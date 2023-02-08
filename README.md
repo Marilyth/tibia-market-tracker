@@ -1,2 +1,2 @@
-# tibia-market-tracker
-Keeps track of Tibia market prices over time
+# tibia-market-tracker-data
+Data for the tibia-market-tracker website

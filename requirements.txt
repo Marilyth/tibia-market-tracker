@@ -1,9 +1,0 @@
-pyautogui
-typer
-pytesseract
-opencv-python
-numpy
-pandas
-flask-cors
-gitpython
-schedule
