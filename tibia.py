@@ -285,12 +285,13 @@ class MarketMemoryReader:
         # Timestamps are read as 64 bit, but only the last 32 bits are used.
         sell_timestamp = sell_timestamp & 0xFFFFFFFF
         buy_timestamp = buy_timestamp & 0xFFFFFFFF
-        
+
         if not name.lower() == "golden helmet" and\
              sell_offer <= 0 or sell_offer > 8000000000 or \
              buy_offer <= 0 or buy_offer > 8000000000 or \
                 (not was_duplicate and self.last_id == item_id) or \
-            len(set(item_ids)) > 2:
+            len(set(item_ids)) > 2 or\
+            any(x < 100 for x in item_ids):
             #buy_timestamp > now_timestamp or sell_timestamp > now_timestamp or \
             #buy_timestamp < current_timestamp or sell_timestamp < current_timestamp:
             # Probably the address changed.

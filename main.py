@@ -30,7 +30,9 @@ def write_events(results_location: str):
         with open(os.path.join(results_location, "events.csv"), "a+") as event_file:
             events = Wiki().get_events(last_date)
             if events:
-                event_file.write("\n".join([event.__str__() for event in events]) + "\n")
+                # Write all events that are in the past up until today to the events file.
+                # This is done so that spontaneous events that are added to the schedule are not missed.
+                event_file.write("\n".join([event.__str__() for event in events if event.date <= datetime.today()]) + "\n")
     except Exception as e:
         print(f"Writing events failed: {e}")
 
