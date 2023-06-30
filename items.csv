@@ -8,6 +8,7 @@ Abandoned Imbuing Shrine,25102
 Abomination's Eye,36792
 Abomination's Tail,36791
 Abomination's Tongue,36793
+Abridged Promotion Scroll,43946
 Abyss Hammer,7414
 Abyssador's Lash,16206
 Acid,8792
@@ -20,10 +21,10 @@ Adamant Shield,28918
 Addled Egg,32031
 Addled Flower,9888
 Advanced Fishing Rod,32051
+Advanced Promotion Scroll,43950
 Adventurer's Map,22107
 Adventurer's Stone,16277
 Adventurers' Guild Picture,37333
-Advertisement Sign,17668
 Afflicted Strider Head,36789
 Afflicted Strider Worms,36790
 Aggressive Fluid,14055
@@ -53,7 +54,6 @@ Amazon Armor,3394
 Amazon Disguise Kit,397
 Amazon Helmet,3393
 Amazon Shield,3437
-Amber (Item),32626
 Amber Staff,7426
 Amber with a Bug,32624
 Amber with a Dragonfly,32625
@@ -85,7 +85,6 @@ Anglerfish Lamp (Lit),28675
 Anglerfish Lamp (Unlit),28674
 Animal Cure,8819
 Animal Fetish,9236
-Animate Dead Rune,3203
 Ankh,3077
 Annihilation Bear,3213
 Anniversary Backpack,14674
@@ -124,14 +123,12 @@ Armable Beer Trap (Cat),32040
 Armable Beer Trap (Empty),32039
 Armable Beer Trap (Orc),32041
 Armageddon Plans,12540
-Armillary Sphere,8852
 Armillary Sphere (TibiaMaps),37114
 Armor (Object),5863
 Armor Rack,6112
 Armor Rack (Immobile),5861
 Armor Rack Kit,6114
 Arrival at Thais Painting,27698
-Arrow,3447
 Artefact Box,36810
 Artist Chair,34039
 Artist Chest,34043
@@ -156,7 +153,6 @@ Asuri Talisman,38844
 Atlas,6108
 Aubergine,11460
 Autumn Sparkle Blossom,24041
-Avalanche Rune,3161
 Axe,3274
 Axe Ring,3092
 Axe of Carving,23311
@@ -176,7 +172,6 @@ Azure Carpet,23716
 Babel Swimmer,12736
 Baby Bonelord,34029
 Baby Brain Squid,32912
-Baby Dragon,23443
 Baby Elephant,35154
 Baby Hedgehog,31682
 Baby Munster,34268
@@ -185,7 +180,6 @@ Baby Polar Bear,32793
 Baby Rotworm,10026
 Baby Rotworm (Store),28693
 Baby Seal,32789
-Baby Seal (Object),7178
 Baby Seal (Painted),7252
 Baby Seal (Time Travel),37747
 Baby Seal (Time Travel, Painted),37748
@@ -202,6 +196,7 @@ Badger Fur (Decoration),903
 Badly Made Piece of Cloth,21868
 Bag,2853
 Bag (Ahmet),235
+Bag You Covet,43860
 Bag You Desire,34109
 Bag of Apple Slices,12548
 Bag of Oriental Spices,10818
@@ -215,6 +210,7 @@ Baking Tray,3464
 Baking Tray (Cookie),8020
 Baking Tray (Garlic),8198
 Baking Tray (Reed),31913
+Bakragore's Amalgamation,43968
 Bale of White Cloth,142
 Bale of Yellowed Cloth,143
 Ball Gown,3570
@@ -290,7 +286,6 @@ Bar of Gold,14112
 Barbarian Axe,3317
 Bard Doll,33777
 Bark Peeler,31328
-Barrel,2523
 Barrel (Brown),2519
 Barrel (Store),34301
 Barrel Filled with Hammers,30304
@@ -298,23 +293,25 @@ Barrel Kit,2793
 Barrel and Anchor Lamp,31940
 Barrel of Beer,404
 Basalt,15301
+Basalt Core,43859
+Basalt Crumbs,43858
 Basalt Fetish,17856
 Basalt Figurine,17857
+Basalt Obelisk (Faint),43793
+Basalt Obelisk (Intense),43792
 Basalt Wall with Crystals,14889
 Bashmu Fang,36820
 Bashmu Feather,36823
 Bashmu Tongue,36821
+Basic Promotion Scroll,43947
 Basin Filled with Blood,31432
 Basin with a Flower,38528
 Basin with a Glowing Flower,38526
-Basket,2855
 Basket (Puppies),14153
-Basket with Puppies,14152
 Bass,32043
 Bast Legs,35517
 Bast Skirt,3560
 Bat (Item),31487
-Bat (Object),8594
 Bat (Store),33042
 Bat Decoration,6491
 Bat Wing,5894
@@ -350,7 +347,6 @@ Beetle Necklace,10457
 Beetroot,8017
 Behemoth Claw,5930
 Behemoth Taming Stone,22871
-Behemoth Trophy,7396
 Behemoth Trophy (Immobile),2676
 Bejeweled Ship's Telescope,9619
 Bell,15832
@@ -444,6 +440,7 @@ Blessed Water,39145
 Blessed Wooden Stake,5942
 Blister Ring,31621
 Blister Tendril,10743
+Bloated Maggot,43856
 Blob Bomb,13976
 Blood Basin,8525
 Blood Crystal,8453
@@ -459,6 +456,7 @@ Blood Vial,19100
 Blood Vial (Necromancer),19101
 Blood Vial (Vampire),19102
 Blood of the Mountain (Item),25361
+Blooded Worm,43857
 Bloodkiss Flower,9241
 Bloodstained Crystal,21572
 Bloody Dwarven Beard,17827
@@ -867,7 +865,7 @@ Candy Cane,3599
 Candy Canes,24494
 Candy Floss,32069
 Candy Floss (Large),37531
-Candy Lure,9536
+Candy Lure,39536
 Canopic Jar (Object),4995
 Canopy Bed,17928
 Canopy Bed Kit,17972
@@ -925,6 +923,7 @@ Cat's Paw,5479
 Cateroide's Doll,22151
 Cateroide's Doll (Activated),22152
 Cauldron,42103
+Cauldron (Witchcraft),43673
 Cauliflower,11462
 Cave Chimera Head,36787
 Cave Chimera Leg,36788
@@ -961,9 +960,14 @@ Charged Arcanomancer Sigil,39184
 Charged Compass (Blue),29292
 Charged Compass (Green),29293
 Charged Compass (Violet),29294
+Charged Essence Devourer (Chagorz),43988
+Charged Essence Devourer (Ichgahal),43984
+Charged Essence Devourer (Murcion),43498
+Charged Essence Devourer (Vemiath),43986
 Charged Flame,39230
 Charged Ghost Charm,8827
 Charged Spiritthorn Ring,39178
+Chargoz Igneous Obsidian,43966
 Charm Upgrade,36726
 Charmer's Tiara,3407
 Chasm Spawn Abdomen,27603
@@ -980,6 +984,7 @@ Cheesy Membership Card,35614
 Cherry,3590
 Chess Board,1210
 Chest,2482
+Chest Full of Witchcraft,43680
 Chest of Abundance,28946
 Chest of Drawers,2434
 Chicken Feather,5890
@@ -1036,6 +1041,7 @@ Cleaver,3471
 Clerical Mace,3311
 Cliff Strider Claw,16134
 Closed Door (Timber),11714
+Closed Pocket Sundial,43888
 Closed Silvered Trap,22074
 Closed Trap,3481
 Closed Trapdoor (Dawnport),21374
@@ -1119,6 +1125,8 @@ Complete Opticording Sphere,23572
 Composite Hornbow,8027
 Compound Eye,14083
 Compromising Letter,7935
+Conch Shell,43861
+Conch Shell Horn,43863
 Condensed Energy,23501
 Condensed Remorse,33792
 Confetti Cannon,37272
@@ -1322,6 +1330,7 @@ Curly Hortensis Lamp (Unlit),31695
 Cursed Bone,32774
 Cursed Gold,21746
 Cursed Shoulder Spikes,10410
+Cursed Wood,43899
 Cutlery,11820
 Cyan Crystal Fragment,16125
 Cyclops Balloon,37503
@@ -1360,6 +1369,7 @@ Dark Mage Statue,748
 Dark Moon Mirror,25729
 Dark Mushroom,3728
 Dark Mushrooms,3733
+Dark Obsidian Splinter,43850
 Dark Oracle,37750
 Dark Parquet,23719
 Dark Parquet Planks,23713
@@ -1372,6 +1382,12 @@ Dark Trinity Mace,8099
 Dark Whispers,29427
 Dark Wizard's Crown,22153
 Dark Wizard's Crown (Activated),22154
+Darkfield,43928
+Darklight Basalt Chunk,43852
+Darklight Core (Object),43853
+Darklight Geode,43900
+Darklight Heart,43855
+Darklight Obsidian Axe,43781
 Dawnfire Herb Plant,21377
 Dawnfire Pantaloons,39166
 Dawnfire Sherwani,39164
@@ -1383,6 +1399,7 @@ Dead Goblin (Fresh Quest),22687
 Dead Goblin (Rotten Quest),22685
 Dead Holy Bog Frog,22693
 Dead Rat (Oramond),21850
+Dead Snake (Item),4000
 Dead Tree (Birch),958
 Dead Weight,20202
 Deadeye Devious' Eye Patch,6102
@@ -1396,6 +1413,7 @@ Death Toll,32703
 Deathstrike's Snippet,16136
 Debris,6485
 Debris (Rubble),1892
+Decayed Finger Bone,43846
 Decharger,39811
 Decorated Carpet,26155
 Decoration Kit,23398
@@ -1488,6 +1506,8 @@ Depth Scutum,13998
 Destroy Field Rune,3148
 Devil Helmet,3356
 Devourer Core,23686
+Dewberries,43892
+Dewberry Palm Leaf,43894
 Diabolic Hedge,9840
 Diabolic Skull,34025
 Diamond,32770
@@ -1793,6 +1813,8 @@ Empty Birdcage,23812
 Empty Bucket (Timira),39242
 Empty Cask,33917
 Empty Coal Basin,31316
+Empty Essence Flask (Dark),44046
+Empty Essence Flask (Rotten),44045
 Empty Flask,40599
 Empty Flower Pot,306
 Empty Goldfish Bowl,5928
@@ -1882,6 +1904,10 @@ Envenomed Arrow,16143
 Epaminondas Doll,9145
 Epaulette,28793
 Epee,3326
+Essence Devourer (Chagorz),43987
+Essence Devourer (Ichgahal),43983
+Essence Devourer (Murcion),43497
+Essence Devourer (Vemiath),43985
 Essence of Dread,20138
 Essence of Wishful Thinking,20139
 Essence of a Bad Dream,10306
@@ -1923,6 +1949,7 @@ Explosive Barrel,23486
 Explosive Fireworks Rocket,37448
 Exquisite Silk,11545
 Exquisite Wood,11547
+Extended Promotion Scroll,43949
 Exultant Ritual Figurine,28536
 Eye Key,28477
 Eye Patch,6098
@@ -2051,12 +2078,15 @@ Fiery War Axe Replica,25924
 Fiery War Hammer,674
 Fiery War Hammer Replica,25929
 Fig Leaf,25742
+Figurine of Bakragore,43963
 Figurine of Cruelty,34019
 Figurine of Greed,34021
 Figurine of Hatred,34020
 Figurine of Malice,34018
 Figurine of Megalomania,33953
+Figurine of Murcion,43962
 Figurine of Spite,33952
+Figurine of Vemiath,43961
 File AH-X17L89,403
 Filigree Statue,17724
 Filled Carrying Device,9699
@@ -2669,8 +2699,10 @@ Golden Shark Trophy,35586
 Golden Sickle,3306
 Golden Skull,35580
 Golden Statue,17344
+Golden Sun Coin,43734
 Golden Symbol of Suon,27499
 Golden Talon,24968
+Golden Tiger Coin,43735
 Golden Trophy of Excellence,9212
 Golden Wallpaper,37542
 Golden Warlord Sword,38642
@@ -2701,6 +2733,16 @@ Grained Stone (Big),22271
 Grained Stone (Medium),22273
 Grained Stone (Small),22272
 Grainy Fireworks Powder,30271
+Grand Sanguine Battleaxe,43875
+Grand Sanguine Blade,43865
+Grand Sanguine Bludgeon,43873
+Grand Sanguine Bow,43878
+Grand Sanguine Coil,43883
+Grand Sanguine Crossbow,43880
+Grand Sanguine Cudgel,43867
+Grand Sanguine Hatchet,43869
+Grand Sanguine Razor,43871
+Grand Sanguine Rod,43886
 Grandiose Bed,35939
 Grandiose Carpet,35942
 Grandiose Carpet (Rolled-Up),35941
@@ -2968,6 +3010,7 @@ Heavy Stone Hammer (Immobile),22319
 Heavy Trident,12683
 Heavy Weapon Rack,11094
 Heavy Wooden Chair,8520
+Heliodor's Scrolls,43969
 Hellflayer Trophy,32753
 Hellforged Axe,8096
 Hellhound Slobber,9637
@@ -3088,6 +3131,7 @@ Ice Shrine,153
 Ice Stone Floor,15785
 Ice Stool,32779
 Iced Soil,944
+Ichgahal's Fungal Infestation,43964
 Icicle (Item),4837
 Icicle (Percht),32777
 Icicle Bow,19362
@@ -3445,6 +3489,7 @@ Leviathan's Amulet,9303
 Liane (Object),1596
 Library Ticket,28791
 Lich Staff,3343
+Lichen Gobbler,43782
 Life Buoy,42305
 Life Crystal,3061
 Life Preserver,17813
@@ -3853,12 +3898,17 @@ Moohtant Horn,21200
 Moon Backpack,9604
 Moon Carpet,35898
 Moon Carpet (Rolled-Up),35897
+Moon Compass,43739
 Moon Flower,3655
 Moon Mint,39132
 Moon Mint (Immobile),39131
 Moon Mirror,25975
+Moon Pin,43736
+Moon-Touched Dewberries,43893
 Moonlight Crystals,22083
+Moonlight Ipomea's Stamen,44008
 Moonlight Rod,3070
+Moonshine Bells,18446
 Moonshine Pearl,39134
 Moonstone,32771
 Morbid Tapestry,34170
@@ -3890,6 +3940,7 @@ Muck Rod,16117
 Mucus Plug,16102
 Mug,2880
 Mummy Disguise,144
+Murcion's Mycelium,43965
 Mushroom Backpack,16099
 Mushroom Corkscrew Stairs,15144
 Mushroom House,25332
@@ -3907,12 +3958,15 @@ Music Sheet (Fourth Verse),6090
 Music Sheet (Second Verse),6088
 Music Sheet (Third Verse),6089
 Musician's Bow,9378
+Mutant Bone Boots,40593
+Mutant Bone Kilt,40595
 Mutated Bat Ear,9662
 Mutated Egg,29305
 Mutated Flesh,10308
 Mutated Rat Dummy,12049
 Mutated Rat Tail,9668
 Mutated Skin Armor,40591
+Mutated Skin Legs,40590
 Mycological Bow,16164
 Mycological Mace,16162
 Mysterious Fetish,3078
@@ -4031,6 +4085,7 @@ Obsidian Zaoan Queen,18333
 Obsidian Zaoan Rook,18337
 Obujos' Shell,14023
 Obvious Piece of Cloth,12554
+Ocarina,43585
 Occupied Birdcage,23813
 Oceanborn Leviathan Armor,8056
 Octoputz,37212
@@ -4158,6 +4213,7 @@ Orcish Gear,11477
 Orcish Maul,7392
 Orclops Santa,24394
 Ore Wagon,7132
+Organic Acid,43778
 Organic Structure (Dark),13236
 Organic Structure (Light),12860
 Organic Structure (Regular),13038
@@ -4541,6 +4597,7 @@ Plushie of a Hydra,32765
 Plushie of a Mearidion,36868
 Plushie of a Murmillion,36865
 Plushie of a Scissorion,36866
+Pocket Sundial,43738
 Podium of Renown,35974
 Podium of Tenacity,42368
 Podium of Vigour,38707
@@ -4803,6 +4860,7 @@ Resonance Crystal,7242
 Resonance Crystal (Recorded),7315
 Rest of Life Energy,21808
 Retching Horror Doll,32945
+Revised Promotion Scroll,43948
 Reward Box,12057
 Reward Box (25th Anniversary),39705
 Reward Chest,19250
@@ -4923,7 +4981,9 @@ Rotten Heart,31589
 Rotten Heart of a Tree,652
 Rotten Meat,3112
 Rotten Piece of Cloth,10291
+Rotten Roots,43849
 Rotten Tomatoes,32029
+Rotten Vermin Ichor,43847
 Rotten Witches' Cauldron Seed,12232
 Rotworm Balloon,37511
 Rotworm Balloon (Inflated),37433
@@ -5029,6 +5089,20 @@ Sandscourge Figurine,35590
 Sandstone Railing,2209
 Sandstone Statue,2034
 Sandstone Window,6463
+Sanguine Battleaxe,43875
+Sanguine Blade,43864
+Sanguine Bludgeon,43872
+Sanguine Boots,43884
+Sanguine Bow,43877
+Sanguine Coil,43882
+Sanguine Crossbow,43879
+Sanguine Cudgel,43866
+Sanguine Galoshes,43887
+Sanguine Greaves,43881
+Sanguine Hatchet,43868
+Sanguine Legs,43876
+Sanguine Razor,43870
+Sanguine Rod,43885
 Santa Ahau,42175
 Santa Backpack,10346
 Santa Doll,6567
@@ -5055,6 +5129,7 @@ Scalpel,32225
 Scarab Amulet,3018
 Scarab Cheese,169
 Scarab Coin,3042
+Scarab Ocarina,43740
 Scarab Ornament,2617
 Scarab Pincers,9631
 Scarab Shield,3440
@@ -5243,6 +5318,7 @@ Silver Dagger,3290
 Silver Deed,32916
 Silver Dust,27447
 Silver Fafnar Trophy,9627
+Silver Foxmouse Coin,43733
 Silver Goblet,5806
 Silver Hand,38649
 Silver Hand Mirror,32772
@@ -5252,6 +5328,7 @@ Silver Key (Outpost),21392
 Silver Mace,3312
 Silver Mask,31370
 Silver Medal,9216
+Silver Moon Coin,43732
 Silver Necklace,3015
 Silver Nugget,27488
 Silver Nuggets,27445
@@ -5639,6 +5716,7 @@ Spiritthorn Armor,39147
 Spiritthorn Helmet,39148
 Spiritthorn Ring,39179
 Spiritual Charm,10343
+Spiritual Horseshoe,44048
 Spite's Spirit,33926
 Spitter Nose,14078
 Splashing Fireworks Rocket,37453
@@ -5684,6 +5762,7 @@ Star Herb,3736
 Star Ring,12669
 Starfish,5416
 Starfish (Item),24438
+Starlight Buttercup,18447
 Starlight Vial,25976
 Statue (Archer),9436
 Statue (Demonbunny),15633
@@ -5720,8 +5799,11 @@ Steel Shield,3409
 Steel Spider Silk,21819
 Sticky Elemental Goo,36617
 Stimulated Brain,19078
+Stitched Mutant Hide Legs,40589
 Stockfish,32070
 Stolen Golden Goblet,7870
+Stone (Long Big),1779
+Stone (Long),1777
 Stone (Medium),1772
 Stone (Small),1782
 Stone Carving (Building),8946
@@ -5894,6 +5976,7 @@ Sulphurous Demonbone,28832
 Sulphurous Stone,10315
 Summer Dress,8046
 Summerblade,29421
+Sun Brooch,43737
 Sun Catcher,25977
 Sun Emblem,9453
 Sun Fruit,29995
@@ -5947,8 +6030,11 @@ Sword Ring,3091
 Sword Tapestry,23724
 Symbol of Sun and Sea,31431
 Table (Bench),13885
+Table (Without Candles),43674
 Table Lamp,2935
 Table Lamp Kit,2798
+Table with Burning Candles,43676
+Table with Candles,43675
 Taboret,11808
 Tactical Map,10184
 Tagralt Blade,31614
@@ -5958,6 +6044,7 @@ Tail of Abyssador,16229
 Tail of Corruption,11672
 Tainted Blood Essence,19133
 Tainted Glooth Capsule,21816
+Tainted Heart,43854
 Tall Dark Cypress,19676
 Tall Dusky Cypress,20117
 Tall Dusky Cypress (Broken Dream),20102
@@ -6048,6 +6135,10 @@ The Dust of Marziel,8719
 The Dwarven Emperor's Beard,113
 The Epic Wisdom,12810
 The Epiphany,8103
+The Essence of Chagorz,43504
+The Essence of Ichgahal,43502
+The Essence of Murcion,43501
+The Essence of Vemiath,43503
 The Eye of Suon,36708
 The Famous Golden Bug,9614
 The Famous Mina Losa Painting,7871
@@ -6199,6 +6290,7 @@ Tournament Carpet,31468
 Tower Shield,3428
 Toxic Tulip,10717
 Toxic Tulip Seed,12233
+Toy Ball,43901
 Toy Mouse,123
 Toy Spider,8179
 Traditional Gamsbart Hat,32100
@@ -6332,6 +6424,7 @@ Unlit Campfire,2001
 Unliving Demonbone,28831
 Unrealized Dream,20264
 Unremarkable Hammer,37170
+Unstable Darklight Matter,43779
 Unstable Ring of Ending,20209
 Untended Trimmed Tree,24033
 Unworked Sacred Wood,11339
@@ -6401,6 +6494,7 @@ Veldt Flowers,31325
 Veldt Flowers (Immobile),30426
 Velvet Mantle,8040
 Velvet Tapestry,8923
+Vemiath's Infused Basalt,43967
 Vengothic Bed,35886
 Vengothic Cabinet,25228
 Vengothic Chair,25224
@@ -6517,6 +6611,7 @@ Wall Lamp (Spikes),11254
 Wall Leaves,39801
 Wall Mirror,2604
 Wall Mirror (Edged),2635
+Wall Mirror (Mirrored Nightmare),33785
 Wall Mirror (Oval),2638
 Wall Mirror (Quest),28906
 Wall Mirror (Round),2632
@@ -6613,15 +6708,23 @@ Wereboar Loincloth,22087
 Wereboar Trophy,22102
 Wereboar Trophy (Immobile),22096
 Wereboar Tusks,22054
+Werecrocodile Tongue,43729
+Werecrocodile Trophy,43916
 Werefox Tail,27463
 Werefox Trophy,27706
 Werehyaena Nose,33943
 Werehyaena Talisman,33944
 Werehyaena Trophy,34219
+Werepanther Claw,43731
+Werepanther Trophy,43917
+Weretiger Tooth,43730
+Weretiger Trophy,43915
 Werewolf Amulet,22060
 Werewolf Fangs,22052
 Werewolf Fur,10317
 Werewolf Helmet,22062
+Werewolf Painting (Howling),44028
+Werewolf Painting (Moon),44029
 Wet Boards,40581
 Wet Temple Floor,13430
 Whacking Driller of Fate,9598
@@ -6691,6 +6794,18 @@ Winterblade,29422
 Witch Broom,9652
 Witch Hat,9653
 Witch's Clock,12031
+Witchcraft Bed,43726
+Witchcraft Bookstand,43706
+Witchcraft Cabinet,43688
+Witchcraft Cage,73708
+Witchcraft Chair,43684
+Witchcraft Cupboard,43698
+Witchcraft Fireplace,43696
+Witchcraft Forest Herbs,43711
+Witchcraft Portal,43692
+Witchcraft Scroll,43709
+Witchcraft Summoning Circle,43702
+Witchcraft Sweet Herbs,43713
 Witches' Cap Spot,21950
 Witchesbroom,3211
 Witchhunter's Coat,7993
@@ -6723,6 +6838,7 @@ Wooden Flute,2948
 Wooden Grinder,21573
 Wooden Hammer,3459
 Wooden Key,2968
+Wooden Mouthpiece,43862
 Wooden Plank,33052
 Wooden Planks (Store),26123
 Wooden Pole,8739
@@ -6749,6 +6865,7 @@ Workbench,35166
 Worm,3492
 Worm Punisher,9234
 Worm Queen Tooth,9239
+Worm Sponge,43848
 Wormhole (Carrion Worm),9197
 Wormhole (Rotworm),9196
 Worn Firewalker Boots,9020
@@ -6786,6 +6903,7 @@ Yellow Balloon,37500
 Yellow Balloon (Inflated),37422
 Yellow Bed Kit,832
 Yellow Cake Carpet,37368
+Yellow Darklight Matter,43780
 Yellow Energy Ball,27868
 Yellow Fireworks Powder,30189
 Yellow Fireworks Rocket,30210

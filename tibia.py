@@ -9,6 +9,8 @@ import re
 from memory_reader import MemoryReader
 import ctypes
 import os
+import random
+import traceback
 
 
 class EventData:
@@ -23,23 +25,17 @@ class EventData:
 class MarketValues:
     def __init__(self, name: str, time: float, sell_offer: int, buy_offer: int, month_sell_offer: int, month_buy_offer: int, sold: int, bought: int, highest_sell: int, lowest_buy: int, approx_offers: int):
         self.buy_offer: int = max(buy_offer, lowest_buy)
-        self.sell_offer: int = max(min(sell_offer, highest_sell), self.buy_offer) if sold > 0 else sell_offer
+        self.sell_offer: int = min(sell_offer, highest_sell) if sold > 0 else sell_offer
         self.month_sell_offer: int = month_sell_offer
         self.month_buy_offer: int = month_buy_offer
         self.sold: int = sold
         self.bought: int = bought
         self.time: float = time
-
-        self.profit: int = self.sell_offer - self.buy_offer
-        # Subtract 2% of the offer values, or a maximum of 250000gp, from the profit due to market fees.
-        self.profit -= (min(int(self.buy_offer * 0.02), 250000) + min(int(self.sell_offer * 0.02), 250000))
-        self.rel_profit: float = round(self.profit / self.buy_offer, 2) if self.buy_offer > 0 else 0
-        self.potential_profit: int = self.profit * min(sold, bought)
         self.active_traders: int = approx_offers
         self.name = name
 
     def __str__(self) -> str:
-        return f"{self.name.lower()},{self.sell_offer},{self.buy_offer},{self.month_sell_offer},{self.month_buy_offer},{self.sold},{self.bought},{self.profit},{self.rel_profit},{self.potential_profit},{self.active_traders}"
+        return f"{self.name.lower()},{self.sell_offer},{self.buy_offer},{self.month_sell_offer},{self.month_buy_offer},{self.sold},{self.bought},{self.active_traders}"
 
     def history_string(self) -> str:
         """Returns the relevant historic values of the object as a string, separated by commas.
@@ -172,6 +168,8 @@ class MarketMemoryReader:
             avg_sell_offer (int): The current maximum sell offer.
             item_id (int): The current item id.
         """
+        print(f"Filtering memory... {buy_offer=}, {sell_offer=}, {max_buy_offer=}, {max_sell_offer=}, {item_id=}")
+
         if len(self.buy_offer_reader.addresses) != 1 and buy_offer >= 100:
             self.buy_offer_reader.filter_value(0, ctypes.c_long(buy_offer))
         if len(self.sell_offer_reader.addresses) != 1 and sell_offer >= 100:
@@ -286,12 +284,14 @@ class MarketMemoryReader:
         sell_timestamp = sell_timestamp & 0xFFFFFFFF
         buy_timestamp = buy_timestamp & 0xFFFFFFFF
 
-        if not name.lower() == "golden helmet" and\
-             sell_offer <= 0 or sell_offer > 8000000000 or \
-             buy_offer <= 0 or buy_offer > 8000000000 or \
+        if not name.lower() == "golden helmet" and \
+                sell_offer <= 0 or sell_offer > 8000000000 or \
+                buy_offer <= 0 or buy_offer > 8000000000 or \
+                buy_amount + sell_amount >= 50000 or \
+                buy_amount < 0 or sell_amount < 0 or \
                 (not was_duplicate and self.last_id == item_id) or \
-            len(set(item_ids)) > 2 or\
-            any(x < 100 for x in item_ids):
+                len(set(item_ids)) > 2 or \
+                any(x < 100 for x in item_ids):
             #buy_timestamp > now_timestamp or sell_timestamp > now_timestamp or \
             #buy_timestamp < current_timestamp or sell_timestamp < current_timestamp:
             # Probably the address changed.
@@ -394,7 +394,7 @@ class Client:
         self._wait_until_find("images/Update.png", click=True, timeout=10, cache=False)
 
         # Wait until update is done, and click play button.
-        self._wait_until_find("images/PlayButton.png", click=True, cache=False)
+        self._wait_until_find("images/PlayButton.png", click=True, cache=False, timeout=600)
         time.sleep(5)
 
     def login_to_game(self, email: str, password: str):
@@ -423,7 +423,7 @@ class Client:
         Closes Tibia unsafely. Probably better to log out before.
         """
         pyautogui.hotkey("alt", "f4")
-        self._wait_until_find("images/Exit.png", click=True, cache=False)
+        self._wait_until_find("images/Exit.png", click=True, cache=False, timeout=5)
 
     def open_market(self):
         """
@@ -437,12 +437,17 @@ class Client:
         def try_open_market() -> bool:
             x, y = self._wait_until_find("images/SuccessDepotTile.png", timeout=5, cache=False, exact=True)
             if x >= 0:
+                # We are at a depot, check if already opened.
                 if self._wait_until_find("images/Market.png", click=True, cache=False, timeout=5)[0] == -1:
                     print("Opening depot")
                     pyautogui.leftClick(636, 385)
-                    self._wait_until_find("images/Market.png", click=True, cache=False, timeout=5)[0]
-                    
-                self._wait_until_find("images/Details.png", cache=False)
+
+                    # Tried to open depot, check if it worked.
+                    if self._wait_until_find("images/Market.png", click=True, cache=False, timeout=5)[0] == -1:
+                        return False
+                
+                # Depot and market are open, wait for market to load.
+                self._wait_until_find("images/Details.png", cache=False, timeout=5)
 
                 print("Market open.")
                 return True
@@ -467,9 +472,14 @@ class Client:
         """
         pyautogui.PAUSE = 0.1
         print("Finding relevant memory addresses with OCR.")
-        
+        iterations = 0
+
+        items = [("tibia coins", 22118), ("time ring", 3053), ("stealth ring", 3049), ("rope belt", 11492), ("stone skin amulet", 3081), ("collar of red plasma", 23544),
+                 ("gold token", 22721), ("silver token", 22516), ("silencer claws", 20200), ("bloody pincers", 9633), ("elvish talisman", 9635), ("broken shamanic staff", 11452)]
+
         while not self.market_reader.has_finished_filtering:
-            for item, id in [("tibia coins", 22118), ("time ring", 3053), ("stealth ring", 3049), ("rope belt", 11492), ("stone skin amulet", 3081), ("collar of red plasma", 23544)]:
+            random.shuffle(items)
+            for item, id in items:
                 if self.market_reader.has_finished_filtering:
                     break
                 
@@ -479,7 +489,10 @@ class Client:
                 print(len(self.market_reader.sell_details_reader.addresses))
                 print(len(self.market_reader.buy_details_reader.addresses))
                 print(len(self.market_reader.item_id_reader.addresses))
-                print(values)
+            
+            iterations += 1
+            if iterations > 5:
+                raise Exception("Failed to find memory addresses after 5 iterations. Aborted.")
 
         # Fill memory with timestamps to know if an offer in memory still belongs to the current item.
         self.search_item("tibia coins")
@@ -495,17 +508,27 @@ class Client:
             A list of MarketValues objects.
         """
         results = []
-
-        # Reopen the market to avoid being kicked out.
-        self.close_market()
-        self.wiggle()
-        next_wiggle = time.time() + 60 * 13
-        self.open_market()
         fail_count = 0
 
-        # Find memory addresses if they haven't been found yet.
-        if not self.market_reader.has_finished_filtering:
-            self._find_memory_addresses()
+        # Reopen the market to avoid being kicked out.
+        while True:
+            try:
+                self.close_market()
+                self.wiggle()
+                next_wiggle = time.time() + 60 * 13
+                self.open_market()
+                
+
+                # Find memory addresses if they haven't been found yet.
+                if not self.market_reader.has_finished_filtering:
+                    self._find_memory_addresses()
+            except Exception as e:
+                print(e)
+                fail_count += 1
+
+                if fail_count >= 10:
+                    raise e
+            break
 
         self._wait_until_find("images/Category.png", click=True, cache=False)
 
@@ -643,12 +666,12 @@ class Client:
             
             elif self.market_tab == "offers":
                 buy_offer, sell_offer, approx_offers = scan_offers()
-                self._wait_until_find("images/Details.png", click=True)
+                self._wait_until_find("images/Details.png", timeout=5, click=True, throw_on_timeout=True)
                 interpreted_statistics = scan_details()
                 self.market_tab = "details"
             else:
                 interpreted_statistics = scan_details()
-                self._wait_until_find("images/OffersButton.png", click=True)
+                self._wait_until_find("images/OffersButton.png", timeout=5, click=True, throw_on_timeout=True)
                 buy_offer, sell_offer, approx_offers = scan_offers()
                 self.market_tab = "offers"
 
@@ -660,6 +683,8 @@ class Client:
             exit(1)
         except Exception as e:
             print(f"Market search failed for {name}: {e}")
+            traceback.print_exc()
+
             return MarketValues(name, time.time(), -1, -1, -1, -1, -1, -1, -1, -1, -1)
 
     def close_market(self):
@@ -693,7 +718,7 @@ class Client:
         time.sleep(0.5)
         self.market_tab = "offers"
 
-    def _wait_until_find(self, image: str, timeout: int = 60, click: bool = False, cache: bool = True, exact: bool = False) -> Tuple[int, int]:
+    def _wait_until_find(self, image: str, timeout: int = 60, click: bool = False, cache: bool = True, exact: bool = False, throw_on_timeout: bool = False) -> Tuple[int, int]:
         start_time = time.time()
 
         while time.time() - start_time < timeout:
@@ -719,5 +744,8 @@ class Client:
             time.sleep(0.2)
         
         print(f"Finding {image} failed.")
+        if throw_on_timeout:
+            raise TimeoutError(f"Finding {image} failed.")
+        
         return (-1, -1)
     
