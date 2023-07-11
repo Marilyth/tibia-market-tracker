@@ -158,6 +158,18 @@ class MarketMemoryReader:
         
         self.has_finished_filtering = False
 
+    def reset(self):
+        """Resets the memory reader to the initial state.
+        """
+        self.sell_offer_reader.reset_filter()
+        self.buy_offer_reader.reset_filter()
+        self.sell_details_reader.reset_filter()
+        self.buy_details_reader.reset_filter()
+        self.item_id_reader.reset_filter()
+        self.has_finished_filtering = False
+        self.last_id = 0
+        self.last_expression = ""
+
     def find_current_memory(self, buy_offer: int, sell_offer: int, max_buy_offer: int, max_sell_offer: int, item_id: int):
         """Filters the readers with the current values. If all readers only have 1 value left, returns True.
 
@@ -245,8 +257,11 @@ class MarketMemoryReader:
             MarketValues: The MarketValues for the current item.
         """
         max_bought, min_bought, total_bought_gold, amount_bought = self.buy_details_reader.read_values()
+        amount_bought = amount_bought & 0xFFFFFFFF
         average_bought = (total_bought_gold // amount_bought) if amount_bought > 0 else 0
+
         max_sold, min_sold, total_sold_gold, amount_sold = self.sell_details_reader.read_values()
+        amount_sold = amount_sold & 0xFFFFFFFF
         average_sold = (total_sold_gold // amount_sold) if amount_sold > 0 else 0
         item_ids = self.item_id_reader.read_values()[-3:]
         print(item_ids)
@@ -287,23 +302,15 @@ class MarketMemoryReader:
         if not name.lower() == "golden helmet" and \
                 sell_offer <= 0 or sell_offer > 8000000000 or \
                 buy_offer <= 0 or buy_offer > 8000000000 or \
-                buy_amount + sell_amount >= 50000 or \
-                buy_amount < 0 or sell_amount < 0 or \
+                amount_bought + amount_sold >= 500000 or \
                 (not was_duplicate and self.last_id == item_id) or \
                 len(set(item_ids)) > 2 or \
                 any(x < 100 for x in item_ids):
             #buy_timestamp > now_timestamp or sell_timestamp > now_timestamp or \
             #buy_timestamp < current_timestamp or sell_timestamp < current_timestamp:
             # Probably the address changed.
-            self.sell_offer_reader.reset_filter()
-            self.buy_offer_reader.reset_filter()
-            self.sell_details_reader.reset_filter()
-            self.buy_details_reader.reset_filter()
-            self.item_id_reader.reset_filter()
-            self.has_finished_filtering = False
-            self.last_id = 0
-            self.last_expression = ""
-            raise Exception(f"The memory address might have changed: {item_id=},{buy_offer=},{sell_offer=},{buy_timestamp=},{sell_timestamp=}")
+            self.reset()
+            raise Exception(f"The memory address might have changed: {item_id=},{buy_offer=},{sell_offer=},{amount_bought=},{amount_sold=},{buy_timestamp=},{sell_timestamp=},{item_ids=},{was_duplicate=},{self.last_id}")
 
         # If the item id is not the same as the last one, but the timestamp is the same as the last one, then the values aren't theirs.
         if buy_timestamp == self.last_buy_times[0][0] and item_id != self.last_buy_times[0][1]:
@@ -492,7 +499,9 @@ class Client:
             
             iterations += 1
             if iterations > 5:
+                self.market_reader.reset()
                 raise Exception("Failed to find memory addresses after 5 iterations. Aborted.")
+                
 
         # Fill memory with timestamps to know if an offer in memory still belongs to the current item.
         self.search_item("tibia coins")
@@ -508,101 +517,116 @@ class Client:
             A list of MarketValues objects.
         """
         results = []
-        fail_count = 0
+        item_fail_count = 0
+        memory_fail_count = 0
+        loop_back = False
 
-        # Reopen the market to avoid being kicked out.
         while True:
-            try:
-                self.close_market()
-                self.wiggle()
-                next_wiggle = time.time() + 60 * 13
-                self.open_market()
-                
+            loop_back = False
 
-                # Find memory addresses if they haven't been found yet.
-                if not self.market_reader.has_finished_filtering:
-                    self._find_memory_addresses()
-            except Exception as e:
-                print(e)
-                fail_count += 1
+            # Reopen the market to avoid being kicked out.
+            while True:
+                try:
+                    self.close_market()
+                    self.wiggle()
+                    next_wiggle = time.time() + 60 * 13
+                    self.open_market()
+                    
 
-                if fail_count >= 10:
-                    raise e
-            break
+                    # Find memory addresses if they haven't been found yet.
+                    if not self.market_reader.has_finished_filtering:
+                        self._find_memory_addresses()
+                    
+                    break
+                except Exception as e:
+                    print(e)
+                    memory_fail_count += 1
+                    self.market_reader.reset()
 
-        self._wait_until_find("images/Category.png", click=True, cache=False)
+                    if memory_fail_count >= 5:
+                        raise e
 
-        # Go to the correct category.
-        pyautogui.press("down", presses=category_index - 1)
+            self._wait_until_find("images/Category.png", click=True, cache=False)
 
-        # Tab to the item list. This number might have to be changed if the market is updated.
-        pyautogui.press("tab", presses=10)
-        
-        # Go through the items quickly, except for the last one.
-        # This is to make sure the item's value is fully loaded and we aren't rate limited.
-        if starting_index > 1:
-            pyautogui.press("down", presses=starting_index)
-            time.sleep(8)
+            # Go to the correct category.
+            pyautogui.press("down", presses=category_index - 1)
 
-        last_item_id = -1
-        while True:
-            if self.market_reader.has_finished_filtering:
-                # If fetching results failed 10 times in a row, restart.
-                if fail_count >= 10:
-                    print("Restarting...")
-                    return results + self.crawl_market(category_index, starting_index)
-                
-                # If the last result failed, reload the item.
-                if fail_count > 0:
-                    pyautogui.press("up")
+            # Tab to the item list. This number might have to be changed if the market is updated.
+            pyautogui.press("tab", presses=10)
+            
+            # Go through the items quickly, except for the last one.
+            # This is to make sure the item's value is fully loaded and we aren't rate limited.
+            if starting_index > 1:
+                pyautogui.press("down", presses=starting_index)
+                time.sleep(8)
+
+            last_item_id = -1
+            while True:
+                if self.market_reader.has_finished_filtering:
+                    # If fetching results failed 10 times in a row, restart and skip this item.
+                    if item_fail_count >= 5:
+                        print("Failed 5 times, skipping item...")
+                        starting_index += 1
+                        item_fail_count = 0
+                        pyautogui.press("down")
+                        time.sleep(0.5)
+                    
+                    # If the last result failed, reload the item.
+                    if item_fail_count > 0:
+                        pyautogui.press("up")
+                        time.sleep(0.5)
+
+                    # Go to next item. Wait a bit to make sure we aren't rate limited.
+                    pyautogui.press("down")
                     time.sleep(0.5)
 
-                # Go to next item. Wait a bit to make sure we aren't rate limited.
-                pyautogui.press("down")
-                time.sleep(0.5)
+                    pyautogui.PAUSE = 0.01
 
-                pyautogui.PAUSE = 0.01
+                    try:
+                        values, id, was_duplicate = self.market_reader.get_current_market_values("Unknown")
+                    except Exception as e:
+                        print(f"category: {category_index}, index: {starting_index}, Error: {e}")
+                        item_fail_count += 1
+                        continue
 
-                try:
-                    values, id, was_duplicate = self.market_reader.get_current_market_values("Unknown")
-                except Exception as e:
-                    print(f"category: {category_index}, index: {starting_index}, Error: {e}")
-                    fail_count += 1
-                    continue
+                    # If the id is the same as the last one, we have reached the end of the category.
+                    if id == last_item_id:
+                        break
+                    
+                    # If we have failed 10 times in a row, we should probably restart.
+                    if was_duplicate and id != last_item_id and\
+                        (values.month_sell_offer + values.month_buy_offer != 0) and\
+                            id != 22118:
+                        item_fail_count += 1
+                        continue
 
-                # If the id is the same as the last one, we have reached the end of the category.
-                if id == last_item_id:
+                    item_fail_count = 0
+                    starting_index += 1
+
+                    if id not in self.id_to_name:
+                        print("Unknown item id: " + str(id) + ", category: " + str(category_index) + ", index: " + str(starting_index))
+                    else:
+                        values.name = self.id_to_name[id]
+
+                    print(values)
+
+                    if values.name != "Unknown":
+                        results.append(values)
+
+                    last_item_id = id
+
+                    # Wiggle every once in a while to avoid being kicked out.
+                    if time.time() > next_wiggle:
+                        loop_back = True
+                        break
+                else:
+                    loop_back = True
                     break
                 
-                # If we have failed 10 times in a row, we should probably restart.
-                if was_duplicate and id != last_item_id and\
-                    (values.month_sell_offer + values.month_buy_offer != 0) and\
-                        id != 22118:
-                    fail_count += 1
-                    continue
+            if loop_back:
+                continue
 
-                fail_count = 0
-                starting_index += 1
-
-                if id not in self.id_to_name:
-                    print("Unknown item id: " + str(id) + ", category: " + str(category_index) + ", index: " + str(starting_index))
-                else:
-                    values.name = self.id_to_name[id]
-
-                print(values)
-
-                if values.name != "Unknown":
-                    results.append(values)
-
-                last_item_id = id
-
-                # Wiggle every once in a while to avoid being kicked out.
-                if time.time() > next_wiggle:
-                    return results + self.crawl_market(category_index, starting_index)
-            else:
-                return results + self.crawl_market(category_index, starting_index)
-
-        return results
+            return results
 
     def search_item(self, name: str, id: Optional[int] = None) -> MarketValues:
         """
