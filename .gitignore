@@ -129,7 +129,7 @@ dmypy.json
 
 results/*.csv
 results/histories/*.csv
-
+src/Tibia
 *.png
 
 /node_modules

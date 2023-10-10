@@ -1,3 +1,4 @@
+python-xlib
 pyautogui
 pytesseract
 opencv-python-headless
@@ -8,3 +9,5 @@ schedule
 gitpython
 requests
 mem-edit
+pyvirtualdisplay
+pytest

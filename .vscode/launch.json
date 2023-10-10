@@ -9,10 +9,48 @@
             "name": "Python: Main File",
             "type": "python",
             "request": "launch",
-            "program": "main.py",
+            "program": "src/main.py",
             "console": "integratedTerminal",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/src:${workspaceFolder}/tests"
+            },
             "justMyCode": true,
             "sudo": true
+        },
+        {
+            "name": "Python: Current File (pytest)",
+            "type": "python",
+            "request": "launch",
+            "module": "pytest",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/src:${workspaceFolder}/tests"
+            },
+            "args": [
+                "${file}"
+            ],
+            "console": "integratedTerminal",
+            "sudo": true
+        },
+        {
+            "name": "Python: Run Test Method",
+            "type": "python",
+            "request": "launch",
+            "module": "pytest",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/src:${workspaceFolder}/tests"
+            },
+            "args": [
+                "-k",
+                "${input:TestMethod}"
+            ],
+            "console": "integratedTerminal"
+        }
+    ],
+    "inputs": [
+        {
+            "id": "TestMethod",
+            "type": "promptString",
+            "description": "Enter the name of the test method to run"
         }
     ]
 }
