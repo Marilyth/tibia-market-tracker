@@ -1,4 +1,4 @@
-from src.market_values import MarketValues
+from data.market_values import MarketValues
 
 
 def test_MarketValuesToString_GivenValues_ReturnsExpected():

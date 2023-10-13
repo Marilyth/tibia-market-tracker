@@ -1,9 +1,9 @@
 import time
 from typing import *
 from datetime import datetime, timedelta
-from memory_reader import MemoryReader
+from utils.memory_reader import MemoryReader
 import ctypes
-from market_values import MarketValues
+from utils.market_values import MarketValues
 
 
 class MarketMemoryReader:

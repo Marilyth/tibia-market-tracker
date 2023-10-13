@@ -10,3 +10,5 @@ pytest
 fastapi
 uvicorn
 slowapi
+pymongo
+tqdm

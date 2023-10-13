@@ -1,6 +1,6 @@
 import pytest
 from datetime import datetime
-from src.tibia_wiki import EventData, Wiki
+from utils.tibia_wiki import EventData, Wiki
 
 
 class TestWiki:

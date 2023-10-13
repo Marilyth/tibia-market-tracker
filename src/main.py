@@ -1,8 +1,12 @@
-from tibia_wiki import Wiki
+from utils.tibia_wiki import Wiki
 import os
 import json
 from datetime import datetime
+from utils.mongo_manager import MongoManager
+from tqdm import tqdm
 
+
+mongo_manager: MongoManager = None
 
 def write_marketable_items():
     items = Wiki().get_all_marketable_items()
@@ -37,7 +41,7 @@ def do_market_search(email: str, password: str, tibia_location: str, results_loc
     write_events(results_location)
 
     def market_search():
-        from tibia import Client
+        from utils.tibia import Client
 
         client = Client()
         client.start_game(tibia_location)
@@ -55,12 +59,14 @@ def do_market_search(email: str, password: str, tibia_location: str, results_loc
                 client.exit_tibia()
                 return
             
-            for category in range(1, 25):
+            for category in tqdm(range(1, 25), desc="Category"):
                 try:
-                    for item in client.crawl_market(category):
+                    for item in tqdm(client.crawl_market(category), desc="Updating item values"):
                         with open(os.path.join(scan_path, "histories", f"{item.name.lower()}.csv"), "a+") as h:
                             h.write(item.history_string() + "\n")
                         f.write(f"{item}\n")
+
+                        mongo_manager.add_market_value(client.character_server, item)
                 except Exception as e:
                     print(f"Error while crawling market: {e}")
                     break
@@ -80,11 +86,14 @@ def do_market_search(email: str, password: str, tibia_location: str, results_loc
     else:
         market_search()
 
+
 if __name__ == "__main__":
     with open(os.path.join(os.path.dirname(__file__), "config", "config.json"), "r") as c:
         config = json.loads(c.read())
 
+    mongo_manager = MongoManager(config["mongodbConnectionString"])
+
     # Ensure that the results location exists.
     os.makedirs(config["resultsLocation"], exist_ok=True)
-    
+
     do_market_search(config["email"], config["password"], config["tibiaLocation"], config["resultsLocation"], config["useVirtualDisplay"], config["showVirtualDisplay"])

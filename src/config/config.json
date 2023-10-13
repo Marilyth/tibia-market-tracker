@@ -1,6 +1,7 @@
 {
     "email": "",
     "password": "",
+    "mongodbConnectionString": "",
     "tibiaLocation": "./Tibia/Tibia",
     "resultsLocation": "./results",
     "useVirtualDisplay": true,

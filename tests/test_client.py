@@ -1,5 +1,5 @@
 import pytest
-from src.tibia import Client
+from utils.tibia import Client
 
 client = None
 

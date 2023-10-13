@@ -49,7 +49,7 @@ def install_tibia():
     # Start_game already handles the installation process.
     with Display(visible=False, size=(1600, 900)):
         import pyautogui
-        from tibia import Client
+        from utils.tibia import Client
         pyautogui._pyautogui_x11._display = Xlib.display.Display(os.environ['DISPLAY'])
         client = Client()
         client.start_game("Tibia/Tibia")

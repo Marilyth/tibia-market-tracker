@@ -1,4 +1,5 @@
-from market_values import MarketValues
+from utils.market_values import MarketValues
+from utils.mongo_manager import MongoManager
 import uvicorn
 import fastapi
 from fastapi.middleware.cors import CORSMiddleware
@@ -31,6 +32,8 @@ config = {}
 fullscan_lock = asyncio.Lock()
 with open(os.path.join(os.path.dirname(__file__), "config", "config.json"), "r") as c:
     config = json.loads(c.read())
+
+mongo_manager: MongoManager = MongoManager(config["mongodbConnectionString"])
 
 # Helper methods.
 def does_server_exist(server: str):

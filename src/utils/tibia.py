@@ -2,13 +2,13 @@ import pyautogui
 import subprocess
 import time
 from typing import *
-import screenshot
+import utils.screenshot as screenshot
 import os
 import random
 import traceback
-from market_memory_reader import MarketMemoryReader
-from market_values import MarketValues
-from tibia_wiki import Wiki
+from utils.market_memory_reader import MarketMemoryReader
+from utils.market_values import MarketValues
+from utils.tibia_wiki import Wiki
 import shutil
 
 

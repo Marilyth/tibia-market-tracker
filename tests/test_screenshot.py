@@ -1,7 +1,7 @@
 import pytest
 from PIL import Image
 
-from src.screenshot import take_screenshot, process_image, read_image_text
+from utils.screenshot import take_screenshot, process_image, read_image_text
 
 
 class TestScreenshot:
