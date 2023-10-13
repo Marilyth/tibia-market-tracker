@@ -7,3 +7,4 @@ sudo apt-get install -y tesseract-ocr
 sudo apt-get install -y tesseract-ocr-deu
 sudo apt-get install -y scrot
 sudo apt-get install -y xvfb xserver-xephyr tigervnc-standalone-server x11-utils gnumeric
+sudo apt-get install -y uvicorn

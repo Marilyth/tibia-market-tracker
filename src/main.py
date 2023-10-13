@@ -81,7 +81,7 @@ def do_market_search(email: str, password: str, tibia_location: str, results_loc
         market_search()
 
 if __name__ == "__main__":
-    with open("config/config.json", "r") as c:
+    with open(os.path.join(os.path.dirname(__file__), "config", "config.json"), "r") as c:
         config = json.loads(c.read())
 
     # Ensure that the results location exists.

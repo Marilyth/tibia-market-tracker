@@ -18,6 +18,17 @@
             "sudo": true
         },
         {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/src:${workspaceFolder}/tests"
+            },
+            "justMyCode": true
+        },
+        {
             "name": "Python: Current File (pytest)",
             "type": "python",
             "request": "launch",
