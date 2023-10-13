@@ -1,0 +1,8 @@
+{
+    "email": "",
+    "password": "",
+    "tibiaLocation": "./Tibia/Tibia",
+    "resultsLocation": "./results",
+    "useVirtualDisplay": true,
+    "showVirtualDisplay": false
+}
