@@ -2,7 +2,7 @@
     "email": "",
     "password": "",
     "tibiaLocation": "./Tibia/Tibia",
-    "resultsLocation": "",
-    "useVirtualDisplay": false,
+    "resultsLocation": "./results",
+    "useVirtualDisplay": true,
     "showVirtualDisplay": false
 }
