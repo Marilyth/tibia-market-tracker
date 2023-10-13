@@ -3,10 +3,6 @@ pyautogui
 pytesseract
 opencv-python-headless
 numpy
-pandas
-gitpython
-schedule
-gitpython
 requests
 mem-edit
 pyvirtualdisplay

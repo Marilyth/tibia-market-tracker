@@ -19,12 +19,16 @@ class Client:
         '''
         # Start Tibia.
         pyautogui.PAUSE = 0.1
-        self.tibia_settings_location = os.path.join(os.path.expanduser("~"), ".local", "share", "CipSoft GmbH", "Tibia", "packages", "Tibia", "conf")
+        self.tibia_data_location = os.path.join(os.path.expanduser("~"), ".local", "share", "CipSoft GmbH", "Tibia")
+        self.tibia_settings_location = os.path.join(self.tibia_data_location, "packages", "Tibia", "conf")
         self.tibia: subprocess.Popen = None
         self.position_cache = {}
         self.market_tab = "offers"
         self.market_reader: MarketMemoryReader = None
-        self.client_log = []
+        self.bot_log = []
+        self.character_name = ""
+        self.character_server = ""
+        self.game_log = ""
 
         # Load item ids from wiki, or from items.csv if wiki is down.
         try: 
@@ -61,9 +65,35 @@ class Client:
             if file.startswith("qipc_sharedmemory"):
                 os.remove(os.path.join("/tmp", file))
 
-        self.tibia: subprocess.Popen = subprocess.Popen([location])
+        # Start Tibia.
+        self.tibia: subprocess.Popen = subprocess.Popen([location], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        os.set_blocking(self.tibia.stdout.fileno(), False)
+
         time.sleep(5)
         self._update_tibia()
+
+    def get_tibia_process_output(self) -> str:
+        """Returns the output of the Tibia process so far, and decodes it to utf-8.
+
+        Returns:
+            str: The output of the Tibia process.
+        """
+        if self.tibia:
+            # Read line by line to avoid blocking.
+            output = self.game_log
+
+            while True:
+                line = self.tibia.stdout.readline().decode("utf-8")
+
+                if line:
+                    output += line
+                else:
+                    self.game_log += output
+                    break
+
+            return output
+        else:
+            return ""
 
     def _update_tibia(self):
         """
@@ -96,12 +126,25 @@ class Client:
         pyautogui.press("enter")
 
         # Go ingame.
-        character_position = self._wait_until_find("images/BotCharacter.png", cache=False)
-        pyautogui.doubleClick(character_position)
+        self._wait_until_find("images/CharacterSlot.png", click=True, cache=False)
+        bot_character_index = 0
+
+        # If desired, select another character than the first one.
+        for i in range(bot_character_index):
+            pyautogui.press("down")
+            time.sleep(0.1)
+
+        pyautogui.press("enter")
         
         # Wait until ingame.
         self._wait_until_find("images/Ingame.png", cache=False)
         self._add_to_log("Ingame.")
+
+        tibia_output = self.get_tibia_process_output()
+        self.character_name = tibia_output.split("Charakter \"")[-1].split("\"")[0]
+        self.character_server = tibia_output.split("Connected to gameserver ")[-1].split("\" \"")[-1].split("\"")[0]
+
+        self._add_to_log(f"Logged in as {self.character_name} in server {self.character_server}.")
 
     def exit_tibia(self):
         """
@@ -459,5 +502,5 @@ class Client:
         return (-1, -1)
     
     def _add_to_log(self, message: str):
-        self.client_log.append(message)
+        self.bot_log.append(message)
         print(message)

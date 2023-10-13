@@ -40,6 +40,7 @@ class Wiki:
         """
         Scrapes the event calendar from tibia.com and returns a list of EventData objects.
         """
+        # TODO: Consider reading ~/.local/share/CipSoft GmbH/Tibia/packages/Tibia/cache/eventschedule.json after logging in.
         event_data: List[EventData] = []
         response = requests.get("https://www.tibia.com/news/?subtopic=eventcalendar").text
         events = response.split("\"eventscheduletable\"")[-1].split("</table>")[0].split("<td style")[1:]
@@ -88,6 +89,8 @@ class Wiki:
         Returns:
             Tuple[Dict[int, str], Dict[str, int]]: A tuple containing a dictionary mapping item ids to item names, and a dictionary mapping item names to item ids.
         """
+        # TODO: Consider reading ~/.local/share/CipSoft GmbH/Tibia/packages/Tibia/assets/appearances-*.dat for item info.
+        # This is a protobuf file. https://otland.net/threads/tibia-11-dat-file-structure.246601/
         response = requests.get("https://tibia.fandom.com/api.php?action=parse&page=Item_IDs&format=json").json()
         response = response["parse"]["text"]["*"]
         

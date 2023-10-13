@@ -130,6 +130,10 @@ dmypy.json
 results/*.csv
 results/histories/*.csv
 src/Tibia
-*.png
+.screenshot*.png
+ai_image_input.png
+selection_showcase.png
+out*.txt
+*.csv
 
 /node_modules

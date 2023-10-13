@@ -1,12 +1,7 @@
 from tibia_wiki import Wiki
-import time
 import os
 import json
-import schedule
-import subprocess
 from datetime import datetime
-from git.repo import Repo
-import sys
 
 
 def write_marketable_items():
@@ -44,13 +39,18 @@ def do_market_search(email: str, password: str, tibia_location: str, results_loc
     def market_search():
         from tibia import Client
 
-        with open(os.path.join(results_location, "fullscan_tmp.csv"), "w+") as f:
+        client = Client()
+        client.start_game(tibia_location)
+        client.login_to_game(email, password)
+        scan_path = os.path.join(results_location, client.character_server)
+
+        # Create the directory for the server if it does not exist.
+        os.makedirs(scan_path, exist_ok=True)
+        os.makedirs(os.path.join(scan_path, "histories"), exist_ok=True)
+
+        with open(os.path.join(scan_path, "fullscan_ongoing.csv"), "w+") as f:
             f.write("Name,SellPrice,BuyPrice,AvgSellPrice,AvgBuyPrice,Sold,Bought,ActiveTraders\n")
             
-            client = Client()
-            client.start_game(tibia_location)
-            client.login_to_game(email, password)
-
             if not client.open_market():
                 client.exit_tibia()
                 return
@@ -58,17 +58,17 @@ def do_market_search(email: str, password: str, tibia_location: str, results_loc
             for category in range(1, 25):
                 try:
                     for item in client.crawl_market(category):
-                        with open(os.path.join(results_location, "histories", f"{item.name.lower()}.csv"), "a+") as h:
+                        with open(os.path.join(scan_path, "histories", f"{item.name.lower()}.csv"), "a+") as h:
                             h.write(item.history_string() + "\n")
                         f.write(f"{item}\n")
                 except Exception as e:
                     print(f"Error while crawling market: {e}")
                     break
             
+            # Replace full scan with the ongoing one.
+            os.replace(os.path.join(scan_path, "fullscan_ongoing.csv"), os.path.join(scan_path, "fullscan.csv"))
+            
         client.exit_tibia()
-
-        os.replace(os.path.join(results_location, "fullscan_tmp.csv"), os.path.join(results_location, "fullscan.csv"))
-        push_to_github(results_location)
 
     if virtual_display:
         from pyvirtualdisplay import Display
@@ -80,43 +80,11 @@ def do_market_search(email: str, password: str, tibia_location: str, results_loc
     else:
         market_search()
 
-    turn_off_display()
-
-def push_to_github(results_repo_location: str):
-    """
-    Pushes the new market data from the results repo to GitHub.
-    """
-    try:
-        repo = Repo(os.path.join(results_repo_location, ".git"))
-        repo.git.add(all=True)
-        repo.index.commit("Update market data")
-        origin = repo.remote("origin")
-        origin.push()
-    except Exception as e:
-        print(f"Error while pushing to git: {e}")
-
-def turn_off_display():
-    """Turns off the display by using xset.
-    The display will turn on again when there is mouse or keyboard activity.
-    This is done to save power.
-    """
-    os.system("xset dpms force off")
-
 if __name__ == "__main__":
     with open("config/config.json", "r") as c:
         config = json.loads(c.read())
 
     # Ensure that the results location exists.
     os.makedirs(config["resultsLocation"], exist_ok=True)
-
-    if (len(sys.argv) > 1 and sys.argv[1].lower() == "y") or (len(sys.argv) == 1 and input("Do you want to do a run right now? (y/n): ").lower() == "y"):
-        do_market_search(config["email"], config["password"], config["tibiaLocation"], config["resultsLocation"], config["useVirtualDisplay"], config["showVirtualDisplay"])
     
-    turn_off_display()
-
-    schedule.every().day.at("18:00:00").do(lambda: do_market_search(config["email"], config["password"], config["tibiaLocation"], config["resultsLocation"], config["useVirtualDisplay"], config["showVirtualDisplay"]))
-    schedule.every().day.at("06:00:00").do(lambda: do_market_search(config["email"], config["password"], config["tibiaLocation"], config["resultsLocation"], config["useVirtualDisplay"], config["showVirtualDisplay"]))
-    
-    while True:
-        schedule.run_pending()
-        time.sleep(60)
+    do_market_search(config["email"], config["password"], config["tibiaLocation"], config["resultsLocation"], config["useVirtualDisplay"], config["showVirtualDisplay"])
