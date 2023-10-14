@@ -33,6 +33,9 @@ def write_events(results_location: str):
                 # Write all events that are in the past up until today to the events file.
                 # This is done so that spontaneous events that are added to the schedule are not missed.
                 event_file.write("\n".join([event.__str__() for event in events]) + "\n")
+
+                for event in events:
+                    mongo_manager.add_event(event)
     except Exception as e:
         print(f"Writing events failed: {e}")
 

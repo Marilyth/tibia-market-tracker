@@ -1,13 +1,15 @@
 import pymongo
 from utils.market_values import MarketValues
+from utils.tibia_wiki import EventData
 from typing import List
 import os
 from tqdm import tqdm
 
 
 class ItemPricesCollection:
-    def __init__(self, name: str):
+    def __init__(self, name: str, id: int):
         self.name = name
+        self.id = id
         self.history = {}
 
     @staticmethod
@@ -22,6 +24,7 @@ class ItemPricesCollection:
         """
         value_dict = market_values.__dict__
         value_dict.pop("name")
+        value_dict.pop("id")
 
         return value_dict
     
@@ -36,7 +39,7 @@ class ItemPricesCollection:
         for server in self.history:
             history[server] = [ItemPricesCollection.MarketValues_to_mongo_dict(market_value) for market_value in self.history[server]]
 
-        return {"name": self.name, "history": history}
+        return {"name": self.name, "id": self.id, "history": history}
 
 
 class MongoManager:
@@ -46,6 +49,22 @@ class MongoManager:
         self.item_prices = self.database["ItemPrices"]
         self.api_keys = self.database["APIKeys"]
         self.access_logs = self.database["AccessLogs"]
+        self.events = self.database["Events"]
+
+    def _add_events_from_file_system(self):
+        """Adds the events from the file system to the database.
+        """
+        path = "./src/results/events.csv"
+
+        with open(path, "r") as f:
+            for line in f.read().split("\n"):
+                if line == "":
+                    continue
+                
+                date, events = line.split(",", 1)
+                events = events.split(",")
+
+                self.add_event(date, events)
 
     def _add_from_file_system(self):
         """Adds the market values from the file system to the database.
@@ -63,7 +82,7 @@ class MongoManager:
                 # Add histories.
                 with open(os.path.join(path, server, "histories", file), "r") as f:
                     item_name = file[:-4]
-                    item_values[item_name] = ItemPricesCollection(item_name)
+                    item_values[item_name] = ItemPricesCollection(item_name, -1)
                     item_values[item_name].history[server] = []
 
                     # Skip first line, because it is gibberish often.
@@ -102,6 +121,24 @@ class MongoManager:
         
         self.api_keys.insert_one({"api_key": api_key})
 
+    def add_event(self, event: EventData):
+        """Adds the given event to the database.
+
+        Args:
+            date (str): The date of the event.
+            events (List[str]): The events to add.
+        """
+        event.events = [event for event in event.events if event]
+
+        if event.events:
+            date = event.date.strftime('%Y.%m.%d')
+            event = self.events.find_one({"date": date})
+
+            if not event:
+                self.events.insert_one({"date": date, "events": event.events})
+            else:
+                self.events.update_one({"date": date}, {"$set": {"events": event.events}})
+
     def get_api_keys(self) -> List[str]:
         """Gets the api keys from the database.
 
@@ -134,14 +171,18 @@ class MongoManager:
             return
 
         # Check if the item already exists in the database. Load the name and collection NAMES only, not their values.
-        item = self.item_prices.find_one({"name": market_values.name.lower()}, {"name": 1, "history": 1})
+        item = self.item_prices.find_one({"name": market_values.name.lower()}, {"name": 1, "id": 1, "history": 1})
 
         if item:
             # Add the market values to the history[server] list.
             self.item_prices.update_one({"name": market_values.name.lower()}, {"$push": {f"history.{server}": ItemPricesCollection.MarketValues_to_mongo_dict(market_values) } } )
+            
+            # Also update the item id if it differs.
+            if item["id"] != market_values.id:
+                self.item_prices.update_one({"name": market_values.name.lower()}, {"$set": {"id": market_values.id} } )
         else:
             # Add the item to the database.
-            collection = ItemPricesCollection(market_values.name.lower())
+            collection = ItemPricesCollection(market_values.name.lower(), market_values.id)
             collection.history[server] = [market_values]
             self.item_prices.insert_one(collection.to_mongo_dict())
 
@@ -186,3 +227,11 @@ class MongoManager:
             return [item for name, item in items]
         else:
             return []
+        
+    def get_events(self) -> List[dict]:
+        """Gets all events from the database.
+
+        Returns:
+            List[EventData]: The events from the database.
+        """
+        return list(self.events.find({}, {"_id": 0}))

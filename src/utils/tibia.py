@@ -228,7 +228,6 @@ class Client:
                 self.market_reader.reset()
                 raise Exception("Failed to find memory addresses after 5 iterations. Aborted.")
                 
-
         # Fill memory with timestamps to know if an offer in memory still belongs to the current item.
         self.search_item("tibia coins")
 
@@ -257,7 +256,6 @@ class Client:
                     self.wiggle()
                     next_wiggle = time.time() + 60 * 13
                     self.open_market()
-                    
 
                     # Find memory addresses if they haven't been found yet.
                     if not self.market_reader.has_finished_filtering:
@@ -410,7 +408,7 @@ class Client:
                     self.wiggle()
                     self.open_market()
                     self._find_memory_addresses()
-                    values = self.search_item(name)
+                    values = self.search_item(name, id)
 
                 return values
             
@@ -425,7 +423,7 @@ class Client:
                 buy_offer, sell_offer, approx_offers = scan_offers()
                 self.market_tab = "offers"
 
-            values = MarketValues(name, time.time(), sell_offer, buy_offer, int(interpreted_statistics[6]), int(interpreted_statistics[2]), int(interpreted_statistics[4]), int(interpreted_statistics[0]), int(interpreted_statistics[5]), int(interpreted_statistics[3]), approx_offers)
+            values = MarketValues(name, time.time(), sell_offer, buy_offer, int(interpreted_statistics[6]), int(interpreted_statistics[2]), int(interpreted_statistics[4]), int(interpreted_statistics[0]), int(interpreted_statistics[5]), int(interpreted_statistics[3]), approx_offers, id if id else None)
             self.market_reader.find_current_memory(buy_offer, sell_offer, int(interpreted_statistics[1]), int(interpreted_statistics[5]), id)
             
             return values
@@ -435,7 +433,7 @@ class Client:
             self._add_to_log(f"Market search failed for {name}: {e}")
             traceback.print_exc()
 
-            return MarketValues(name, time.time(), -1, -1, -1, -1, -1, -1, -1, -1, -1)
+            return MarketValues(name, time.time(), -1, -1, -1, -1, -1, -1, -1, -1, -1, -1)
 
     def close_market(self):
         """

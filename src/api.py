@@ -174,6 +174,14 @@ async def get_item_history(request: Request, server: str, item: str, start_time:
     
     return {"last_updated": scan_time, "history": values}
 
+@app.get("/events")
+@limiter.limit("1/5seconds;10/minute")
+async def get_events(request: Request):
+    """Returns all tracked tibia events so far.
+    """
+    events = mongo_manager.get_events()
+
+    return {"events": events}
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8001)
