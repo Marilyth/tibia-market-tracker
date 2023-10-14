@@ -170,19 +170,22 @@ class MongoManager:
                 self.add_market_value(server, market_value)
             return
 
+        item_name = market_values.name.lower()
+        item_id = market_values.id
+
         # Check if the item already exists in the database. Load the name and collection NAMES only, not their values.
-        item = self.item_prices.find_one({"name": market_values.name.lower()}, {"name": 1, "id": 1, "history": 1})
+        item = self.item_prices.find_one({"name": item_name}, {"name": 1, "history": 1})
 
         if item:
             # Add the market values to the history[server] list.
-            self.item_prices.update_one({"name": market_values.name.lower()}, {"$push": {f"history.{server}": ItemPricesCollection.MarketValues_to_mongo_dict(market_values) } } )
+            self.item_prices.update_one({"name": item_name}, {"$push": {f"history.{server}": ItemPricesCollection.MarketValues_to_mongo_dict(market_values) } } )
             
-            # Also update the item id if it differs.
-            if item["id"] != market_values.id:
-                self.item_prices.update_one({"name": market_values.name.lower()}, {"$set": {"id": market_values.id} } )
+            # Also update the item id if it doesn't exist yet.
+            if "id" not in item or item["id"] == -1:
+                self.item_prices.update_one({"name": item_name}, {"$set": {"id": item_id} } )
         else:
             # Add the item to the database.
-            collection = ItemPricesCollection(market_values.name.lower(), market_values.id)
+            collection = ItemPricesCollection(item_name, item_id)
             collection.history[server] = [market_values]
             self.item_prices.insert_one(collection.to_mongo_dict())
 
@@ -213,10 +216,12 @@ class MongoManager:
         Returns:
             List[dict]: The market values of the items which match the given criteria.
         """
+        query = {f"history.{server}": {"$exists": True}}
+
         # Only retrieve the last entry of the history[server]'s history. Don't include the rest of the history, and don't include other servers.
         projection = {"name": 1, "history": {server: {"$slice": -1}}}
 
-        items = self.item_prices.find({}, projection)
+        items = self.item_prices.find(query, projection)
 
         if items:
             items = list(items)

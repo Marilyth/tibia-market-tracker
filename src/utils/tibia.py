@@ -160,7 +160,9 @@ class Client:
         self._add_to_log("Opening market")
 
         if not self.market_reader:
-            self.market_reader = MarketMemoryReader()
+            ids = MarketMemoryReader.get_process_id("client")
+            print(ids)
+            self.market_reader = MarketMemoryReader(ids[-1])
             
         def try_open_market() -> bool:
             x, y = self._wait_until_find("images/SuccessDepotTile.png", timeout=5, cache=False, exact=True)
@@ -307,7 +309,8 @@ class Client:
                     pyautogui.PAUSE = 0.01
 
                     try:
-                        values, id, was_duplicate = self.market_reader.get_current_market_values("Unknown")
+                        values, was_duplicate = self.market_reader.get_current_market_values("Unknown")
+                        id = values.id
                     except Exception as e:
                         self._add_to_log(f"category: {category_index}, index: {starting_index}, Error: {e}")
                         item_fail_count += 1
@@ -400,8 +403,8 @@ class Client:
 
             if self.market_reader.has_finished_filtering:
                 pyautogui.PAUSE = 0.01
-                values, id, was_duplicate = self.market_reader.get_current_market_values(name, True)
-                item_name = self.id_to_name[id] if id in self.id_to_name else name
+                values, was_duplicate = self.market_reader.get_current_market_values(name, True)
+                item_name = self.id_to_name[values.id] if values.id in self.id_to_name else name
                 values.name = item_name
                 if not values:
                     self.close_market()

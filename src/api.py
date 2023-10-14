@@ -109,7 +109,7 @@ async def middleware(request: Request, call_next):
     return response
 
 # Set up API endpoints.
-@app.get("/market_values", dependencies=[Depends(api_key_auth)])
+@app.get("/market_values")
 @limiter.limit("1/5seconds;10/minute")
 async def get_market_values(request: Request, server: str, name: str = None, max_sell_price: int = None, min_buy_price: int = None, max_buy_price: int = None,
                             min_sell_price: int = None, max_flippers: int = None, min_flippers: int = None, skip: int = 0, limit: int = 100):

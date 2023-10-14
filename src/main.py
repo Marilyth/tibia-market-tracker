@@ -4,8 +4,9 @@ import json
 from datetime import datetime
 from utils.mongo_manager import MongoManager
 from tqdm import tqdm
+import sys
 
-
+dry_run: bool = False
 mongo_manager: MongoManager = None
 
 def write_marketable_items():
@@ -28,6 +29,9 @@ def write_events(results_location: str):
                     last_date = datetime.strptime(previous_events[-1].split(",")[0], "%Y.%m.%d")
 
         with open(os.path.join(results_location, "events.csv"), "a+") as event_file:
+            if dry_run:
+                return
+
             events = [event for event in Wiki().get_events(last_date) if event.date <= datetime.today()]
             if events:
                 # Write all events that are in the past up until today to the events file.
@@ -65,17 +69,23 @@ def do_market_search(email: str, password: str, tibia_location: str, results_loc
             for category in tqdm(range(1, 25), desc="Category"):
                 try:
                     for item in tqdm(client.crawl_market(category), desc="Updating item values"):
-                        with open(os.path.join(scan_path, "histories", f"{item.name.lower()}.csv"), "a+") as h:
-                            h.write(item.history_string() + "\n")
-                        f.write(f"{item}\n")
+                        if not dry_run:
+                            with open(os.path.join(scan_path, "histories", f"{item.name.lower()}.csv"), "a+") as h:
+                                h.write(item.history_string() + "\n")
+                            f.write(f"{item}\n")
 
-                        mongo_manager.add_market_value(client.character_server, item)
+                            mongo_manager.add_market_value(client.character_server, item)
                 except Exception as e:
+                    # print the stacktrace
+                    import traceback
+                    traceback.print_exc()
+                    
                     print(f"Error while crawling market: {e}")
                     break
             
             # Replace full scan with the ongoing one.
-            os.replace(os.path.join(scan_path, "fullscan_ongoing.csv"), os.path.join(scan_path, "fullscan.csv"))
+            if not dry_run:
+                os.replace(os.path.join(scan_path, "fullscan_ongoing.csv"), os.path.join(scan_path, "fullscan.csv"))
             
         client.exit_tibia()
 
@@ -93,6 +103,13 @@ def do_market_search(email: str, password: str, tibia_location: str, results_loc
 if __name__ == "__main__":
     with open(os.path.join(os.path.dirname(__file__), "config", "config.json"), "r") as c:
         config = json.loads(c.read())
+
+    # If email and password are passed as arguments, use those instead of the ones in the config.
+    # This makes tracking many servers easier.
+    if len(sys.argv) > 1:
+        config["email"] = sys.argv[1]
+    if len(sys.argv) > 2:
+        config["password"] = sys.argv[2]
 
     mongo_manager = MongoManager(config["mongodbConnectionString"])
 

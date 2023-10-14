@@ -4,11 +4,12 @@ from datetime import datetime, timedelta
 from utils.memory_reader import MemoryReader
 import ctypes
 from utils.market_values import MarketValues
+import psutil
 
 
 class MarketMemoryReader:
-    def __init__(self):
-        self.buy_details_reader: MemoryReader = MemoryReader(p_name="client")
+    def __init__(self, p_id: int):
+        self.buy_details_reader: MemoryReader = MemoryReader(p_id=p_id)
         self.sell_details_reader: MemoryReader = MemoryReader(process=self.buy_details_reader.process)
         self.buy_offer_reader: MemoryReader = MemoryReader(process=self.buy_details_reader.process)
         self.sell_offer_reader: MemoryReader = MemoryReader(process=self.buy_details_reader.process)
@@ -22,6 +23,23 @@ class MarketMemoryReader:
         self.last_id = 0
         
         self.has_finished_filtering = False
+
+    @staticmethod
+    def get_process_id(process_name: str) -> List[int]:
+        """Gets the process ids of the process with the given name.
+
+        Args:
+            process_name (str): The name of the process.
+
+        Returns:
+            int: The process id.
+        """
+        pids = []
+        for proc in psutil.process_iter():
+            if proc.name() == process_name:
+                pids.append(proc.pid)
+
+        return pids
 
     def reset(self):
         """Resets the memory reader to the initial state.

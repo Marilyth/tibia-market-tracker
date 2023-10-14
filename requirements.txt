@@ -12,3 +12,4 @@ uvicorn
 slowapi
 pymongo
 tqdm
+psutil

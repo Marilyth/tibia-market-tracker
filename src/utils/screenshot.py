@@ -26,7 +26,7 @@ def process_image(image: Image.Image, relative_box: Tuple[int, int, int, int] = 
 
     draw = ImageDraw.Draw(image)
     draw.rectangle(crop_box, outline="black")
-    image.save("selection_showcase.png")
+    #image.save("selection_showcase.png")
 
     img = np.asarray(cropped_image, dtype="uint8")
 
@@ -41,7 +41,7 @@ def process_image(image: Image.Image, relative_box: Tuple[int, int, int, int] = 
         img = cv2.threshold(img[1], 128, 255, cv2.THRESH_BINARY_INV)
 
     cropped_image = Image.fromarray(img[1])
-    cropped_image.save("ai_image_input.png")
+    #cropped_image.save("ai_image_input.png")
 
     return cropped_image
 
