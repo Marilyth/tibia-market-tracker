@@ -4,6 +4,7 @@ from utils.tibia_wiki import EventData
 from typing import List
 import os
 from tqdm import tqdm
+from datetime import datetime
 
 
 class ItemPricesCollection:
@@ -156,7 +157,7 @@ class MongoManager:
             param (str): The param of the request.
             status (int): The status code of the request.
         """
-        self.access_logs.insert_one({"ip": ip, "endpoint": endpoint, "parameters": parameters, "status": status})
+        self.access_logs.insert_one({"ip": ip, "time": datetime.now().isoformat(), "endpoint": endpoint, "parameters": parameters, "status": status})
 
     def add_market_value(self, server: str, market_values: MarketValues):
         """Adds the market values to the database.
