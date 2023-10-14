@@ -1,8 +1,9 @@
 from utils.market_values import MarketValues
 from utils.mongo_manager import MongoManager
 import uvicorn
-import fastapi
+from fastapi import FastAPI, Response, Request, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordBearer
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -15,7 +16,8 @@ import time
 
 # Set up the API.
 limiter = Limiter(key_func=get_remote_address, default_limits=["1/2seconds"])
-app = fastapi.FastAPI()
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+app = FastAPI()
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(
@@ -34,30 +36,16 @@ with open(os.path.join(os.path.dirname(__file__), "config", "config.json"), "r")
     config = json.loads(c.read())
 
 mongo_manager: MongoManager = MongoManager(config["mongodbConnectionString"])
+mongo_manager.add_api_key("demo")
+api_keys = mongo_manager.get_api_keys()
 
-# Helper methods.
-def does_server_exist(server: str):
-    """Checks if the given server exists in the results location.
-
-    Args:
-        server (str): The server to check.
-
-    Returns:
-        bool: True if the server exists, False otherwise.
-    """
-    return os.path.exists(os.path.join(config["resultsLocation"], server))
-
-def does_item_exist(server: str, name: str):
-    """Checks if the given item exists in the results location.
-
-    Args:
-        server (str): The server of the item.
-        name (str): The name of the item.
-
-    Returns:
-        bool: True if the item exists, False otherwise.
-    """
-    return does_server_exist and os.path.exists(os.path.join(config["resultsLocation"], server, "histories", f"{name.lower()}.csv"))
+# Helpers.
+def api_key_auth(api_key: str = Depends(oauth2_scheme)):
+    if api_key not in api_keys:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Forbidden"
+        )
 
 async def get_fullscan_async(server: str):
     """Gets the fullscan for the given server.
@@ -68,26 +56,18 @@ async def get_fullscan_async(server: str):
     Returns:
         list: The fullscan for the given server.
     """
-    if not does_server_exist(server):
-        return {"error": "Server does not exist, or has no data."}
-
-    # Check if the fullscan is cached. If not, read it from disk.
+    # Check if the fullscan is cached and not old. If not, read it from mongodb.
     try:
         await fullscan_lock.acquire()
-        fullscan_time = os.path.getmtime(os.path.join(config["resultsLocation"], server, "fullscan.csv"))
 
-        if server not in full_scans or full_scans[server][0] < fullscan_time:
-            with open(os.path.join(config["resultsLocation"], server, "fullscan.csv"), "r") as f:
-                values = []
-                for line in f.read().split("\n"):
-                    if line == "":
-                        continue
-                    
-                    # Ignore header.
-                    if not line.startswith("Name,"):
-                        values.append(MarketValues.from_string(line))
+        if server not in full_scans or time.time() - full_scans[server][0] + 3600 <= 0:
+            values = mongo_manager.get_latest_market_values(server)
 
-                full_scans[server] = (fullscan_time, values)
+            if not values:
+                return None, []
+            fullscan_time = values[-1]["time"]
+
+            full_scans[server] = (fullscan_time, values)
     except Exception as e:
         print(f"Error while reading fullscan: {e}")
     finally:
@@ -95,48 +75,18 @@ async def get_fullscan_async(server: str):
 
     return full_scans[server]
 
-async def get_item_history_async(server: str, item: str):
-    if not does_server_exist(server):
-        return {"error": "Server does not exist, or has no data."}
-    
-    if not does_item_exist(server, item):
-        return {"error": "Item does not exist, or has no data."}
-
-    values = []
-    scan_time = os.path.getmtime(os.path.join(config["resultsLocation"], server, "histories", f"{item.lower()}.csv"))
-
-    with open(os.path.join(config["resultsLocation"], server, "histories", f"{item.lower()}.csv"), "r") as f:
-        for line in f.read().split("\n"):
-            if line == "":
-                continue
-            
-            # Convert csv line to MarketValues object.
-            value = MarketValues.from_history_string(line)
-            value.name = item
-            values.append(value)
-    
-    return scan_time, values
-
-def log_request(request: fastapi.Request):
-    """Logs the request being made.
-
-    Args:
-        request (fastapi.Request): The request being made.
-    """
-    print(f"Incoming request from {request.client.host}: {request.method} {request.url}")
-
-def log_request_result(request: fastapi.Request, result: fastapi.Response):
+def log_request_result(request: Request, result: Response):
     """Logs the result of the request being made.
 
     Args:
         request (fastapi.Request): The request being made.
         result (fastapi.Response): The result of the request.
     """
-    print(f"Request from {request.client.host}: {request.method} {request.url} resulted in {result.status_code}")
+    mongo_manager.add_access_log(request.client.host, request.url.path, request.url.query, result.status_code)
 
 # Middleware.
 @app.middleware("http")
-async def middleware(request: fastapi.Request, call_next):
+async def middleware(request: Request, call_next):
     """Performs actions before and after the request is made.
 
     Args:
@@ -147,7 +97,6 @@ async def middleware(request: fastapi.Request, call_next):
         The result of the next function.
     """
     # Before.
-    log_request(request)
     start_time = time.time()
 
     response = await call_next(request)
@@ -160,9 +109,9 @@ async def middleware(request: fastapi.Request, call_next):
     return response
 
 # Set up API endpoints.
-@app.get("/market_values")
+@app.get("/market_values", dependencies=[Depends(api_key_auth)])
 @limiter.limit("1/5seconds;10/minute")
-async def get_market_values(request: fastapi.Request, server: str, name: str = None, max_sell_price: int = None, min_buy_price: int = None, max_buy_price: int = None,
+async def get_market_values(request: Request, server: str, name: str = None, max_sell_price: int = None, min_buy_price: int = None, max_buy_price: int = None,
                             min_sell_price: int = None, max_flippers: int = None, min_flippers: int = None, skip: int = 0, limit: int = 100):
     """Returns the market values of the items which match the given criteria.
 
@@ -181,40 +130,45 @@ async def get_market_values(request: fastapi.Request, server: str, name: str = N
     filters = []
 
     if name:
-        filters.append(lambda value: name.lower() in value.name.lower())
+        filters.append(lambda value: name.lower() in value["name"].lower())
     if max_sell_price:
-        filters.append(lambda value: value.sell_offer <= max_sell_price)
-    if min_buy_price:
-        filters.append(lambda value: value.buy_offer >= min_buy_price)
-    if max_buy_price:
-        filters.append(lambda value: value.buy_offer <= max_buy_price)
+        filters.append(lambda value: value["sell_offer"] <= max_sell_price)
     if min_sell_price:
-        filters.append(lambda value: value.sell_offer >= min_sell_price)
+        filters.append(lambda value: value["sell_offer"] >= min_sell_price)
+    if min_buy_price:
+        filters.append(lambda value: value["buy_offer"] >= min_buy_price)
+    if max_buy_price:
+        filters.append(lambda value: value["buy_offer"] <= max_buy_price)
     if max_flippers:
-        filters.append(lambda value: value.active_traders <= max_flippers)
+        filters.append(lambda value: value["active_traders"] <= max_flippers)
     if min_flippers:
-        filters.append(lambda value: value.active_traders >= min_flippers)
+        filters.append(lambda value: value["active_traders"] >= min_flippers)
 
     values = [value for value in values if all([filter(value) for filter in filters])]
 
     return {"last_updated": last_updated, "total_results": len(values), "values": values[skip:skip+limit]}
 
-@app.get("/item_history")
+@app.get("/item_history", dependencies=[Depends(api_key_auth)])
 @limiter.limit("1/5seconds;10/minute")
-async def get_item_history(request: fastapi.Request, server: str, item: str, start_time: float = None, end_time: float = None):
+async def get_item_history(request: Request, server: str, item: str, start_time: float = None, end_time: float = None):
     """Returns the history of the given item.
 
     Args:
         server (str): The server of the item.
         item (str): The name of the item.
     """
-    scan_time, values = await get_item_history_async(server, item)
+    values = mongo_manager.get_item_history(item, server)
+
+    if not values:
+        return {"error": "Item does not exist, or has no data."}
+
+    scan_time = values[-1]["time"]
     filters = []
 
     if start_time:
-        filters.append(lambda value: value.time >= start_time)
+        filters.append(lambda value: value["time"] >= start_time)
     if end_time:
-        filters.append(lambda value: value.time <= end_time)
+        filters.append(lambda value: value["time"] <= end_time)
 
     values = [value for value in values if all([filter(value) for filter in filters])]
     

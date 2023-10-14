@@ -40,10 +40,12 @@ class ItemPricesCollection:
 
 
 class MongoManager:
-    def __init__(self, connection_string: str, database_name: str = "TibiaMarketTracker", collection_name: str = "ItemPrices"):
+    def __init__(self, connection_string: str, database_name: str = "TibiaMarketTracker"):
         self.client = pymongo.MongoClient(connection_string)
         self.database = self.client[database_name]
-        self.collection = self.database[collection_name]
+        self.item_prices = self.database["ItemPrices"]
+        self.api_keys = self.database["APIKeys"]
+        self.access_logs = self.database["AccessLogs"]
 
     def _add_from_file_system(self):
         """Adds the market values from the file system to the database.
@@ -86,7 +88,38 @@ class MongoManager:
                         item_values[market_values.name].history[server].append(market_values)
 
             for item in tqdm(item_values, desc=f"Adding items to database"):
-                self.collection.insert_one(item_values[item].to_mongo_dict())
+                self.item_prices.insert_one(item_values[item].to_mongo_dict())
+
+    def add_api_key(self, api_key: str):
+        """Adds the given api key to the database.
+
+        Args:
+            api_key (str): The api key to add.
+        """
+        # Check if the api key already exists in the database.
+        if self.api_keys.find_one({"api_key": api_key}):
+            return
+        
+        self.api_keys.insert_one({"api_key": api_key})
+
+    def get_api_keys(self) -> List[str]:
+        """Gets the api keys from the database.
+
+        Returns:
+            List[str]: The api keys from the database.
+        """
+        return [api_key["api_key"] for api_key in self.api_keys.find()]
+    
+    def add_access_log(self, ip: str, endpoint: str, parameters: str, status: int):
+        """Adds the given access log to the database.
+
+        Args:
+            ip (str): The ip of the request.
+            endpoint (str): The endpoint of the request.
+            param (str): The param of the request.
+            status (int): The status code of the request.
+        """
+        self.access_logs.insert_one({"ip": ip, "endpoint": endpoint, "parameters": parameters, "status": status})
 
     def add_market_value(self, server: str, market_values: MarketValues):
         """Adds the market values to the database.
@@ -101,16 +134,16 @@ class MongoManager:
             return
 
         # Check if the item already exists in the database. Load the name and collection NAMES only, not their values.
-        item = self.collection.find_one({"name": market_values.name.lower()}, {"name": 1, "history": 1})
+        item = self.item_prices.find_one({"name": market_values.name.lower()}, {"name": 1, "history": 1})
 
         if item:
             # Add the market values to the history[server] list.
-            self.collection.update_one({"name": market_values.name.lower()}, {"$push": {f"history.{server}": ItemPricesCollection.MarketValues_to_mongo_dict(market_values) } } )
+            self.item_prices.update_one({"name": market_values.name.lower()}, {"$push": {f"history.{server}": ItemPricesCollection.MarketValues_to_mongo_dict(market_values) } } )
         else:
             # Add the item to the database.
             collection = ItemPricesCollection(market_values.name.lower())
             collection.history[server] = [market_values]
-            self.collection.insert_one(collection.to_mongo_dict())
+            self.item_prices.insert_one(collection.to_mongo_dict())
 
     def get_item_history(self, item: str, server: str) -> List[dict]:
         """Gets the history of the item on the given server.
@@ -123,41 +156,33 @@ class MongoManager:
             List[MarketValues]: The history of the item on the given server.
         """
         # Load only the requested server's history.
-        item = self.collection.find_one({"name": item.lower()}, {"history": {server.lower(): 1}})
+        item = self.item_prices.find_one({"name": item.lower()}, {"history": {server: 1}})
 
         if item:
-            return item["history"][server.lower()]
+            return item["history"][server]
         else:
             return []
         
-    def get_latest_market_values(self, server: str, name: str = None, max_sell_price: int = None, min_buy_price: int = None, max_buy_price: int = None,
-                    min_sell_price: int = None, max_flippers: int = None, min_flippers: int = None, order_by: str = None, ascending: bool = True) -> List[dict]:
+    def get_latest_market_values(self, server: str) -> List[dict]:
         """Gets the market values of the items which match the given criteria.
 
         Args:
             server (str): The server of the item.
-            name (str): The name of the item.
-            max_sell_price (int): The maximum sell price of the item.
-            min_buy_price (int): The minimum buy price of the item.
-            max_buy_price (int): The maximum buy price of the item.
-            min_sell_price (int): The minimum sell price of the item.
-            max_flippers (int): The maximum number of flippers of the item.
-            min_flippers (int): The minimum number of flippers of the item.
-            order_by (str): The field to order by.
-            ascending (bool): Whether to sort ascending or descending.
         
         Returns:
             List[dict]: The market values of the items which match the given criteria.
         """
-        # Load only the requested server's history.
-        query = {"history": {server.lower(): {"$exists": True}}}
-
         # Only retrieve the last entry of the history[server]'s history. Don't include the rest of the history, and don't include other servers.
-        projection = {"name": 1, "history": {server.lower(): {"$slice": -1}}}
+        projection = {"name": 1, "history": {server: {"$slice": -1}}}
 
-        items = self.collection.find(query, projection)
+        items = self.item_prices.find({}, projection)
 
         if items:
-            return list(items)
+            items = list(items)
+            items = [(item["name"], item["history"][server][0]) for item in items if len(item["history"][server]) > 0]
+            for name, item in items:
+                item["name"] = name
+
+            return [item for name, item in items]
         else:
             return []
