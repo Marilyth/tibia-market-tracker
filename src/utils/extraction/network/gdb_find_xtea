@@ -1,0 +1,5 @@
+commands
+x/4xw $rdi
+quit
+end
+continue
