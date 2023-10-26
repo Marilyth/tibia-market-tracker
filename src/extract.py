@@ -8,7 +8,7 @@ import sys
 import traceback
 from install_tibia import install_tibia, download_package
 
-dry_run: bool = True
+dry_run: bool = False
 mongo_manager: MongoManager = None
 
 def write_marketable_items():

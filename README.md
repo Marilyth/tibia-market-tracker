@@ -10,4 +10,4 @@ A tool to keep track of Tibia market prices over time
 The main.py runs a full market search on the first character of the provided account.
 To automate the script execution, add a cron job (sudo crontab -e) using something like
 
-0 6,18 * * * export DISPLAY=':0' && xhost + && cd /path/to/src && python3 main.py > logs/out_$(date +\%H-\%M--\%d-\%m-\%Y).txt
+0 20 * * * export DISPLAY=':0' && xhost + && cd /home/may/Desktop/tibia-market-tracker-bot/src && ./kill_trackers.sh && python3 extract.py > logs/out_$(date +\%Y-\%m-\%d--\%H-\%M>
