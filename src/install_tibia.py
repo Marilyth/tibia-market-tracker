@@ -51,8 +51,8 @@ def install_tibia():
         import pyautogui
         from utils.client import Client
         pyautogui._pyautogui_x11._display = Xlib.display.Display(os.environ['DISPLAY'])
-        client = Client()
-        client.start_game("Tibia/Tibia")
+        client = Client("./Tibia/Tibia", None, None)
+        client.start_game()
         client.exit_tibia()
 
 if __name__ == "__main__":

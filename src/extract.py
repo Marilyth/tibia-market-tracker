@@ -48,15 +48,15 @@ def write_events(results_location: str):
         print(f"Writing events failed: {e}")
 
 
-def do_market_search(email: str, password: str, tibia_location: str, results_location: str, virtual_display: bool, virtual_display_visible: bool):
-    write_events(results_location)
+def do_market_search(email: str, password: str, virtual_display: bool, virtual_display_visible: bool):
+    write_events("./results")
 
     def market_search():
         from utils.extraction.memory.memory_extraction import MemoryExtractor
         from utils.extraction.extractor import Extractor
         from utils.client import Client
 
-        client = Client(tibia_location, email, password)
+        client = Client("./Tibia/Tibia", email, password)
         extractor: Extractor = MemoryExtractor(client)
         extractor.setup()
 
@@ -97,6 +97,6 @@ if __name__ == "__main__":
     mongo_manager = MongoManager(config["mongodbConnectionString"])
 
     # Ensure that the results location exists.
-    os.makedirs(config["resultsLocation"], exist_ok=True)
+    os.makedirs("./results", exist_ok=True)
 
-    do_market_search(config["email"], config["password"], config["tibiaLocation"], config["resultsLocation"], config["useVirtualDisplay"], config["showVirtualDisplay"])
+    do_market_search(config["email"], config["password"], config["useVirtualDisplay"], config["showVirtualDisplay"])
