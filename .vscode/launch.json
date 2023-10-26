@@ -9,7 +9,7 @@
             "name": "Python: Main File",
             "type": "python",
             "request": "launch",
-            "program": "src/main.py",
+            "program": "src/extract.py",
             "console": "integratedTerminal",
             "env": {
                 "PYTHONPATH": "${workspaceFolder}/src:${workspaceFolder}/tests"

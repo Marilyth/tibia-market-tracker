@@ -1,5 +1,5 @@
-# Kills all running tracker processes, i.e. those that show up as "sudo python3 main.py" in the process list.
-pids=$(ps -aux | grep "sudo python3 main.py" | grep -v grep | awk '{print $2}')
+# Kills all running tracker processes, i.e. those that show up as "sudo python3 extract.py" in the process list.
+pids=$(ps -aux | grep "sudo python3 extract.py" | grep -v grep | awk '{print $2}')
 
 # Kill all tracker processes
 for pid in $pids
