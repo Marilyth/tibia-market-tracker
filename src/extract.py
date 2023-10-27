@@ -60,14 +60,15 @@ def do_market_search(email: str, password: str, virtual_display: bool, virtual_d
         extractor: Extractor = MemoryExtractor(client)
         extractor.setup()
 
+        market_values = extractor.extract_market_values()
+        client.exit_tibia()
+
         # Create the directory for the server if it does not exist.
-        for item in tqdm(extractor.extract_market_values(), desc="Updating item values"):
+        for item in tqdm(market_values, desc="Updating item values"):
             print(item)
 
             if not dry_run:
                 mongo_manager.add_market_value(client.character_server, item)
-
-        client.exit_tibia()
 
     if virtual_display:
         from pyvirtualdisplay import Display
@@ -85,7 +86,6 @@ if __name__ == "__main__":
         config = json.loads(c.read())
 
     download_package()
-    install_tibia()
 
     # If email and password are passed as arguments, use those instead of the ones in the config.
     # This makes tracking many servers easier.
