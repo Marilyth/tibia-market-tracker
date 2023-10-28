@@ -77,6 +77,7 @@ async def get_fullscan_async(server: str):
             if not values:
                 return None, []
 
+            values = sorted(values, key=lambda x: (x["sell_offers"] + x["buy_offers"]) if "buy_offers" in x else 0, reverse=True)
             full_scans[server] = (time.time(), values)
     except Exception as e:
         print(f"Error while reading fullscan: {e}")
@@ -156,7 +157,6 @@ async def get_market_values(request: Request, server: str, name: str = None, max
         filters.append(lambda value: value["active_traders"] >= min_flippers)
 
     values = [value for value in values if all([filter(value) for filter in filters])]
-    values = sorted(values, key=lambda x: (x["sell_offers"] + x["buy_offers"]) if "buy_offers" in x else 0, reverse=True)
 
     return {"total_results": len(values), "values": values[skip:skip+limit]}
 
