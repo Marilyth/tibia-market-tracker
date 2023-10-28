@@ -20,7 +20,7 @@ RUN apt-get install -y libqt5gui5
 RUN python3 install_tibia.py
 
 # Run the command to start Tibia Market Tracker.
-CMD [ "python3", "main.py y" ]
+CMD [ "python3", "extract.py y" ]
 
 # Create this container with the tag "tibia-market-tracker" by running:
 # docker build -t tibia-market-tracker .
