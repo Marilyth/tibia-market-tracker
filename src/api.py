@@ -156,6 +156,7 @@ async def get_market_values(request: Request, server: str, name: str = None, max
         filters.append(lambda value: value["active_traders"] >= min_flippers)
 
     values = [value for value in values if all([filter(value) for filter in filters])]
+    values = sorted(values, key=lambda x: (x["sell_offers"] + x["buy_offers"]) if "buy_offers" in x else 0, reverse=True)
 
     return {"total_results": len(values), "values": values[skip:skip+limit]}
 
