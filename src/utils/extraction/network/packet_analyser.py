@@ -8,6 +8,7 @@ import time
 import sys
 import subprocess
 import os
+import traceback
 
 
 class PacketAnalyser:
@@ -33,7 +34,7 @@ class PacketAnalyser:
 
     def log(self, text: str):
         if self.output:
-            self.output.write(text)
+            self.output.write(text + "\n")
         else:
             print(text)
 
@@ -48,6 +49,8 @@ class PacketAnalyser:
 
         self.xtea = new(self.key_string, mode=MODE_ECB, rounds=self.rounds, endian="<" if self.byte_order == "little" else ">")
 
+        self.log(f"Key set to {key}.")
+        
         for packet in self.queue:
             self._decrypt_packet(packet)
 
@@ -99,13 +102,15 @@ class PacketAnalyser:
             packet (Packet): The packet to add.
         """
         try:
-            self.log(f"{packet.summary()}: {PacketAnalyser.bytes_to_readable_string(packet[Raw].load if Raw in packet else None)}\n")
+            #self.log(f"{packet.summary()}: {PacketAnalyser.bytes_to_readable_string(packet[Raw].load if Raw in packet else None)}\n")
 
             if self.key is None:
                 pass
             else:
                 self._decrypt_packet(packet[Raw].load if Raw in packet else None, packet["TCP"].sport == 7171 if "TCP" in packet else False)
         except Exception as e:
+            # Print stacktrace
+            traceback.print_exc()
             self.log(f"Error while decrypting packet: {e}")
         
     @staticmethod
@@ -135,10 +140,15 @@ class PacketAnalyser:
         data_str = PacketAnalyser.bytes_to_readable_string(data)
         
         # zlib does not work with Tibia packets, so use the zlib.net C# library.
-        decompressor_location = os.path.join(os.path.dirname(__file__), "..", "..", "..", "decompressor", "bin", "Debug", "net7.0", "decompressor.dll")
+        decompressor_location = os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "decompressor", "bin", "Debug", "net7.0", "decompressor.dll")
         response = subprocess.run(["dotnet", decompressor_location, data_str], capture_output=True)
         
         # Get output from stdout.
+        stderr = response.stderr.decode("utf-8")
+
+        if stderr:
+            raise Exception(f"Decompression failed: {stderr}")
+        
         response = response.stdout.decode("utf-8")
         byte_expressions = response.split(" ")
         
@@ -179,8 +189,6 @@ class PacketAnalyser:
         is_compressed = compression_flag & 0xC000 == 0xC000
         
         if is_compressed:
-            #print(", ".join([f"0x{byte:02x}" for byte in raw_data]))
-            #print(", ".join([f"0x{byte:02x}" for byte in payload]))
             decrypted_data = self.decompress_bytes(payload)
             payload = decrypted_data[2:]
         
