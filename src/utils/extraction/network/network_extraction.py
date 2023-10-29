@@ -14,7 +14,7 @@ class NetworkExtractor(Extractor):
         super().__init__(client)
         self.memory_extractor = MemoryExtractor(client)
         self.packet_sniffer = PacketSniffer()
-        self.packet_analyser = PacketAnalyser()
+        self.packet_analyser = PacketAnalyser(output=False)
         self.xtea_key = None
 
     def setup(self):
@@ -29,6 +29,11 @@ class NetworkExtractor(Extractor):
         if not self.client.open_market():
             self.client.exit_tibia()
             raise Exception("Failed to open market.")
+        
+        # Network extractor isn't done yet.
+        # For now, just print the decrypted packets and let the user interact.
+        while True:
+            time.sleep(1)
 
     def extract_market_values(self) -> List[MarketValues]:
         pass
