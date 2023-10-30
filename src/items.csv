@@ -998,6 +998,8 @@ Cask of Brown Ale (Item),8774
 Castle Flag,2019
 Castle Shield,3435
 Cat in a Basket,23452
+Cat's Food Mushroom,3916
+Cat's Food Mushrooms,3917
 Cat's Paw,5479
 Cateroide's Doll,22151
 Cateroide's Doll (Activated),22152
@@ -1100,6 +1102,7 @@ Chest,2482
 Chest Full of Witchcraft,43680
 Chest of Abundance,28946
 Chest of Drawers,2434
+Chest of Drawers (Quest),2434
 Chicken Feather,5890
 Chill Nettle,3870
 Chilli Con Carniphila,29412
@@ -1541,6 +1544,7 @@ Dead Goblin (Decaying Quest),22686
 Dead Goblin (Fresh Quest),22687
 Dead Goblin (Rotten Quest),22685
 Dead Holy Bog Frog,22693
+Dead Man's Saddle,3907
 Dead Rat (Oramond),21850
 Dead Snake (Item),4000
 Dead Tree (Birch),958
@@ -1651,6 +1655,7 @@ Destroy Field Rune,3148
 Devil Helmet,3356
 Devil's Tongue Flower,3899
 Devourer Core,23686
+Dew Kisser Flower,3894
 Dewberries,43892
 Dewberry Palm,43944
 Dewberry Palm Leaf,43894
@@ -2643,6 +2648,7 @@ Giant Dreadcoil,10737
 Giant Emerald,30060
 Giant Eye,10280
 Giant Footprint,2766
+Giant Glimmer Cap Mushroom,3920
 Giant Jungle Rose,3878
 Giant Pacifier,21199
 Giant Ruby,30059
@@ -2658,6 +2664,8 @@ Giant Sword,3281
 Giant Tentacle,27619
 Giant Topaz,32623
 Giant Tree,3807
+Giggle Mushroom,3914
+Giggle Mushrooms,3915
 Gilded Birthday Cup,24951
 Gilded Blessed Shield,37165
 Gilded Crown,34332
@@ -2691,6 +2699,8 @@ Glass Lens,39241
 Glass Tube,21766
 Glass of Goo,19371
 Gleaming Starlight Vial,25732
+Glimmer Cap Mushroom,3918
+Glimmer Cap Mushrooms,3919
 Glimmering Soil,941
 Glistening Bone,23522
 Glistening Stone,19810
@@ -2796,6 +2806,7 @@ Goblin Statue Kit,2804
 God Flowers,2981
 Goddess Statue,9449
 Godly Fireworks Rocket,37456
+Gold Blossom,3887
 Gold Coin,3031
 Gold Converter,23722
 Gold Cup,32921
@@ -3619,6 +3630,7 @@ Large Amphora,2904
 Large Amphora Kit,2805
 Large Basin,19095
 Large Berg Crystal (Pillar),19312
+Large Black Crystal,10797
 Large Candelabrum,8523
 Large Cauldron,2007
 Large Cauldron (Cobra),31287
@@ -4039,6 +4051,7 @@ Maxxen Santa,21952
 Maxxenius Head,29942
 Mead Horn,7141
 Mead Horn (Empty),7140
+Meadow Star,3890
 Mean Knight Sword,17109
 Mean Paladin Spear,17110
 Meandi,12580
@@ -4187,6 +4200,7 @@ Mortal Mace,31580
 Mortar,34366
 Mosaic,34003
 Moss,8500
+Moss Cap Mushroom,3909
 Mossmasher Figurine,35591
 Mossy Fallen Tree,3980
 Mossy Fallen Tree (Something),3978
@@ -4201,6 +4215,7 @@ Mouldy Cheese,3120
 Mouldy Powder,35596
 Mountain (Earth),1027
 Mountain (Wall),1116
+Mourning Mushroom,9896
 Mouthpiece for a Horn,20057
 Mr Jones's Piano,21372
 Mr. Punish's Handcuffs,6537
@@ -4209,6 +4224,8 @@ Muck Rod,16117
 Mucus Plug,16102
 Mud (Tile),10605
 Mud Whip,3687
+Muddy Brick Wall,17224
+Muddy Floor,355
 Muddy Floor (Dark),10235
 Muddy Floor (Light),10243
 Mug,2880
@@ -5795,6 +5812,8 @@ Slime Gobbler,12077
 Slime Heart,21194
 Slime Mould,12601
 Slime Slide,21049
+Slime Table Mushroom,3912
+Slime Table Mushrooms,3913
 Slimy Leaf Tentacle,21197
 Slimy Leg,27623
 Slimy Valve,21150
