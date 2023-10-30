@@ -28,6 +28,7 @@ class PacketAnalyser:
         self.key_string = None
         self.xtea = None
         self.output = None
+        self.incomplete_packets = []
 
         if output:
             self.output = open(f"traffic_{time.time()}.txt", "w+")
@@ -35,6 +36,7 @@ class PacketAnalyser:
     def log(self, text: str):
         if self.output:
             self.output.write(text + "\n")
+            self.output.flush()
         else:
             print(text)
 
@@ -102,7 +104,7 @@ class PacketAnalyser:
             packet (Packet): The packet to add.
         """
         try:
-            #self.log(f"{packet.summary()}: {PacketAnalyser.bytes_to_readable_string(packet[Raw].load if Raw in packet else None)}\n")
+            #self.log(f"{packet.summary()}: {packet[Raw].load if Raw in packet else None}")
 
             if self.key is None:
                 pass
@@ -168,10 +170,19 @@ class PacketAnalyser:
         
         #self.log(f"{raw_data}\n")
 
+        if self.incomplete_packets and from_server:
+            # Append the raw_data to the last incomplete packet.
+            self.incomplete_packets[-1] += raw_data
+            raw_data = self.incomplete_packets[-1]
+            self.incomplete_packets = []
+
         # First 2 bytes are the size of the packet load (minus the size bytes) in little endian. I.e. 0c00 is 12 bytes.
         packet_size = int.from_bytes(raw_data[:2], byteorder=sys.byteorder, signed=False)
 
-        #assert packet_size == len(example_network_packet[2:])
+        if packet_size > len(raw_data[2:]) and from_server and len(raw_data) == 1024:
+            # Packet is not complete yet. Wait for the next packet.
+            self.incomplete_packets.append((raw_data))
+            return
 
         # The next 2 bytes, are the sequence number, and the next 2 bytes are the compression flag.
         sequence_number = int.from_bytes(raw_data[2:4], byteorder=sys.byteorder, signed=False)
@@ -183,7 +194,7 @@ class PacketAnalyser:
         decrypted_packet_length = int.from_bytes(decrypted_data[:2], byteorder=sys.byteorder, signed=False)
 
         # Assert that the decryption was successful.
-        assert decrypted_packet_length <= len(decrypted_data[2:])
+        #assert decrypted_packet_length <= len(decrypted_data[2:])
         payload = decrypted_data[2:decrypted_packet_length + 2]
         
         is_compressed = compression_flag & 0xC000 == 0xC000
@@ -195,30 +206,11 @@ class PacketAnalyser:
         hex_data = binascii.hexlify(decrypted_data)
         hex_payload = binascii.hexlify(payload)
 
-        command = payload[0]
+        command = payload[0] if payload else -1
         command_name = self.command_type_to_name(command, client_commands if not from_server else server_commands)
-        self.log(f"Decrypted {from_server=} {command} {command_name}")
 
-        return payload
+        if not command_name == "ClientCheck" and not "Ping" in command_name and not "Invalid" in command_name:
+            self.log(f"Decrypted {is_compressed=} {packet_size=} {len(raw_data) - 2=} {from_server=} {sequence_number=} {command} {command_name} {hex_data=}")
+
+        return payload, command_name
     
-
-if __name__ == "__main__":
-    xtea_decrypter = PacketAnalyser()
-    xtea_decrypter.set_key([0x66c112a6, 0xddecf1e0, 0x8f674514, 0x31d0171c])
-
-    packages = []
-    with open(os.path.join(os.path.dirname(__file__), "example_traffic.txt"), "rb") as f:
-        example_network_packet = f.readlines()
-
-        for packet in example_network_packet:
-            if b"Raw: " in packet:
-                data = packet.split(b"Raw: ")[1]
-                data = eval(data)
-                packages.append([data, b"7171 > " in packet])
-    
-    for package, from_server in packages:
-        try:
-            xtea_decrypter._decrypt_packet(package, from_server)
-        except Exception as e:
-            pass
-        

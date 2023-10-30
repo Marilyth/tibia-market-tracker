@@ -61,17 +61,3 @@ class XteaDebugger:
 
         return keys
         
-
-# Check executable of Tibia with
-# objdump -M intel -Sd .local/share/CipSoft\ GmbH/Tibia/packages/Tibia/bin/client
-
-# In it, you can find the XTEA magic number 0x61c88647
-# | grep -C 5 61c88647
-#   d4990a:	8b 34 97             	mov    esi,DWORD PTR [rdi+rdx*4]
-#   d4990d:	89 ca                	mov    edx,ecx
-#   d4990f:	c1 e2 04             	shl    edx,0x4
-#   d49912:	31 da                	xor    edx,ebx
-#   d49914:	01 c6                	add    esi,eax
-#   d49916:	2d 47 86 c8 61       	sub    eax,0x61c88647
-
-# In this case, d4990a loads part of the XTEA key into esi.

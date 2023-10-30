@@ -12,7 +12,7 @@ class PacketSniffer:
         AsyncSniffer(
             prn=callback,
             iface=self.interface,
-            filter=f"dst port {self.port} or src port {self.port}",
+            filter=f"dst port {self.port} or src port {self.port} or dst port 7172 or src port 7172",
         ).start()
 
 if __name__ == "__main__":
