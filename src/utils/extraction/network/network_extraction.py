@@ -14,7 +14,7 @@ class NetworkExtractor(Extractor):
         super().__init__(client)
         self.memory_extractor = MemoryExtractor(client)
         self.packet_sniffer = PacketSniffer()
-        self.packet_analyser = PacketAnalyser(output=False)
+        self.packet_analyser = PacketAnalyser(output=True)
         self.xtea_key = None
 
     def setup(self):

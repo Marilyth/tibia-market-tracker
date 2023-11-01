@@ -53,11 +53,12 @@ def do_market_search(email: str, password: str, virtual_display: bool, virtual_d
 
     def market_search():
         from utils.extraction.memory.memory_extraction import MemoryExtractor
+        from utils.extraction.network.network_extraction import NetworkExtractor
         from utils.extraction.extractor import Extractor
         from utils.client import Client
 
         client = Client("./Tibia/Tibia", email, password)
-        extractor: Extractor = MemoryExtractor(client)
+        extractor: Extractor = NetworkExtractor(client)
         extractor.setup()
 
         market_values = extractor.extract_market_values()

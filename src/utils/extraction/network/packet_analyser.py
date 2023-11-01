@@ -9,6 +9,7 @@ import sys
 import subprocess
 import os
 import traceback
+from threading import Lock
 
 
 class PacketAnalyser:
@@ -22,13 +23,15 @@ class PacketAnalyser:
         """
         self.decompressor = zlib.decompressobj(-15)
         self.byte_order = byte_order
-        self.queue = []
+        self.queue = {}
         self.rounds = rounds
         self.key = None
         self.key_string = None
         self.xtea = None
         self.output = None
         self.incomplete_packets = []
+        self.decrompression_stream = bytes()
+        self.queue_lock = Lock()
 
         if output:
             self.output = open(f"traffic_{time.time()}.txt", "w+")
@@ -52,9 +55,6 @@ class PacketAnalyser:
         self.xtea = new(self.key_string, mode=MODE_ECB, rounds=self.rounds, endian="<" if self.byte_order == "little" else ">")
 
         self.log(f"Key set to {key}.")
-        
-        for packet in self.queue:
-            self._decrypt_packet(packet)
 
     @staticmethod
     def command_type_to_name(type: int, commands: dict) -> str:
@@ -104,12 +104,54 @@ class PacketAnalyser:
             packet (Packet): The packet to add.
         """
         try:
-            #self.log(f"{packet.summary()}: {packet[Raw].load if Raw in packet else None}")
+            # Print packet flag, i.e. S, A, PA, SA, etc.
+            packet_src = packet['IP'].src
+            packet_src_port = packet['TCP'].sport
+            packet_src = f"{packet_src}:{packet_src_port}"
+            packet_seq = packet['TCP'].seq
+            packet_load = len(packet[Raw].load) if Raw in packet else 0
 
-            if self.key is None:
-                pass
-            else:
-                self._decrypt_packet(packet[Raw].load if Raw in packet else None, packet["TCP"].sport == 7171 if "TCP" in packet else False)
+            self.queue_lock.acquire()
+
+            try:
+                if packet_src not in self.queue:
+                    self.queue[packet_src] = {"current_seq": packet_seq, "packets": {packet_seq: packet}}
+                else:
+                    self.queue[packet_src]["packets"][packet_seq] = packet
+                
+                if not self.key:
+                    return
+                
+                # Get all packets in the queue, which are in order starting from current_seq.
+                packets = []
+                while True:
+                    current_seq = self.queue[packet_src]["current_seq"]
+                    if current_seq in self.queue[packet_src]["packets"]:
+                        packets.append(self.queue[packet_src]["packets"].pop(current_seq))
+                        packet_length = len(packets[-1][Raw].load) if Raw in packets[-1] else 0
+                        packet_flags = packets[-1]["TCP"].flags
+
+                        if packet_length == 0 and packet_flags != "A":
+                            packet_length = 1
+
+                        self.queue[packet_src]["current_seq"] += packet_length
+                    else:
+                        break
+                
+                # Clean up all packets with sequence numbers lower than current_seq. They are probably duplicates.
+                for packet_seq in [packet_seq for packet_seq in self.queue[packet_src]["packets"] if packet_seq < self.queue[packet_src]["current_seq"]]:
+                    self.queue[packet_src]["packets"].pop(packet_seq)
+                
+                for packet in packets:
+                    self._decrypt_packet(packet[Raw].load if Raw in packet else None, packet["IP"].src)
+                    pass
+            except Exception as e:
+                # Print stacktrace
+                traceback.print_exc()
+                self.log(f"Error while decrypting packet: {e}")
+            finally:
+                self.queue_lock.release()
+            
         except Exception as e:
             # Print stacktrace
             traceback.print_exc()
@@ -156,37 +198,54 @@ class PacketAnalyser:
         
         # Convert e.g. ['1B', 'A2'] to [0x1B, 0xA2].
         byte_expressions = [int(byte_expression, 16) for byte_expression in byte_expressions]
-        
+
         # Convert byte_expressions to bytes.
         response = bytes(byte_expressions)
         
         return response
 
-    def _decrypt_packet(self, raw_data: bytes, from_server: bool = False):
+    def _decrypt_packet(self, raw_data: bytes, sender: str):
         """ Decrypts a client packet using the XTEA algorithm.
         """
         if not raw_data:
             return
         
-        #self.log(f"{raw_data}\n")
+        from_server = b":7171" in sender
 
-        if self.incomplete_packets and from_server:
-            # Append the raw_data to the last incomplete packet.
-            self.incomplete_packets[-1] += raw_data
-            raw_data = self.incomplete_packets[-1]
-            self.incomplete_packets = []
+        #self.log(f"{raw_data}\n")
 
         # First 2 bytes are the size of the packet load (minus the size bytes) in little endian. I.e. 0c00 is 12 bytes.
         packet_size = int.from_bytes(raw_data[:2], byteorder=sys.byteorder, signed=False)
-
-        if packet_size > len(raw_data[2:]) and from_server and len(raw_data) == 1024:
-            # Packet is not complete yet. Wait for the next packet.
-            self.incomplete_packets.append((raw_data))
-            return
+        actual_size = len(raw_data[2:])
 
         # The next 2 bytes, are the sequence number, and the next 2 bytes are the compression flag.
         sequence_number = int.from_bytes(raw_data[2:4], byteorder=sys.byteorder, signed=False)
         compression_flag = int.from_bytes(raw_data[4:6], byteorder=sys.byteorder, signed=False)
+        
+        is_compressed = compression_flag == 0xC000
+        is_valid = is_compressed or compression_flag == 0x0000
+
+        if self.incomplete_packets and from_server and not is_valid:
+            # Append the raw_data to the last incomplete packet.
+            incomplete_packet = [packet for packet in self.incomplete_packets if packet[1] == sender][-1]
+            raw_data = incomplete_packet[0] + raw_data
+            actual_size = len(raw_data[2:])
+            packet_size = int.from_bytes(raw_data[:2], byteorder=sys.byteorder, signed=False)
+            sequence_number = int.from_bytes(raw_data[2:4], byteorder=sys.byteorder, signed=False)
+            compression_flag = int.from_bytes(raw_data[4:6], byteorder=sys.byteorder, signed=False)
+            is_compressed = compression_flag == 0xC000
+            is_valid = is_compressed or compression_flag == 0x0000
+            self.incomplete_packets.remove(incomplete_packet)
+
+        if packet_size > len(raw_data[2:]) and from_server and is_compressed:
+            # Packet is not complete yet. Wait for the next packet.
+            self.incomplete_packets.append((raw_data, sender))
+            return
+        
+        # Unfinished packet was not completed. Remove it.
+        for packet in self.incomplete_packets[:]:
+            if packet[1] == sender:
+                raise Exception("Unfinished packet was not completed.")
 
         decrypted_data = self.decrypt(raw_data[6:6 + packet_size])
 
@@ -196,11 +255,23 @@ class PacketAnalyser:
         # Assert that the decryption was successful.
         #assert decrypted_packet_length <= len(decrypted_data[2:])
         payload = decrypted_data[2:decrypted_packet_length + 2]
-        
-        is_compressed = compression_flag & 0xC000 == 0xC000
+
+        if not is_valid:
+            if not from_server:
+                self.log(f"Invalid compression flag: {compression_flag}")
+                return
+            else:
+                raise Exception(f"Invalid compression flag: {compression_flag}")
+                return
         
         if is_compressed:
             decrypted_data = self.decompress_bytes(payload)
+
+            with open("compressed.txt", "wb+") as f:
+                f.write(payload)
+            with open("compressedStrip.txt", "wb+") as f:
+                f.write(payload[:-2])
+
             payload = decrypted_data[2:]
         
         hex_data = binascii.hexlify(decrypted_data)
@@ -210,7 +281,7 @@ class PacketAnalyser:
         command_name = self.command_type_to_name(command, client_commands if not from_server else server_commands)
 
         if not command_name == "ClientCheck" and not "Ping" in command_name and not "Invalid" in command_name:
-            self.log(f"Decrypted {is_compressed=} {packet_size=} {len(raw_data) - 2=} {from_server=} {sequence_number=} {command} {command_name} {hex_data=}")
+            self.log(f"Decrypted {is_compressed=} {packet_size=} {len(raw_data) - 2=} {sender=} {sequence_number=} {command} {command_name}")
 
         return payload, command_name
     
