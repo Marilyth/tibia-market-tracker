@@ -21,7 +21,7 @@ class PacketAnalyser:
             rounds (int, optional): The number of rounds to use for decryption. Defaults to 64.
             byte_order (str, optional): The byte order to use for decryption. Defaults to "little".
         """
-        self.decompressor = zlib.decompressobj(-15)
+        self.decompressor = {}
         self.byte_order = byte_order
         self.queue = {}
         self.rounds = rounds
@@ -32,6 +32,7 @@ class PacketAnalyser:
         self.incomplete_packets = []
         self.decrompression_stream = bytes()
         self.queue_lock = Lock()
+        self.prev = bytes()
 
         if output:
             self.output = open(f"traffic_{time.time()}.txt", "w+")
@@ -143,7 +144,9 @@ class PacketAnalyser:
                     self.queue[packet_src]["packets"].pop(packet_seq)
                 
                 for packet in packets:
-                    self._decrypt_packet(packet[Raw].load if Raw in packet else None, packet["IP"].src)
+                    load = packet[Raw].load if Raw in packet else None
+                    self.log(f"{packet.summary()}: {load}")
+                    #self._decrypt_packet(packet[Raw].load if Raw in packet else None, packet["IP"].src)
                     pass
             except Exception as e:
                 # Print stacktrace
@@ -172,28 +175,52 @@ class PacketAnalyser:
         else:
             return None
         
-    def decompress_bytes(self, data: bytes) -> bytes:
+    def decompress_bytes(self, data: bytes, sender: str) -> bytes:
         """Decompresses a bytes object.
 
         Args:
             data (bytes): The bytes object to decompress.
+            sender (str): The sender of the packet.
 
         Returns:
             bytes: The decompressed bytes object.
         """
         data_str = PacketAnalyser.bytes_to_readable_string(data)
-        
-        # zlib does not work with Tibia packets, so use the zlib.net C# library.
-        decompressor_location = os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "decompressor", "bin", "Debug", "net7.0", "decompressor.dll")
-        response = subprocess.run(["dotnet", decompressor_location, data_str], capture_output=True)
-        
-        # Get output from stdout.
-        stderr = response.stderr.decode("utf-8")
 
-        if stderr:
-            raise Exception(f"Decompression failed: {stderr}")
+        # zlib does not work with Tibia packets, so use the zlib.net C# library.
+        if not sender in self.decompressor:
+            decompressor_location = os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "decompressor", "bin", "Debug", "net7.0", "decompressor.dll")
+            self.decompressor[sender] = subprocess.Popen(["dotnet", decompressor_location, data_str], stderr=subprocess.PIPE, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+            os.set_blocking(self.decompressor[sender].stdout.fileno(), False)
+            os.set_blocking(self.decompressor[sender].stderr.fileno(), False)
+
+        # Send data to decompressor.
+        response = self.decompressor[sender].stdin.write(data_str.encode() + b"\n")
+        self.decompressor[sender].stdin.flush()
+        time.sleep(0.1)
+        response = None
+        while not response:
+            response = self.decompressor[sender].stdout.read()
+
+            time.sleep(0.05)
+
+            if response:
+                # Read all remaining data from stdout.
+                while True:
+                    new_response = self.decompressor[sender].stdout.read()
+                    if new_response:
+                        response += new_response
+                    else:
+                        break
+                        
+                    time.sleep(0.05)
+                break
         
-        response = response.stdout.decode("utf-8")
+        response = response.decode().strip()
+
+        if "Exception" in response:
+            raise Exception(response)
+        
         byte_expressions = response.split(" ")
         
         # Convert e.g. ['1B', 'A2'] to [0x1B, 0xA2].
@@ -265,13 +292,7 @@ class PacketAnalyser:
                 return
         
         if is_compressed:
-            decrypted_data = self.decompress_bytes(payload)
-
-            with open("compressed.txt", "wb+") as f:
-                f.write(payload)
-            with open("compressedStrip.txt", "wb+") as f:
-                f.write(payload[:-2])
-
+            decrypted_data = self.decompress_bytes(payload, sender)
             payload = decrypted_data[2:]
         
         hex_data = binascii.hexlify(decrypted_data)
@@ -281,7 +302,7 @@ class PacketAnalyser:
         command_name = self.command_type_to_name(command, client_commands if not from_server else server_commands)
 
         if not command_name == "ClientCheck" and not "Ping" in command_name and not "Invalid" in command_name:
-            self.log(f"Decrypted {is_compressed=} {packet_size=} {len(raw_data) - 2=} {sender=} {sequence_number=} {command} {command_name}")
+            self.log(f"Decrypted {is_compressed=} {packet_size=} {len(raw_data) - 2=} {sender=} {sequence_number=} {command} {command_name} {hex_data=}")
 
         return payload, command_name
     
