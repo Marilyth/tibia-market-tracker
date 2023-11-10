@@ -1,10 +1,12 @@
 import pyautogui
 import subprocess
 import time
+from random import uniform
 from typing import *
 import os
 from utils.extraction.memory.memory_reader import MemoryReader
 import shutil
+from utils.human_movement import move_mouse_like_human
 
 
 class Client:
@@ -147,7 +149,8 @@ class Client:
                     self._add_to_log("Opening depot")
 
                     # Needs to be adjusted if the resolution is not 1600x900 fullscreen!
-                    pyautogui.leftClick(645, 320)
+                    move_mouse_like_human(645, 320)
+                    pyautogui.leftClick()
 
                     # Tried to open depot, check if it worked.
                     if self._wait_until_find("images/Market.png", click=True, cache=False, timeout=5)[0] == -1:
@@ -203,9 +206,9 @@ class Client:
         """
         self._add_to_log("Wiggling character...")
         pyautogui.hotkey("ctrl", "right")
-        time.sleep(0.5)
+        time.sleep(uniform(0.4, 0.6)))
         pyautogui.hotkey("ctrl", "left")
-        time.sleep(0.5)
+        time.sleep(uniform(0.4, 0.6)))
         self.market_tab = "offers"
         self._update_kick_timer()
 
@@ -230,7 +233,8 @@ class Client:
                 self._add_to_log(f"Found {image} at {position}.")
                 if click:
                     self._add_to_log(f"Clicking {image}...")
-                    pyautogui.leftClick(position)
+                    move_mouse_like_human(position[0], position[1])
+                    pyautogui.leftClick()
                     
                 return position
 

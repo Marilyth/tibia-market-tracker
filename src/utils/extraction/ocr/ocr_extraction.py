@@ -28,8 +28,6 @@ class OCRExtractor(Extractor):
         Literally searches for the given item in the market, takes screenshots and uses OCR to read the values.
         """
         try:
-            self.client.open_market()
-
             pyautogui.hotkey("ctrl", "z")
             pyautogui.typewrite(name)
             
