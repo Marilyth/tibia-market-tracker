@@ -11,6 +11,7 @@ from tqdm import tqdm
 import random
 import traceback
 from utils.human_movement import wait_like_human, repeat_like_human
+import os
 
 
 class MemoryExtractor(Extractor):
@@ -19,17 +20,8 @@ class MemoryExtractor(Extractor):
         self.ocr_extractor = OCRExtractor(client)
         self.market_reader: MarketMemoryReader = None
 
-        # Load item ids from wiki, or from items.csv if wiki is down.
-        try: 
-            self.id_to_name, self.name_to_id = Wiki().get_item_ids()
-
-            # Save the item ids to items.csv.
-            with open("items.csv", "w+") as f:
-                for key, value in self.name_to_id.items():
-                    f.write(f"{key},{value}\n")
-        except Exception as e:
-            self.client._add_to_log(f"Failed to get item ids from wiki. {e}")
-            
+        # if file exists.
+        if os.path.exists("items.csv"):
             # Load self.id_to_name and self.name_to_id from items.csv instead
             self.id_to_name = {}
             self.name_to_id = {}
@@ -42,6 +34,21 @@ class MemoryExtractor(Extractor):
 
                         self.id_to_name[int(id)] = name
                         self.name_to_id[name] = int(id)
+
+        # Load item ids from wiki, or from items.csv if wiki is down.
+        try: 
+            self.wiki_id_to_name, self.wiki_name_to_id = Wiki().get_item_ids()
+
+            # Merge the two dictionaries.
+            self.id_to_name = {**self.id_to_name, **self.wiki_id_to_name}
+            self.name_to_id = {**self.name_to_id, **self.wiki_name_to_id}
+
+            # Save the item ids to items.csv.
+            with open("items.csv", "w+") as f:
+                for key, value in self.name_to_id.items():
+                    f.write(f"{key},{value}\n")
+        except Exception as e:
+            self.client._add_to_log(f"Failed to get item ids from wiki. {e}")
     
     def setup(self):
         self.client.start_game()
@@ -188,6 +195,7 @@ class MemoryExtractor(Extractor):
 
                     # If the id is the same as the last one, we have reached the end of the category.
                     if id == last_item_id:
+                        self.client._add_to_log(f"Probably reached end of {category_index=}: {values.name=} {values.id=}")
                         break
                     
                     # If we have failed 10 times in a row, we should probably restart.
