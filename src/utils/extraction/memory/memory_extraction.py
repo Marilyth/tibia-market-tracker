@@ -10,6 +10,7 @@ import pyautogui
 from tqdm import tqdm
 import random
 import traceback
+from utils.human_movement import wait_like_human, repeat_like_human
 
 
 class MemoryExtractor(Extractor):
@@ -60,7 +61,6 @@ class MemoryExtractor(Extractor):
 
         items = [("tibia coins", 22118), ("time ring", 3053), ("stealth ring", 3049), ("rope belt", 11492), ("stone skin amulet", 3081), ("collar of red plasma", 23544),
                  ("gold token", 22721), ("silver token", 22516), ("silencer claws", 20200), ("bloody pincers", 9633), ("elvish talisman", 9635), ("broken shamanic staff", 11452)]
-        self.client.open_market()
 
         # Repeat until all memory addresses have been found.
         while not self.market_reader.has_finished_filtering:
@@ -145,16 +145,16 @@ class MemoryExtractor(Extractor):
             self.client._wait_until_find("images/Category.png", click=True, cache=False)
 
             # Go to the correct category.
-            pyautogui.press("down", presses=category_index - 1, interval=0.1)
+            repeat_like_human(lambda: pyautogui.press("down"), category_index - 1)
 
             # Tab to the item list. This number might have to be changed if the market is updated.
-            pyautogui.press("tab", presses=10, interval=0.1)
+            repeat_like_human(lambda: pyautogui.press("tab"), 10)
             
             # Go through the items quickly, except for the last one.
             # This is to make sure the item's value is fully loaded and we aren't rate limited.
             if starting_index > 1:
-                pyautogui.press("down", presses=starting_index)
-                time.sleep(8)
+                repeat_like_human(lambda: pyautogui.press("down"), starting_index, wait_time=0.1)
+                wait_like_human(8)
 
             last_item_id = -1
             while True:
@@ -165,16 +165,16 @@ class MemoryExtractor(Extractor):
                         starting_index += 1
                         item_fail_count = 0
                         pyautogui.press("down")
-                        time.sleep(0.5)
+                        wait_like_human(0.5)
                     
                     # If the last result failed, reload the item.
                     if item_fail_count > 0:
                         pyautogui.press("up")
-                        time.sleep(0.5)
+                        wait_like_human(0.5)
 
                     # Go to next item. Wait a bit to make sure we aren't rate limited.
                     pyautogui.press("down")
-                    time.sleep(0.5)
+                    wait_like_human(0.5)
 
                     pyautogui.PAUSE = 0.01
 

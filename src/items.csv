@@ -108,6 +108,7 @@ Ape Fur,5883
 Apocalypse Mushroom,9894
 Apples,24490
 Apron,33933
+Aquarius Fungius,9862
 Arbalest,5803
 Arboreal Crown,39153
 Arboreal Ring,39188
@@ -321,6 +322,7 @@ Basalt Core,43859
 Basalt Crumbs,43858
 Basalt Fetish,17856
 Basalt Figurine,17857
+Basalt Floor,15003
 Basalt Obelisk (Faint),43793
 Basalt Obelisk (Intense),43792
 Basalt Wall with Crystals,14889
@@ -351,7 +353,7 @@ Battle Stone,11447
 Batwing Hat,9103
 Beach Backpack,5949
 Beach Bag,5950
-Beam,11829
+Beam,11830
 Bear Doll,3001
 Bear Paw,5896
 Bear Skin,31578
@@ -438,6 +440,7 @@ Black Skull (Quest),37335
 Black Token,3533
 Black Wool,11448
 Blackboard,2605
+Blackened Flower,9884
 Blackened Hand Mirror,36876
 Blacksteel Sword,7406
 Blade of Carving,23303
@@ -478,6 +481,7 @@ Blister Tendril,10743
 Bloated Maggot,43856
 Blob Bomb,13976
 Block of Wood,2743
+Blood (Tile),18620
 Blood Basin,8525
 Blood Crystal,8453
 Blood Crystal (Charged),8225
@@ -576,6 +580,7 @@ Bluish Dewberry Palm,43945
 Blurred Transcript,24873
 Boar Man Hoof,40584
 Bog Fingers Plant,3691
+Bog Water,12721
 Boggy Dreads,9667
 Bola,17809
 Bolfrim's Golden Bug Trophy,14672
@@ -717,6 +722,7 @@ Brainstealer's Tissue,36794
 Branch,7752
 Branch (Immobile),7772
 Branch (Quest),30226
+Branches,18458
 Brandon's Wedding Ring,21745
 Brass Armor,3359
 Brass Button,37604
@@ -1028,6 +1034,7 @@ Cave Floor Earth,44092
 Cave Floor Lamp,44087
 Cave Floor Lamp (Lit),44088
 Cave Mural,44123
+Cave Painting,15527
 Cave Panel,44127
 Cave Panel Border,44141
 Cave Rampart,44135
@@ -1059,6 +1066,7 @@ Chain Armor,3358
 Chain Bolter,8022
 Chain Helmet,3352
 Chain Legs,3558
+Chalk,20125
 Chalk Board,854
 Chameleon (Item),25215
 Chameleon Rune,3178
@@ -1294,7 +1302,7 @@ Cornucopia,3103
 Corrupt Naga Scales,39415
 Corrupted Flag,10409
 Corrupted Plant,9871
-Corrupted Rock,10570
+Corrupted Rock,10577
 Costume Bag (Common),653
 Costume Bag (Deluxe),655
 Costume Bag (Retro),24949
@@ -1432,7 +1440,8 @@ Crystal Table,9062
 Crystal Table (Store),44457
 Crystal Table Kit,9061
 Crystal Trail,15021
-Crystal Wall (Prismatic),15273
+Crystal Wall,15272
+Crystal Wall (Prismatic),15274
 Crystal Wall Lamp,44515
 Crystal Wall Lamp (Lit),44516
 Crystal Wand,3068
@@ -1545,8 +1554,11 @@ Dead Goblin (Fresh Quest),22687
 Dead Goblin (Rotten Quest),22685
 Dead Holy Bog Frog,22693
 Dead Man's Saddle,3907
+Dead Man's Saddles,3907
+Dead Minotaur (Item),4272
 Dead Rat (Oramond),21850
 Dead Snake (Item),4000
+Dead Tree,3634
 Dead Tree (Birch),958
 Dead Weight,20202
 Deadeye Devious' Eye Patch,6102
@@ -1569,7 +1581,7 @@ Decorative Green Sheet,32105
 Decorative Plume,37605
 Decorative Red Sheet,32104
 Decorative Ribbon,16155
-Decorative Spear,11182
+Decorative Spear,11185
 Deed of Ownership,7866
 Deep Crystal,9240
 Deepling Axe,13991
@@ -1677,6 +1689,7 @@ Diremaw Legs,27598
 Dirt (Heavy),355
 Dirt (Light),103
 Dirt (Medium),354
+Dirt (Object),9445
 Dirt Wall,367
 Dirty Cape,3122
 Dirty Fur,3105
@@ -1703,7 +1716,8 @@ Doll,2991
 Doll (Blond),6579
 Doll of Durin The Almighty,14765
 Doll of Durin The Almighty (Replica),23679
-Door (Sealed),5123
+Doomato,10714
+Door (Sealed),11249
 Double Axe,3275
 Doublet,3379
 Downy Feather,11684
@@ -1786,7 +1800,7 @@ Drawer,18020
 Drawer Kit,2789
 Drawing Board,34063
 Dread Doll,12905
-Dreadcoil,10730
+Dreadcoil,10747
 Dreaded Cleaver,7419
 Dream Blossom Staff,25700
 Dream Catcher,29276
@@ -1803,6 +1817,7 @@ Dream Warden Mask,20276
 Dresser,2444
 Dresser Kit,2790
 Dried Grass,993
+Dried Grass Roof,1197
 Drill Bolt,16142
 Drinks,13908
 Dripping Candles (Corner),19036
@@ -1843,6 +1858,7 @@ Dusty Amphora,19075
 Dwarf Balloon,37505
 Dwarf Balloon (Inflated),37427
 Dwarf Disguise Kit,7865
+Dwarf Tree,3625
 Dwarven Armor,3397
 Dwarven Axe,3323
 Dwarven Beard,5900
@@ -1860,6 +1876,8 @@ Dwarven Stone Chest,31190
 Dwarven Stone Table,31191
 Eagle Shield,3438
 Earflap,17819
+Earth (Cracked),1728
+Earth (Tile Black),10534
 Earth (Tile),1020
 Earth (Wall),1027
 Earth Amplification,36738
@@ -2286,6 +2304,7 @@ Final Judgement,31738
 Fine Sulphur,7247
 Fine Vase,227
 Fine Vase (Unknown),228
+Finely Crafted Ornament,13440
 Fir Cone,19111
 Fir Tree,3614
 Fire,2118
@@ -2586,6 +2605,7 @@ Full Storage Flask,19086
 Funeral Urn,4847
 Fungal Blister,39385
 Fungus Powder,21837
+Fur (Tile),6809
 Fur Armor,22085
 Fur Backpack,7342
 Fur Bag,7343
@@ -2664,6 +2684,8 @@ Giant Sword,3281
 Giant Tentacle,27619
 Giant Topaz,32623
 Giant Tree,3807
+Giant Tree (Verminous),10621
+Giant Verminous,10705
 Giggle Mushroom,3914
 Giggle Mushrooms,3915
 Gilded Birthday Cup,24951
@@ -2967,6 +2989,7 @@ Grandiose Refined Chest,35922
 Grandiose Table,35914
 Grant of Arms,28824
 Grapes,3592
+Grappletackle,10725
 Grappling Hook,35588
 Grass (Dry),22348
 Grass (Store),37020
@@ -2979,6 +3002,7 @@ Grasshopper Legs,14087
 Grave,134
 Grave Flower,3661
 Grave Flower Extract,32603
+Gravel,4568
 Gravel and Chalk in a Bucket,20169
 Greasy Stone (Inhabited),22684
 Greasy Stone (Uninhabited),22690
@@ -3081,9 +3105,11 @@ Griffin Shield,3433
 Griffinclaw (Dry),5687
 Griffinclaw Container,5937
 Grimace,32593
+Grimy Wooden Plank,16489
 Grind Stone,17617
 Grinding Wheel,35180
 Grodrik's Favourite Axe,9142
+Grotto,13597
 Ground Reed,31686
 Growing Birch,23816
 Gruesome Fan,34024
@@ -3325,7 +3351,7 @@ Hydra Tongue Salad,9080
 Hydromancer Dummy,12048
 Hydrophytes,39410
 Ice (Object),6714
-Ice (Tile),800
+Ice (Tile),6686
 Ice Amplification,36737
 Ice Cabinet,32776
 Ice Chandelier,32785
@@ -3342,6 +3368,7 @@ Ice Cube,7441
 Ice Cube (Head),7442
 Ice Cube (Mammoth),7445
 Ice Cube (Tusks),7444
+Ice Floor,6967
 Ice Flower,13842
 Ice Flower (Item),30058
 Ice Flower Seeds,13844
@@ -3370,9 +3397,10 @@ Icy Barbarian Axe Replica,25935
 Icy Blacksteel Replica,25933
 Icy Blacksteel Sword,682
 Icy Bone,15725
-Icy Bone Claw,15767
+Icy Bone Claw,15770
 Icy Bones (Fence),15747
-Icy Bones (Spine),15757
+Icy Bones (Rib),15764
+Icy Bones (Spine),15760
 Icy Clerical Mace,689
 Icy Clerical Mace Replica,25940
 Icy Cranial Basher,691
@@ -3400,7 +3428,7 @@ Icy Orcish Maul Replica,25943
 Icy Rainbow Shield,8079
 Icy Relic Sword,680
 Icy Relic Sword Replica,25931
-Icy Skull,15752
+Icy Skull,15753
 Icy Spike Sword,679
 Icy Spike Sword Replica,25930
 Icy War Axe,688
@@ -3431,6 +3459,7 @@ Incredible Mumpiz Slayer,9396
 Indoor Plant,2982
 Indoor Plant Kit,2811
 Inert Astral Shaper Rune,25059
+Infected Throne,9899
 Infernal Bolt,6528
 Infernal Heart,34139
 Infernal Robe,34146
@@ -3444,7 +3473,7 @@ Insectoid Cell,12938
 Insectoid Cocoon (Item),13969
 Insectoid Eggs,17457
 Insectoid Hive Stairs,13342
-Insectoid Pore,10748
+Insectoid Pore,13367
 Insectoid Queen,14049
 Insectoid Remains,13408
 Instable Proto Matter,23516
@@ -3462,6 +3491,7 @@ Iron Floor,8276
 Iron Hammer,3310
 Iron Helmet,3353
 Iron Loadstone,16153
+Iron Maiden,5474
 Iron Ore,5880
 Iron Pillar,5025
 Iron Token,22720
@@ -3481,6 +3511,7 @@ Jade Amulet (Replica),31268
 Jade Basin,11050
 Jade Basin (Lit),11048
 Jade Chair,11013
+Jade Floor Lamp,11052
 Jade Hammer,7422
 Jade Hat,10451
 Jade Ornament,11038
@@ -3619,6 +3650,7 @@ Lamassu Statue,30465
 Laminaria,13671
 Lamp,2916
 Lamp (Fish),13654
+Lamp (Lava),13661
 Lamp (Small Lit),12434
 Lamp (Small),12433
 Lampions,13897
@@ -3713,6 +3745,7 @@ Leather Harness,17846
 Leather Helmet,3355
 Leather Legs,3559
 Leather Whip,12306
+Leaves,6273
 Leaves (Lanceolate),12635
 Leberkassemmel,32068
 Lederhosen,32097
@@ -3770,6 +3803,7 @@ Limestone Pedestal,9300
 Limestone Pillar,9281
 Limestone Railing,9279
 Limestone Window,9574
+Linen,267
 Liodile Fang,40583
 Lion Amulet,34158
 Lion Axe,34253
@@ -3906,7 +3940,7 @@ Lump of Reed Flour Dough,31914
 Lump of Sacred Clay,11344
 Luna (TibiaGoals),36999
 Lunar Staff,7424
-Lush Grass,11711
+Lush Grass,11718
 Lute,2950
 Lutenist,37237
 Luxurious Couch,2417
@@ -3994,6 +4028,7 @@ Mallet Handle,27525
 Mallet Head,27524
 Mallet Pommel,27526
 Malofur's Lunchbox,30088
+Mammoth Bone,15778
 Mammoth Fur Cape,7463
 Mammoth Fur Shorts,7464
 Mammoth Skull,6977
@@ -4093,6 +4128,7 @@ Message in a Bottle (Immobile),20168
 Metal Bat,21171
 Metal File,27270
 Metal Fitting,9115
+Metal Fittings,5774
 Metal Gargoyle (Big),20642
 Metal Gargoyle (Small),20731
 Metal Jaw,21193
@@ -4146,6 +4182,7 @@ Model Ship Lamp,31944
 Modified Crossbow,8021
 Moist Stones,13160
 Moist Wall,13097
+Mold Floor,15027
 Mold Floor (Truffels),15829
 Molten Plate,8058
 Molten Wax,9106
@@ -4228,6 +4265,7 @@ Muddy Brick Wall,17224
 Muddy Floor,355
 Muddy Floor (Dark),10235
 Muddy Floor (Light),10243
+Muddy Water,10494
 Mug,2880
 Mummy Disguise,144
 Murcion's Mycelium,43965
@@ -4532,7 +4570,7 @@ Ornamented Scorpion Table,12493
 Ornamented Shield,3424
 Ornamented Stone Pedestal,21391
 Ornamented Stone Table,2353
-Ornamented Wall,1438
+Ornamented Wall,6853
 Ornate Bed,35874
 Ornate Cabinet,26163
 Ornate Canopic Jar,12511
@@ -4634,7 +4672,7 @@ Panther Paw,12040
 Pantibian Amphora,39707
 Paper Streamers,24496
 Papyrus Deed,32914
-Papyrus Scroll,11967
+Papyrus Scroll,11968
 Paralyse Rune,3165
 Paravent,1420
 Parcel,3503
@@ -4658,6 +4696,7 @@ Parder Fur,39418
 Parder Tooth,39417
 Parquet Floor,17518
 Parrot (Item),24433
+Part of a Giant Stone Dragon,10475
 Part of a Jester Doll (Left Arm),8781
 Part of a Jester Doll (Left Leg),8783
 Part of a Jester Doll (Right Arm),8782
@@ -4723,6 +4762,7 @@ Perfume Gatherer (Final),17674
 Perfume Gatherer (First),17670
 Perfume Gatherer (Second),17672
 Perfume Gatherer (Third),17673
+Pestbringer,9900
 Pester Maws,20109
 Pester Maws (Broken Dream),20105
 Pestilent Fern,9889
@@ -4810,13 +4850,16 @@ Pile of Stone Tiles,26120
 Pile of Sugar Cane,5551
 Pile of Three Presents Kit,37563
 Pile of Wooden Planks,26123
+Pillar (Royal),9429
+Pillar (Small),6986
 Pillar Railing,17620
 Pillar Vine,10856
-Pillory,5475
+Pillory,5476
 Pillow Backpack,24393
 Pinata,30315
 Pinata Dragon,25062
 Pinch of Crystal Dust,21507
+Pine,3626
 Pineapple,11459
 Pink 25 Years Balloon,37518
 Pink 25 Years Balloon (Inflated),37440
@@ -4849,6 +4892,7 @@ Pirate Treasure Chest,31936
 Pirate Treasure Map,9205
 Pirate Voodoo Doll,5810
 Pirate's Surprise,14751
+Pitch Black Gap,8811
 Pitchfork,3451
 Pitfall,294
 Plague Bell,12787
@@ -5180,6 +5224,7 @@ Remains of a Decaying Soul,25778
 Remains of a Dusty Amphora,19076
 Remains of a Fish,3125
 Remains of a Ghost,4290
+Remains of a Spider Web,189
 Remains of a Withering Soul,25777
 Remains of an Old Amphora,21946
 Replica of the Sceptre,11362
@@ -5316,6 +5361,7 @@ Rotten Heart,31589
 Rotten Heart of a Tree,652
 Rotten Meat,3112
 Rotten Piece of Cloth,10291
+Rotten Plant,9886
 Rotten Roots,43849
 Rotten Tomatoes,32029
 Rotten Vermin Ichor,43847
@@ -5354,7 +5400,7 @@ Rubbish (3),3126
 Rubbish (4),3127
 Rubbish (5),3128
 Rubbish Amulet,25296
-Rubble,5618
+Rubble,5623
 Ruby Fire Stone,28709
 Ruby Necklace,3016
 Rudder Blade,4970
@@ -5391,6 +5437,7 @@ Rusty Weapon (Rare),8893
 Rusty Weapon (Semi-Rare),8892
 Rusty Winged Helmet,24405
 Ruthless Axe,6553
+Rutted Stone,11281
 Sabre,3273
 Sabretooth,10311
 Sabretooth Fur,39378
@@ -5421,6 +5468,7 @@ Sample of Venorean Spice,8759
 Sand,231
 Sand (Brown),9531
 Sand (Field),1715
+Sand (Light),9707
 Sand (White),104
 Sand Trickle,18614
 Sandals,3551
@@ -5567,6 +5615,7 @@ Serpent Shield,9515
 Serpent Sword,3297
 Seven Cans,24479
 Sewer Grate,435
+Shackles,5481
 Shadow Ashes,19129
 Shadow Bite Berries,27460
 Shadow Bite Plant,27459
@@ -5581,6 +5630,7 @@ Shaggy Carpet,26117
 Shaggy Ogre Bag,22763
 Shaggy Tail,10407
 Shallow Water,634
+Shallow Water (Zao),10113
 Shamanic Hood,11478
 Shamanic Mask,22192
 Shamanic Talisman,22184
@@ -5808,6 +5858,7 @@ Slime (Glooth),20796
 Slime (Object),8418
 Slime (Purple),21774
 Slime Fungus,10674
+Slime Fungus (Tile),12355
 Slime Gobbler,12077
 Slime Heart,21194
 Slime Mould,12601
@@ -5817,6 +5868,7 @@ Slime Table Mushrooms,3913
 Slimy Leaf Tentacle,21197
 Slimy Leg,27623
 Slimy Valve,21150
+Slimy Wall,5563
 Sling Herb,3738
 Slingshot,5907
 Sliver,37109
@@ -5831,6 +5883,7 @@ Small Blue Crystals,14958
 Small Blue Pillow,2389
 Small Blue Present Kit,37569
 Small Boat,1764
+Small Branches,5561
 Small Brook,18841
 Small Cask,4848
 Small Coral,13678
@@ -5907,7 +5960,7 @@ Small Turquoise Pillow,2391
 Small Whistle,12602
 Small White Pillow,2392
 Small Window,17901
-Small Wooden Fence,17931
+Small Wooden Fence,17932
 Smashed Stone Head,4851
 Smelly Leather Legs,21418
 Smelly Slime,31968
@@ -5948,6 +6001,11 @@ Snowman (Wrappable),10208
 Snowman (Yeti),7173
 Snowman Doll,10339
 Snowman Package,10207
+Snowy Dead Tree (Branched),7021
+Snowy Dead Tree (Half Alive),3608
+Snowy Dead Tree (Rotten),7020
+Snowy Dead Tree (Twisted),7022
+Snowy Fir Tree,3609
 Snowy Pine Tree,7023
 Soap,35595
 Sofa Chair,2369
@@ -6075,8 +6133,10 @@ Spider Egg,233
 Spider Fangs,8031
 Spider Silk,5879
 Spider Victim,200
+Spider Web,187
 Spider Web (Ground),192
 Spider Web (Quest),23736
+Spider Webs,9444
 Spider in a Terrarium,26080
 Spiderweb Clouds Shreds,31339
 Spiderwebs,8032
@@ -6216,6 +6276,7 @@ Stone Gargoyle,8574
 Stone Hammer,22320
 Stone Herb,3735
 Stone Ledge,9425
+Stone Lichen,16415
 Stone Nose,16137
 Stone Pedestal,9523
 Stone Pedestal (Statue),8680
@@ -6238,6 +6299,7 @@ Stone Table (Immobile),7276
 Stone Table Kit,2786
 Stone Tablet with Ley Lines,27464
 Stone Throne,7280
+Stone Tile,429
 Stone Tile (Sand Switch),419
 Stone Tiles,26121
 Stone Wall (Banuta),1562
@@ -6316,6 +6378,8 @@ Strange Whirl,8193
 Strange Yellow Powder,12227
 Strange Yellow Powder (Used),12207
 Strangely Coloured Glooth,21152
+Strangely Glowing Feelers,13665
+Strangely Glowing Feelers (Activated),13666
 Strangely Glowing Mark (Blue),22077
 Strangely Glowing Mark (Green),22076
 Strangely Ornamented Key,29351
@@ -6387,10 +6451,11 @@ Sugar Cane (Harvested),5462
 Sugar Oat,12802
 Sugatrap's Obsidian Lance,22713
 Sulphider Shell,39375
+Sulphur,10592
 Sulphur Blossom Lamp (Lit),31724
 Sulphur Blossom Lamp (Unlit),31723
 Sulphur Powder,39376
-Sulphur Puddle,10693
+Sulphur Puddle,10710
 Sulphur Stone,36597
 Sulphurous Demonbone,28832
 Sulphurous Stone,10315
@@ -6430,9 +6495,10 @@ Svargrond Salmon Filet,29413
 Swamp,4744
 Swamp (Diggable),17950
 Swamp Grass,9686
-Swamp Lichen,16585
+Swamp Lichen,17816
 Swamp Lilly,3689
 Swamp Reed,3688
+Swamp Tentacles,9097
 Swamplair Armor,8052
 Swampling Club,17824
 Swampling Moss,17822
@@ -6554,6 +6620,8 @@ The Alchemists' Formulas,8818
 The Ambrosia Buffet,37620
 The Avenger,6527
 The Ban Hammer,37171
+The Beard of the Colossus,12006
+The Big Toe of the Colossus,12017
 The Blood of Cloak of Terror,34007
 The Book of Death Carpet,36944
 The Calamity,8104
@@ -6581,8 +6649,10 @@ The Essence of Ichgahal,43502
 The Essence of Murcion,43501
 The Essence of Vemiath,43503
 The Eye of Suon,36708
+The Face of the Colossus,12003
 The Famous Golden Bug,9614
 The Famous Mina Losa Painting,7871
+The Fist of the Colossus,12011
 The Gods' Twilight Doll,39762
 The Golden Outfit Display (Basic),31512
 The Golden Outfit Display (Boots),31504
@@ -6619,6 +6689,7 @@ The Regalia of Suon,31576
 The Remains of a Canopic Jar (Horestis),12506
 The Remains of a Lapis Vase,21937
 The Remains of a Pirate,9180
+The Remains of a Spider Egg,234
 The Ring of Ending Carpet,36948
 The Ring of the Count,7924
 The Rite of Eternal Night,22160
@@ -6634,8 +6705,10 @@ The Supreme Cube (Small),33313
 The Supreme Cube Carpet,36946
 The Sylvan Sapling Carpet,36940
 The Tail of the Keeper,11367
+The Thumb of the Colossus,12010
 The Time Compass,21795
 The Time Distort Almanac,31908
+The Toes of the Colossus,12019
 The Top Left Part of a Map,9182
 The Top Right Part of a Map,9181
 The Torso of a Jester Doll,8780
@@ -6656,7 +6729,8 @@ Thread Tree,3743
 Thread Tree (Parrot),6094
 Thread of Screw,5032
 Three Cans,24483
-Throatslitter,9959
+Throatslitter,9952
+Throatslitter (Rotten),9959
 Throne,2357
 Throwing Axe,35515
 Throwing Cake,904
@@ -6686,7 +6760,9 @@ Tic-Tac-Toe Token (O),3548
 Tic-Tac-Toe Token (X),3547
 Tiger Eye,24961
 Tiger Rider Statue,42401
+Timber Archway,11332
 Timber Chair,11803
+Timber Table,12022
 Timber Wall,10590
 Time Machine,25100
 Time Ring,3053
@@ -6777,6 +6853,7 @@ Treasure Map,5090
 Treasure Map (Pirate),5706
 Treasure Map (Store),31946
 Tree Coral,13674
+Tree Hole,6452
 Tree Stump,7960
 Tree Stump (Feyrist),25367
 Tremendous Tyrant Head,36783
@@ -6795,7 +6872,7 @@ Trophy of Jaul,14224
 Trophy of Obujos,14222
 Trophy of Tanjis,14223
 Trophy of a Strange Being,8591
-Trophy of a Strange Fish,8589
+Trophy of a Strange Fish,8590
 Tropical Fried Terrorbird,9082
 Tropical Marinated Tiger,29410
 Trough,2524
@@ -6975,7 +7052,7 @@ Verdant Carpet,26115
 Verdant Chair,26104
 Verdant Table,26111
 Verdant Trunk,26110
-Verminous Slime,10655
+Verminous Slime,10653
 Verocious Bat,12246
 Versicolour Fireworks Powder,30187
 Versicoloured Marble,33307
@@ -7060,6 +7137,7 @@ Wailing Widow's Necklace,10412
 Waldo's Post Horn,3219
 Wall Candle (Lit),32905
 Wall Candle (Unlit),32904
+Wall Chains,5483
 Wall Fern,39800
 Wall Flowers,39799
 Wall Lamp (Bamboo),2946
@@ -7287,7 +7365,7 @@ Witherblossom,12235
 Withered Pauldrons,27607
 Withered Plant,14032
 Withered Scalp,27608
-Witherstem,10714
+Witherstem,10715
 Wolf Backpack,22084
 Wolf Paw,5897
 Wolf Tooth Chain,3012
@@ -7309,10 +7387,11 @@ Wooden Chair Kit,2777
 Wooden Coffin,2477
 Wooden Doll,2989
 Wooden Dragon,6988
-Wooden Floor (Dark Brown),8308
+Wooden Floor (Dark Brown),8316
 Wooden Floor (Docks),499
 Wooden Floor (Rookgaard Border),7886
 Wooden Floor (Switch),7886
+Wooden Floor (Venore),15596
 Wooden Flute,2948
 Wooden Grinder,21573
 Wooden Hammer,3459
@@ -7416,49 +7495,3 @@ Yetislippers,30196
 Yielocks,12805
 Yielowax,12742
 Yirkas' Egg,34102
-Yol's Bow,8028
-Yonan's List,31715
-Young Lich Worm,31590
-Your Inbox,12902
-Your Store Inbox,23396
-Your Student Book,7879
-Your Supply Stash,28750
-Yummy Gummy Worm,8177
-Zaoan Armor,10384
-Zaoan Bamboo Tiles (1),37764
-Zaoan Bamboo Tiles (2),37766
-Zaoan Bamboo Tiles (3),37768
-Zaoan Bamboo Tiles (4),37770
-Zaoan Bamboo Tiles (5),37772
-Zaoan Bamboo Tiles (6),37774
-Zaoan Bamboo Tiles (Rolled-Up, 1),37763
-Zaoan Bamboo Tiles (Rolled-Up, 2),37765
-Zaoan Bamboo Tiles (Rolled-Up, 3),37767
-Zaoan Bamboo Tiles (Rolled-Up, 4),37769
-Zaoan Bamboo Tiles (Rolled-Up, 5),37771
-Zaoan Bamboo Tiles (Rolled-Up, 6),37773
-Zaoan Bonsai,37798
-Zaoan Cabinet,37783
-Zaoan Chess Box,18339
-Zaoan Divider,37815
-Zaoan Drawing,37800
-Zaoan Halberd,10406
-Zaoan Hassock,37781
-Zaoan Helmet,10385
-Zaoan Legs,10387
-Zaoan Panel,37776
-Zaoan Panel Base,37775
-Zaoan Paravent,37785
-Zaoan Pot Bamboo,37799
-Zaoan Robe,10439
-Zaoan Shoes,10386
-Zaoan Side Table,37803
-Zaoan Sword,10390
-Zaoan Wall Lamp,37806
-Zaoan Wall Lamp (Lit),37807
-Zaoan Wall Lamps,37808
-Zaoan Wall Lamps (Lit),37809
-Zaogun Flag,10413
-Zaogun Shoulderplates,10414
-Zathroth' Redeemer,28749
-Zombie Dummy,12050
