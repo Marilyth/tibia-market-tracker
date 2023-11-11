@@ -152,15 +152,15 @@ class MemoryExtractor(Extractor):
             self.client._wait_until_find("images/Category.png", click=True, cache=False)
 
             # Go to the correct category.
-            repeat_like_human(lambda: pyautogui.press("down"), category_index - 1)
+            repeat_like_human(lambda: pyautogui.press("down"), category_index - 1, wait_time=0.1)
 
             # Tab to the item list. This number might have to be changed if the market is updated.
-            repeat_like_human(lambda: pyautogui.press("tab"), 10)
+            repeat_like_human(lambda: pyautogui.press("tab"), 10, wait_time=0.1)
             
             # Go through the items quickly, except for the last one.
             # This is to make sure the item's value is fully loaded and we aren't rate limited.
             if starting_index > 1:
-                repeat_like_human(lambda: pyautogui.press("down"), starting_index, wait_time=0.1)
+                repeat_like_human(lambda: pyautogui.press("down"), starting_index, wait_time=0.06, target_deviation=0.01)
                 wait_like_human(8)
 
             last_item_id = -1
