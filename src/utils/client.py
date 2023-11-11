@@ -6,13 +6,19 @@ from typing import *
 import os
 from utils.extraction.memory.memory_reader import MemoryReader
 import shutil
-from utils.human_movement import move_mouse_like_human
+from utils.human_movement import move_mouse_like_human, wait_like_human, repeat_like_human
 
 
 class Client:
-    def __init__(self, executable_location: str, email: str, password: str):
+    def __init__(self, executable_location: str, email: str, password: str, char_index: int):
         '''
         The Tibia client, and all required functionality.
+
+        Args:
+            executable_location (str): The location of the Tibia executable.
+            email (str): The email of the account to log in with.
+            password (str): The password of the account to log in with.
+            char_index (int): The 0-based index of the character to log in with.
         '''
         pyautogui.PAUSE = 0.1
         self.tibia_data_location = os.path.join(os.path.expanduser("~"), ".local", "share", "CipSoft GmbH", "Tibia")
@@ -20,6 +26,7 @@ class Client:
         self.tibia_executable_location = executable_location
         self.email = email
         self.password = password
+        self.char_index = char_index
 
         self.tibia: subprocess.Popen = None
         self.tibia_process_id = None
@@ -85,7 +92,7 @@ class Client:
 
         # Wait until update is done, and click play button.
         self._wait_until_find("images/PlayButton.png", click=True, cache=False, timeout=600)
-        time.sleep(5)
+        wait_like_human(5)
 
     def _update_kick_timer(self):
         """Updates the timer for the next required wiggle. I.e. the time until the character would get kicked for being afk.
@@ -96,23 +103,20 @@ class Client:
         """
         Logs into the provided account, and selects the provided character.
         """
-        password_position = self._wait_until_find("images/PasswordField.png", click=True, cache=False)
-        pyautogui.typewrite(self.password)
-
-        self._add_to_log("Finding email field")
-        email_position = self._wait_until_find("images/EmailField.png", click=True, cache=False)
-        pyautogui.typewrite(self.email)
+        password_position = self._wait_until_find("images/PasswordField.png", click=False, cache=False, coordinate_deviation=2)
+        pyautogui.typewrite(self.email, 0.1)
+        pyautogui.press("tab")
+        wait_like_human(0.2)
+        pyautogui.typewrite(self.password, 0.1)
+        wait_like_human(0.2)
 
         pyautogui.press("enter")
 
         # Go ingame.
         self._wait_until_find("images/CharacterSlot.png", click=True, cache=False)
-        bot_character_index = 0
 
         # If desired, select another character than the first one.
-        for i in range(bot_character_index):
-            pyautogui.press("down")
-            time.sleep(0.1)
+        repeat_like_human(lambda: pyautogui.press("down"), self.char_index)
 
         pyautogui.press("enter")
         
@@ -173,7 +177,8 @@ class Client:
         for i in range(len(list(pyautogui.locateAllOnScreen("images/DepotTile.png")))):
             print(f"Trying depot {i}...")
             depot_position = list(pyautogui.locateAllOnScreen("images/DepotTile.png"))[i]
-            pyautogui.leftClick(depot_position)
+            move_mouse_like_human(depot_position[0], depot_position[1])
+            pyautogui.leftClick()
             if try_open_market():
                 return True
 
@@ -188,9 +193,9 @@ class Client:
         self._add_to_log("Closing market...")
         pyautogui.PAUSE = 0.1
         pyautogui.press("escape")
-        time.sleep(0.1)
+        wait_like_human(0.2)
         pyautogui.press("escape")
-        time.sleep(0.1)
+        wait_like_human(0.2)
         self.clear_cache()
 
     def clear_cache(self):
@@ -206,13 +211,13 @@ class Client:
         """
         self._add_to_log("Wiggling character...")
         pyautogui.hotkey("ctrl", "right")
-        time.sleep(uniform(0.4, 0.6)))
+        wait_like_human(0.5)
         pyautogui.hotkey("ctrl", "left")
-        time.sleep(uniform(0.4, 0.6)))
+        wait_like_human(0.5)
         self.market_tab = "offers"
         self._update_kick_timer()
 
-    def _wait_until_find(self, image: str, timeout: int = 60, click: bool = False, cache: bool = True, exact: bool = False, throw_on_timeout: bool = False) -> Tuple[int, int]:
+    def _wait_until_find(self, image: str, timeout: int = 60, click: bool = False, cache: bool = True, exact: bool = False, throw_on_timeout: bool = False, coordinate_deviation: int = 5) -> Tuple[int, int]:
         start_time = time.time()
 
         while time.time() - start_time < timeout:
@@ -221,7 +226,7 @@ class Client:
                 position = self.position_cache[image]
             else:
                 self._add_to_log(f"Looking for {image}...")
-                pyautogui.moveTo(20, 20)
+                move_mouse_like_human(20, 20)
                 if not exact:
                     position = pyautogui.locateCenterOnScreen(image, grayscale=True, confidence=0.9)
                 else:
@@ -233,12 +238,12 @@ class Client:
                 self._add_to_log(f"Found {image} at {position}.")
                 if click:
                     self._add_to_log(f"Clicking {image}...")
-                    move_mouse_like_human(position[0], position[1])
+                    move_mouse_like_human(position[0], position[1], coordinate_deviation)
                     pyautogui.leftClick()
                     
                 return position
 
-            time.sleep(0.2)
+            wait_like_human(0.3)
         
         self._add_to_log(f"Finding {image} failed.")
         if throw_on_timeout:

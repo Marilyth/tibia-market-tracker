@@ -2,6 +2,7 @@ from utils.client import Client
 import utils.extraction.ocr.ocr as screenshot
 from utils.market_values import MarketValues
 from utils.extraction.extractor import Extractor
+from utils.human_movement import wait_like_human, repeat_like_human
 from typing import *
 import pyautogui
 import time
@@ -29,14 +30,10 @@ class OCRExtractor(Extractor):
         """
         try:
             pyautogui.hotkey("ctrl", "z")
-            pyautogui.typewrite(name)
+            pyautogui.typewrite(name, 0.1)
             
             item_position = 1
-            
-            for i in range(item_position):
-                pyautogui.press("down")
-                 # Give Tibia some time to load new values.
-                time.sleep(0.45)
+            repeat_like_human(lambda: pyautogui.press("down"), item_position, 0.5)
             
             def parse_value(value: str) -> int:
                 if value.isnumeric():
