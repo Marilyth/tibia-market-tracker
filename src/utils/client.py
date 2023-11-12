@@ -177,7 +177,7 @@ class Client:
         for i in range(len(list(pyautogui.locateAllOnScreen("images/DepotTile.png")))):
             print(f"Trying depot {i}...")
             depot_position = list(pyautogui.locateAllOnScreen("images/DepotTile.png"))[i]
-            move_mouse_like_human(depot_position[0], depot_position[1])
+            move_mouse_like_human(depot_position[0], depot_position[1], 0)
             pyautogui.leftClick()
             if try_open_market():
                 return True
