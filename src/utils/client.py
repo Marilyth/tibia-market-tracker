@@ -81,8 +81,11 @@ class Client:
         """
         Checks if the update or install button exists, and if so, installs or updates and starts Tibia.
         """
-        if self._wait_until_find("images/Install.png", click=True, timeout=5, cache=False)[0] == -1:
-            self._wait_until_find("images/Update.png", click=True, timeout=10, cache=False)
+        # Don't click on the play button yet. We first need to replace the config file after the update.
+        if self._wait_until_find("images/PlayButton.png", click=False, cache=False, timeout=5)[0] == -1:
+            # No playbutton exists, so Tibia must be updated or running first.
+            if self._wait_until_find("images/Update.png", click=True, timeout=5, cache=False)[0] == -1:
+                self._wait_until_find("images/Install.png", click=True, timeout=5, cache=False)
 
         # Create ~/.local/share/CipSoft Gmbh/Tibia/packages/config if it doesn't exist.
         os.makedirs(self.tibia_settings_location, exist_ok=True)
