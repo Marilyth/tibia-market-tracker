@@ -106,7 +106,7 @@ def filter_outliers(values: List[Dict[str, float]], keys: List[str], outlier_fac
     """
     for i, value in enumerate(values):
         if i > 0 and i < len(values) - 1:
-            for stat_name in [keys]:
+            for stat_name in keys:
                 current = value[stat_name]
                 
                 if current == -1:
