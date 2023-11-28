@@ -11,7 +11,7 @@ class TestDebugger:
         self.analyzer.set_key([0x91c43868, 0x5462b10e, 0xd9f0c56d, 0x46928fd6])
 
         packages = []
-        with open(os.path.join(os.path.dirname(__file__), "traffic_1698851800.6518543.txt"), "rb") as f:
+        with open(os.path.join(os.path.dirname(__file__), "example_traffic.txt"), "rb") as f:
             example_network_packet = f.readlines()
 
             for packet in example_network_packet:

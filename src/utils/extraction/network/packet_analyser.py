@@ -197,24 +197,15 @@ class PacketAnalyser:
         # Send data to decompressor.
         response = self.decompressor[sender].stdin.write(data_str.encode() + b"\n")
         self.decompressor[sender].stdin.flush()
-        time.sleep(0.1)
-        response = None
-        while not response:
-            response = self.decompressor[sender].stdout.read()
 
-            time.sleep(0.05)
+        response = b''
+        while len(response) == 0 or response[-1] != 10:
+            new_response = self.decompressor[sender].stdout.read()
+            
+            if new_response:
+                response += new_response
 
-            if response:
-                # Read all remaining data from stdout.
-                while True:
-                    new_response = self.decompressor[sender].stdout.read()
-                    if new_response:
-                        response += new_response
-                    else:
-                        break
-                        
-                    time.sleep(0.05)
-                break
+            time.sleep(0.01)
         
         response = response.decode().strip()
 

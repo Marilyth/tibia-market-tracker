@@ -42,11 +42,11 @@ while(true){
         ushort decompressedLength = (ushort)zStream.next_out_index;
 
         // Convert the decompressed data to a hex string.
-        var decompressedHex = BitConverter.ToString(decompressedBytes).Replace("-", " ");
+        var decompressedHex = BitConverter.ToString(decompressedBytes.Take(decompressedLength).ToArray()).Replace("-", " ");
         decompressedHex = $"{BitConverter.ToString(BitConverter.GetBytes(decompressedLength)).Replace("-", " ")} {decompressedHex}";
 
         // Write the decompressed data to the console.
-        Console.Write(decompressedHex);
+        Console.WriteLine(decompressedHex);
     }
     catch(Exception e){
         Console.WriteLine(e.Message);
