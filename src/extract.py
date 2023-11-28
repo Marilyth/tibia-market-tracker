@@ -58,7 +58,7 @@ def do_market_search(email: str, password: str, char_index: int, virtual_display
         from utils.client import Client
 
         client = Client("./Tibia/Tibia", email, password, char_index)
-        extractor: Extractor = MemoryExtractor(client)
+        extractor: Extractor = NetworkExtractor(client)
         extractor.setup()
 
         market_values = extractor.extract_market_values()
