@@ -13,8 +13,8 @@ while(true){
         var input = Console.ReadLine();
 
         // Ignore empty lines.
-        if(string.IsNullOrEmpty(input)){
-            continue;
+        if(string.IsNullOrWhiteSpace(input)){
+            throw new Exception("Empty input cannot be decompressed.");
         }
 
         // input is a hex string, convert it to a byte array.
@@ -50,5 +50,6 @@ while(true){
     }
     catch(Exception e){
         Console.WriteLine(e.Message);
+        break;
     }
 }
