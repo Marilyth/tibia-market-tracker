@@ -48,7 +48,7 @@ def write_events(results_location: str):
         print(f"Writing events failed: {e}")
 
 
-def do_market_search(email: str, password: str, virtual_display: bool, virtual_display_visible: bool):
+def do_market_search(email: str, password: str, char_index: int, virtual_display: bool, virtual_display_visible: bool):
     write_events("./results")
 
     def market_search():
@@ -57,8 +57,8 @@ def do_market_search(email: str, password: str, virtual_display: bool, virtual_d
         from utils.extraction.extractor import Extractor
         from utils.client import Client
 
-        client = Client("./Tibia/Tibia", email, password)
-        extractor: Extractor = NetworkExtractor(client)
+        client = Client("./Tibia/Tibia", email, password, char_index)
+        extractor: Extractor = MemoryExtractor(client)
         extractor.setup()
 
         market_values = extractor.extract_market_values()
@@ -88,16 +88,15 @@ if __name__ == "__main__":
 
     download_package()
 
-    # If email and password are passed as arguments, use those instead of the ones in the config.
-    # This makes tracking many servers easier.
+    char_index = 0
+
+    # If character index is provided, use that instead of the default.
     if len(sys.argv) > 1:
-        config["email"] = sys.argv[1]
-    if len(sys.argv) > 2:
-        config["password"] = sys.argv[2]
+        char_index = int(sys.argv[1])
 
     mongo_manager = MongoManager(config["mongodbConnectionString"])
 
     # Ensure that the results location exists.
     os.makedirs("./results", exist_ok=True)
 
-    do_market_search(config["email"], config["password"], config["useVirtualDisplay"], config["showVirtualDisplay"])
+    do_market_search(config["email"], config["password"], char_index, config["useVirtualDisplay"], config["showVirtualDisplay"])

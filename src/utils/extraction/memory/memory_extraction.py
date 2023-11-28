@@ -10,6 +10,8 @@ import pyautogui
 from tqdm import tqdm
 import random
 import traceback
+from utils.human_movement import wait_like_human, repeat_like_human
+import os
 
 
 class MemoryExtractor(Extractor):
@@ -18,17 +20,8 @@ class MemoryExtractor(Extractor):
         self.ocr_extractor = OCRExtractor(client)
         self.market_reader: MarketMemoryReader = None
 
-        # Load item ids from wiki, or from items.csv if wiki is down.
-        try: 
-            self.id_to_name, self.name_to_id = Wiki().get_item_ids()
-
-            # Save the item ids to items.csv.
-            with open("items.csv", "w+") as f:
-                for key, value in self.name_to_id.items():
-                    f.write(f"{key},{value}\n")
-        except Exception as e:
-            self.client._add_to_log(f"Failed to get item ids from wiki. {e}")
-            
+        # if file exists.
+        if os.path.exists("items.csv"):
             # Load self.id_to_name and self.name_to_id from items.csv instead
             self.id_to_name = {}
             self.name_to_id = {}
@@ -41,6 +34,21 @@ class MemoryExtractor(Extractor):
 
                         self.id_to_name[int(id)] = name
                         self.name_to_id[name] = int(id)
+
+        # Load item ids from wiki, or from items.csv if wiki is down.
+        try: 
+            self.wiki_id_to_name, self.wiki_name_to_id = Wiki().get_item_ids()
+
+            # Merge the two dictionaries.
+            self.id_to_name = {**self.id_to_name, **self.wiki_id_to_name}
+            self.name_to_id = {**self.name_to_id, **self.wiki_name_to_id}
+
+            # Save the item ids to items.csv.
+            with open("items.csv", "w+") as f:
+                for key, value in self.name_to_id.items():
+                    f.write(f"{key},{value}\n")
+        except Exception as e:
+            self.client._add_to_log(f"Failed to get item ids from wiki. {e}")
     
     def setup(self):
         self.client.start_game()
@@ -144,16 +152,16 @@ class MemoryExtractor(Extractor):
             self.client._wait_until_find("images/Category.png", click=True, cache=False)
 
             # Go to the correct category.
-            pyautogui.press("down", presses=category_index - 1)
+            repeat_like_human(lambda: pyautogui.press("down"), category_index - 1, wait_time=0.1)
 
             # Tab to the item list. This number might have to be changed if the market is updated.
-            pyautogui.press("tab", presses=10)
+            repeat_like_human(lambda: pyautogui.press("tab"), 10, wait_time=0.1)
             
             # Go through the items quickly, except for the last one.
             # This is to make sure the item's value is fully loaded and we aren't rate limited.
             if starting_index > 1:
-                pyautogui.press("down", presses=starting_index)
-                time.sleep(8)
+                repeat_like_human(lambda: pyautogui.press("down"), starting_index, wait_time=0.06, target_deviation=0.01)
+                wait_like_human(8)
 
             last_item_id = -1
             while True:
@@ -164,16 +172,16 @@ class MemoryExtractor(Extractor):
                         starting_index += 1
                         item_fail_count = 0
                         pyautogui.press("down")
-                        time.sleep(0.5)
+                        wait_like_human(0.5)
                     
                     # If the last result failed, reload the item.
                     if item_fail_count > 0:
                         pyautogui.press("up")
-                        time.sleep(0.5)
+                        wait_like_human(0.5)
 
                     # Go to next item. Wait a bit to make sure we aren't rate limited.
                     pyautogui.press("down")
-                    time.sleep(0.5)
+                    wait_like_human(0.5)
 
                     pyautogui.PAUSE = 0.01
 
@@ -187,6 +195,7 @@ class MemoryExtractor(Extractor):
 
                     # If the id is the same as the last one, we have reached the end of the category.
                     if id == last_item_id:
+                        self.client._add_to_log(f"Probably reached end of {category_index=}: {values.name=} {values.id=}")
                         break
                     
                     # If we have failed 10 times in a row, we should probably restart.

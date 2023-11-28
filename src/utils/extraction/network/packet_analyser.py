@@ -41,6 +41,8 @@ class PacketAnalyser:
         if self.output:
             self.output.write(text + "\n")
             self.output.flush()
+            self.output.write(text + "\n")
+            self.output.flush()
         else:
             print(text)
 
@@ -158,6 +160,8 @@ class PacketAnalyser:
         except Exception as e:
             # Print stacktrace
             traceback.print_exc()
+            # Print stacktrace
+            traceback.print_exc()
             self.log(f"Error while decrypting packet: {e}")
         
     @staticmethod
@@ -241,6 +245,12 @@ class PacketAnalyser:
 
         #self.log(f"{raw_data}\n")
 
+        if self.incomplete_packets and from_server:
+            # Append the raw_data to the last incomplete packet.
+            self.incomplete_packets[-1] += raw_data
+            raw_data = self.incomplete_packets[-1]
+            self.incomplete_packets = []
+
         # First 2 bytes are the size of the packet load (minus the size bytes) in little endian. I.e. 0c00 is 12 bytes.
         packet_size = int.from_bytes(raw_data[:2], byteorder=sys.byteorder, signed=False)
         actual_size = len(raw_data[2:])
@@ -281,6 +291,7 @@ class PacketAnalyser:
 
         # Assert that the decryption was successful.
         #assert decrypted_packet_length <= len(decrypted_data[2:])
+        #assert decrypted_packet_length <= len(decrypted_data[2:])
         payload = decrypted_data[2:decrypted_packet_length + 2]
 
         if not is_valid:
@@ -298,6 +309,7 @@ class PacketAnalyser:
         hex_data = binascii.hexlify(decrypted_data)
         hex_payload = binascii.hexlify(payload)
 
+        command = payload[0] if payload else -1
         command = payload[0] if payload else -1
         command_name = self.command_type_to_name(command, client_commands if not from_server else server_commands)
 
