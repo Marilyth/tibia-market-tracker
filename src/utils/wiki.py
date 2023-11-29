@@ -2,6 +2,13 @@ from datetime import datetime
 from typing import Dict, List, Tuple
 import requests
 import re
+import sys
+import os
+
+# Add the proto directory to the path so that we can import from it.
+sys.path.append(os.path.join(os.path.dirname(__file__), "proto"))
+
+from utils.proto import appearances_pb2
 
 
 class EventData:
@@ -118,3 +125,22 @@ class Wiki:
                     item_to_id[item[0]] =  id_value
 
         return id_to_item, item_to_id
+
+    def get_marketable_proto_items(self) -> List[appearances_pb2.Appearance]:
+        """Parses the appearance.dat file, and returns all items with the market flag set.
+
+        Returns:
+            List[appearances_pb2.Appearance]: A list of all items with the market flag set.
+        """
+        assets_folder = os.path.expanduser("/root/.local/share/CipSoft GmbH/Tibia/packages/Tibia/assets")
+        appearances_dat_file_name = [file_name for file_name in os.listdir(assets_folder) if file_name.startswith("appearances-") and file_name.endswith(".dat")][0]
+
+        appearances = appearances_pb2.Appearances()
+        appearances.ParseFromString(open(f"{assets_folder}/{appearances_dat_file_name}", "rb").read())
+
+        marketable_items = []
+        for item in appearances.object:
+            if str(item.flags.market):
+                marketable_items.append(item)
+
+        return marketable_items

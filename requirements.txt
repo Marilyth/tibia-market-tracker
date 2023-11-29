@@ -16,3 +16,4 @@ psutil
 PyJWT
 scapy
 xtea
+protobuf
