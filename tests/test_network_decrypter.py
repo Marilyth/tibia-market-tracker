@@ -4,7 +4,7 @@ import os
 
 class TestDebugger:
     def setup_method(self):
-        self.analyzer = PacketAnalyser(output=False)
+        self.analyzer = PacketAnalyser(output=True)
 
     def test_ExampleTraffic_CanDecrypt(self):
         # Arrange

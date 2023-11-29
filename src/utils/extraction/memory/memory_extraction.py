@@ -4,6 +4,7 @@ from utils.extraction.ocr.ocr_extraction import OCRExtractor
 from utils.extraction.memory.market_memory_reader import MarketMemoryReader
 from utils.wiki import Wiki
 from utils.extraction.extractor import Extractor
+from utils.market_categories import market_categories
 import time
 from typing import *
 import pyautogui
@@ -100,9 +101,9 @@ class MemoryExtractor(Extractor):
     def extract_market_values(self) -> List[MarketValues]:
         items = []
 
-        for category in tqdm(range(1, 25), desc="Category"):
+        for category in tqdm(market_categories, desc=f"Category"):
             try:
-                items.extend(self.crawl_market(category))
+                items.extend(self.crawl_market(category.index))
             except Exception as e:
                 traceback.print_exc()
                 
@@ -152,7 +153,7 @@ class MemoryExtractor(Extractor):
             self.client._wait_until_find("images/Category.png", click=True, cache=False)
 
             # Go to the correct category.
-            repeat_like_human(lambda: pyautogui.press("down"), category_index - 1, wait_time=0.1)
+            repeat_like_human(lambda: pyautogui.press("down"), category_index, wait_time=0.1)
 
             # Tab to the item list. This number might have to be changed if the market is updated.
             repeat_like_human(lambda: pyautogui.press("tab"), 10, wait_time=0.1)
