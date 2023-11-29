@@ -1,6 +1,6 @@
 import pytest
 from datetime import datetime
-from utils.tibia_wiki import EventData, Wiki
+from utils.wiki import EventData, Wiki
 
 
 class TestWiki:
@@ -46,3 +46,12 @@ class TestWiki:
 
         # Assert
         assert len(after_events) == 1
+    
+    def test_GetEvents_WhenCalledWithAfterDate_ReturnsDaysAfterDate(self):
+        # Act
+        items = self.wiki.get_marketable_proto_items()
+
+        # Assert
+        assert len(items) > 3600 and len(items) < 30000
+        assert any([item.name == "fire sword" for item in items])
+        assert not any([item.name == "crystal bed" for item in items])
