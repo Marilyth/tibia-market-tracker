@@ -47,11 +47,11 @@ class TestWiki:
         # Assert
         assert len(after_events) == 1
     
-    def test_GetEvents_WhenCalledWithAfterDate_ReturnsDaysAfterDate(self):
+    def test_GetMarketableProtoItems_ReturnsExpected(self):
         # Act
         items = self.wiki.get_marketable_proto_items()
 
         # Assert
         assert len(items) > 3600 and len(items) < 30000
-        assert any([item.name == "fire sword" for item in items])
-        assert not any([item.name == "crystal bed" for item in items])
+        assert any([item.name == "fire sword" for item in items.values()])
+        assert not any([item.name == "crystal bed" for item in items.values()])

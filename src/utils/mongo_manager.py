@@ -1,6 +1,6 @@
 import pymongo
-from utils.market_values import MarketValues
-from utils.wiki import EventData
+from utils.market_values import MarketValues, NPCSaleData
+from utils.wiki import EventData, Wiki
 from typing import List
 import os
 from tqdm import tqdm
@@ -8,9 +8,15 @@ from datetime import datetime
 
 
 class ItemPricesCollection:
-    def __init__(self, name: str, id: int):
+    def __init__(self, name: str, id: int, pretty_name: str, internal_name: str, npc_sell: List[NPCSaleData], npc_buy: List[NPCSaleData], category: str, is_upgradeable: bool):
         self.name = name
+        self.internal_name = internal_name
         self.id = id
+        self.pretty_name = pretty_name
+        self.npc_sell = npc_sell
+        self.npc_buy = npc_buy
+        self.category = category
+        self.is_upgradeable = is_upgradeable
         self.history = {}
 
     @staticmethod
@@ -26,8 +32,26 @@ class ItemPricesCollection:
         value_dict = market_values.__dict__
         value_dict.pop("name")
         value_dict.pop("id")
+        value_dict.pop("pretty_name")
+        value_dict.pop("internal_name")
+        value_dict.pop("npc_sell")
+        value_dict.pop("npc_buy")
+        value_dict.pop("category")
+        value_dict.pop("is_upgradeable")
 
         return value_dict
+    
+    @staticmethod
+    def NPCSaleData_to_mongo_dict(npc_sale_data: NPCSaleData) -> dict:
+        """Converts a NPCSaleData object to a dictionary for storage in MongoDB.
+
+        Args:
+            npc_sale_data (NPCSaleData): The NPCSaleData object to convert.
+
+        Returns:
+            dict: A dictionary containing the name, price and location of the NPCSaleData object.
+        """
+        return npc_sale_data.__dict__
     
     def to_mongo_dict(self) -> dict:
         """Converts the ItemPricesCollection to a dictionary for storage in MongoDB.
@@ -36,11 +60,21 @@ class ItemPricesCollection:
             dict: A dictionary containing the name and history of the ItemPricesCollection.
         """
         history = {}
+        npc_sell = []
+        npc_buy = []
 
         for server in self.history:
             history[server] = [ItemPricesCollection.MarketValues_to_mongo_dict(market_value) for market_value in self.history[server]]
 
-        return {"name": self.name, "id": self.id, "history": history}
+        for npc_sale_data in self.npc_sell:
+            npc_sell.append(ItemPricesCollection.NPCSaleData_to_mongo_dict(npc_sale_data))
+
+        for npc_sale_data in self.npc_buy:
+            npc_buy.append(ItemPricesCollection.NPCSaleData_to_mongo_dict(npc_sale_data))
+
+        return {"name": self.name, "id": self.id, "history": history, "pretty_name": self.pretty_name, 
+                "internal_name": self.internal_name, "npc_sell": npc_sell, "npc_buy": npc_buy, 
+                "category": self.category, "is_upgradeable": self.is_upgradeable}
 
 
 class MongoManager:
@@ -66,49 +100,6 @@ class MongoManager:
                 events = events.split(",")
 
                 self.add_event(date, events)
-
-    def _add_from_file_system(self):
-        """Adds the market values from the file system to the database.
-        """
-        path = "./src/results"
-
-        for server in os.listdir(path):
-            # if server is not a folder, skip it.
-            if not os.path.isdir(os.path.join(path, server)):
-                continue
-            
-            item_values = {}
-
-            for file in os.listdir(os.path.join(path, server, "histories")):
-                # Add histories.
-                with open(os.path.join(path, server, "histories", file), "r") as f:
-                    item_name = file[:-4]
-                    item_values[item_name] = ItemPricesCollection(item_name, -1)
-                    item_values[item_name].history[server] = []
-
-                    # Skip first line, because it is gibberish often.
-                    for line in f.read().split("\n")[1:]:
-                        if line == "":
-                            continue
-                        market_values = MarketValues.from_history_string(line)
-                        market_values.name = item_name
-                        item_values[item_name].history[server].append(market_values)
-                
-            # Add fullscan.
-            with open(os.path.join(path, server, "fullscan.csv"), "r") as f:
-                for line in f.read().split("\n"):
-                    if line == "":
-                        continue
-                    
-                    # Ignore header.
-                    if not line.startswith("Name,"):
-                        market_values = MarketValues.from_string(line)
-                        last_history = item_values[market_values.name].history[server].pop(-1)
-                        market_values.time = last_history.time
-                        item_values[market_values.name].history[server].append(market_values)
-
-            for item in tqdm(item_values, desc=f"Adding items to database"):
-                self.item_prices.insert_one(item_values[item].to_mongo_dict())
 
     def add_api_key(self, api_key: str):
         """Adds the given api key to the database.
@@ -159,6 +150,36 @@ class MongoManager:
         """
         self.access_logs.insert_one({"ip": ip, "time": datetime.now().isoformat(), "endpoint": endpoint, "parameters": parameters, "status": status})
 
+    def _add_missing_fields(self, server: str, market_values: MarketValues):
+        """Used to add missing fields to the database.
+
+        Args:
+            server (str): _description_
+            market_values (MarketValues): _description_
+        """
+        # If a list of market values is given, add each one individually.
+        if isinstance(market_values, list):
+            for market_value in market_values:
+                self.add_market_value(server, market_value)
+            return
+
+        market_values.load_from_proto()
+        market_values.load_pretty_name()
+
+        item_name = market_values.name.lower()
+        item_id = market_values.id
+
+        # Check if the item already exists in the database. Load the name and collection NAMES only, not their values.
+        item = self.item_prices.find_one({"name": item_name}, {"name": 1, "id": 1, "pretty_name": 1, 
+                                                               "internal_name": 1, "npc_sell": 1, "npc_buy": 1, "category": 1})
+
+        if item:
+            # Add or update the fields.
+            self.item_prices.update_one({"name": item_name}, {"$set": {"pretty_name": market_values.name, "internal_name": item_name, 
+                                                                        "npc_sell": [ItemPricesCollection.NPCSaleData_to_mongo_dict(data) for data in market_values.npc_sell], 
+                                                                        "npc_buy": [ItemPricesCollection.NPCSaleData_to_mongo_dict(data) for data in market_values.npc_buy], 
+                                                                        "category": market_values.category, "is_upgradeable": market_values.is_upgradeable, "id": item_id} } )
+
     def add_market_value(self, server: str, market_values: MarketValues):
         """Adds the market values to the database.
 
@@ -171,22 +192,23 @@ class MongoManager:
                 self.add_market_value(server, market_value)
             return
 
+        # Don't add items that are not marketable.
+        if not market_values.load_from_proto():
+            return
+        market_values.load_pretty_name()
+
         item_name = market_values.name.lower()
         item_id = market_values.id
 
-        # Check if the item already exists in the database. Load the name and collection NAMES only, not their values.
-        item = self.item_prices.find_one({"name": item_name}, {"name": 1, "history": 1})
+        # Check if the item already exists in the database. Load the name.
+        item = self.item_prices.find_one({"name": item_name}, {"name": 1, "id": 1})
 
         if item:
             # Add the market values to the history[server] list.
             self.item_prices.update_one({"name": item_name}, {"$push": {f"history.{server}": ItemPricesCollection.MarketValues_to_mongo_dict(market_values) } } )
-            
-            # Also update the item id if it doesn't exist yet.
-            if "id" not in item or item["id"] == -1:
-                self.item_prices.update_one({"name": item_name}, {"$set": {"id": item_id} } )
         else:
             # Add the item to the database.
-            collection = ItemPricesCollection(item_name, item_id)
+            collection = ItemPricesCollection(item_name, item_id, market_values.name, market_values.internal_name, market_values.npc_sell, market_values.npc_buy, market_values.category, market_values.is_upgradeable)
             collection.history[server] = [market_values]
             self.item_prices.insert_one(collection.to_mongo_dict())
 
@@ -220,15 +242,33 @@ class MongoManager:
         query = {f"history.{server}": {"$exists": True}}
 
         # Only retrieve the last entry of the history[server]'s history. Don't include the rest of the history, and don't include other servers.
-        projection = {"name": 1, "history": {server: {"$slice": -1}}}
+        projection = {"name": 1, "history": {server: {"$slice": -1}}, "id": 1, "pretty_name": 1, 
+                      "internal_name": 1, "npc_sell": 1, "npc_buy": 1, "category": 1, "is_upgradeable": 1}
 
         items = self.item_prices.find(query, projection)
 
         if items:
             items = list(items)
-            items = [(item["name"], item["history"][server][0]) for item in items if len(item["history"][server]) > 0]
-            for name, item in items:
-                item["name"] = name
+            items = [(item, item["history"][server][0]) for item in items if len(item["history"][server]) > 0]
+            
+            # Put the values of the item into the latest history entry for convenience.
+            for values, item in items:
+                item["name"] = values["name"]
+
+                try:
+                    if "pretty_name" in values:
+                        item["id"] = values["id"]
+                        item["pretty_name"] = values["pretty_name"]
+                        item["internal_name"] = values["internal_name"]
+                        item["npc_sell"] = values["npc_sell"]
+                        item["npc_buy"] = values["npc_buy"]
+                        item["category"] = values["category"]
+                        item["is_upgradeable"] = values["is_upgradeable"]
+                except Exception as e:
+                    print(f"Failed to add values to item. {e}")
+                    print(f"Item: {item}")
+                    print(f"Values: {values}")
+                    raise e
 
             return [item for name, item in items]
         else:
