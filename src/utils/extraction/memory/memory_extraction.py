@@ -19,36 +19,6 @@ class MemoryExtractor(Extractor):
         super().__init__(client)
         self.ocr_extractor = OCRExtractor(client)
         self.market_reader: MarketMemoryReader = None
-
-        # if file exists.
-        if os.path.exists("items.csv"):
-            # Load self.id_to_name and self.name_to_id from items.csv instead
-            self.id_to_name = {}
-            self.name_to_id = {}
-            with open("items.csv", "r") as f:
-                for line in f.readlines():
-                    if len(line) >= 3:
-                        values = line.split(",")
-                        id = values[-1]
-                        name = ",".join(values[:-1])
-
-                        self.id_to_name[int(id)] = name
-                        self.name_to_id[name] = int(id)
-
-        # Load item ids from wiki, or from items.csv if wiki is down.
-        try: 
-            self.wiki_id_to_name, self.wiki_name_to_id = Wiki().get_item_ids()
-
-            # Merge the two dictionaries.
-            self.id_to_name = {**self.id_to_name, **self.wiki_id_to_name}
-            self.name_to_id = {**self.name_to_id, **self.wiki_name_to_id}
-
-            # Save the item ids to items.csv.
-            with open("items.csv", "w+") as f:
-                for key, value in self.name_to_id.items():
-                    f.write(f"{key},{value}\n")
-        except Exception as e:
-            self.client._add_to_log(f"Failed to get item ids from wiki. {e}")
     
     def setup(self):
         self.client.start_game()
@@ -208,10 +178,10 @@ class MemoryExtractor(Extractor):
                     item_fail_count = 0
                     starting_index += 1
 
-                    if id not in self.id_to_name:
+                    if id not in Wiki.get_pretty_names():
                         self.client._add_to_log("Unknown item id: " + str(id) + ", category: " + str(category_index) + ", index: " + str(starting_index))
                     else:
-                        values.name = self.id_to_name[id]
+                        values.name = Wiki.get_pretty_names()[id]
 
                     self.client._add_to_log(values)
 

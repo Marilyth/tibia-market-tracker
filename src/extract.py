@@ -11,6 +11,14 @@ from install_tibia import install_tibia, download_package
 dry_run: bool = False
 mongo_manager: MongoManager = None
 
+def update_item_data():
+    """
+    Updates the item data in the database.
+    """
+    from utils.market_values import MarketValues
+    for item_id in tqdm(Wiki.get_marketable_proto_items()):
+        mongo_manager._add_missing_fields("Antica", MarketValues("fire sword", -1, 100, 200, 300, 400, 500, 600, 700, 800, 900, -1, -1, -1, -1, item_id))
+
 def write_marketable_items():
     items = Wiki().get_all_marketable_items()
     with open("tracked_items.txt", "w") as f:

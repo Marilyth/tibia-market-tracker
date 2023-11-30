@@ -127,7 +127,7 @@ Armable Beer Trap (Cat),32040
 Armable Beer Trap (Empty),32039
 Armable Beer Trap (Orc),32041
 Armageddon Plans,12540
-Armillary Sphere,8852
+Armillary Sphere,850
 Armillary Sphere (TibiaMaps),37114
 Armor (Object),5863
 Armor Rack,6112
@@ -337,7 +337,7 @@ Battle Stone,11447
 Batwing Hat,9103
 Beach Backpack,5949
 Beach Bag,5950
-Beam,11829
+Beam,11830
 Bear Doll,3001
 Bear Paw,5896
 Bear Skin,31578
@@ -695,7 +695,7 @@ Brass Button,37604
 Brass Helmet,3354
 Brass Legs,3372
 Brass Shield,3411
-Brass Throne,8529
+Brass Throne,8530
 Brass-Shod Chest,23740
 Bread,3600
 Bread Crust,32030
@@ -737,7 +737,7 @@ Broken Iks Headpiece,40532
 Broken Iks Sandals,40534
 Broken Iks Spear,40535
 Broken Key Ring,11652
-Broken Limestone Wall,9270
+Broken Limestone Wall,9271
 Broken Lizard Statue,2067
 Broken Longbow,34161
 Broken Macuahuitl,40530
@@ -831,7 +831,7 @@ Burning Heart,3240
 Burning Skull,5020
 Burning Splint,39137
 Burning Sugar Cane,5464
-Burning Wall,5063
+Burning Wall,5067
 Burnt Down Firewood,3131
 Burnt Down Rainbow Torch,39703
 Burnt Down Torch,2926
@@ -1037,7 +1037,7 @@ Cheesy Key,35508
 Cheesy Membership Card,35614
 Cherry,3590
 Cherry (Field),12113
-Chess Board,1210
+Chess Board,1211
 Chest,2482
 Chest Full of Witchcraft,43680
 Chest of Abundance,28946
@@ -1200,7 +1200,7 @@ Copper Prison Key,20271
 Copper Roof,17339
 Copper Shield,3430
 Copper Token,22722
-Copper Valve,21758
+Copper Valve,21792
 Coral (Blue),5414
 Coral (Grey),5415
 Coral (Large),5412
@@ -1223,7 +1223,7 @@ Cornucopia,3103
 Corrupt Naga Scales,39415
 Corrupted Flag,10409
 Corrupted Plant,9871
-Corrupted Rock,10570
+Corrupted Rock,10577
 Costume Bag (Common),653
 Costume Bag (Deluxe),655
 Costume Bag (Retro),24949
@@ -1349,7 +1349,7 @@ Crystal Sword,7449
 Crystal Table,9062
 Crystal Table Kit,9061
 Crystal Trail,15021
-Crystal Wall (Prismatic),15273
+Crystal Wall (Prismatic),15274
 Crystal Wand,3068
 Crystal of Balance,9028
 Crystal of Focus,9027
@@ -1482,7 +1482,7 @@ Decorative Green Sheet,32105
 Decorative Plume,37605
 Decorative Red Sheet,32104
 Decorative Ribbon,16155
-Decorative Spear,11182
+Decorative Spear,11185
 Deed of Ownership,7866
 Deep Crystal,9240
 Deepling Axe,13991
@@ -1612,7 +1612,7 @@ Doll,2991
 Doll (Blond),6579
 Doll of Durin The Almighty,14765
 Doll of Durin The Almighty (Replica),23679
-Door (Sealed),5123
+Door (Sealed),11249
 Double Axe,3275
 Doublet,3379
 Downy Feather,11684
@@ -1690,7 +1690,7 @@ Drawer,18020
 Drawer Kit,2789
 Drawing Board,34063
 Dread Doll,12905
-Dreadcoil,10730
+Dreadcoil,10747
 Dreaded Cleaver,7419
 Dream Blossom Staff,25700
 Dream Catcher,29276
@@ -1759,7 +1759,7 @@ Dwarven Stone Table,31191
 Eagle Shield,3438
 Earflap,17819
 Earth (Tile),1020
-Earth (Wall),19029
+Earth (Wall),1027
 Earth Amplification,36738
 Earth Arrow,774
 Earth Barbarian Axe,784
@@ -1939,7 +1939,7 @@ Energy Cranial Basher,808
 Energy Crystal Mace,807
 Energy Dragon Slayer,798
 Energy Drink,23545
-Energy Fence,5071
+Energy Fence,5073
 Energy Field (Field),2126
 Energy Field (Neutral),2135
 Energy Field Rune,3164
@@ -3154,7 +3154,7 @@ Honey Flower,2984
 Honey Palm,31376
 Honey Palm Bark,31329
 Honeycomb,5902
-Honeyflower Patch,9226
+Honeyflower Patch,2984
 Hook,6097
 Hopgoblin's Broken Staff,22712
 Horn,3257
@@ -3231,9 +3231,9 @@ Icy Barbarian Axe Replica,25935
 Icy Blacksteel Replica,25933
 Icy Blacksteel Sword,682
 Icy Bone,15725
-Icy Bone Claw,15767
+Icy Bone Claw,15770
 Icy Bones (Fence),15747
-Icy Bones (Spine),15757
+Icy Bones (Spine),15760
 Icy Clerical Mace,689
 Icy Clerical Mace Replica,25940
 Icy Cranial Basher,691
@@ -3261,7 +3261,7 @@ Icy Orcish Maul Replica,25943
 Icy Rainbow Shield,8079
 Icy Relic Sword,680
 Icy Relic Sword Replica,25931
-Icy Skull,15752
+Icy Skull,15753
 Icy Spike Sword,679
 Icy Spike Sword Replica,25930
 Icy War Axe,688
@@ -3305,7 +3305,7 @@ Insectoid Cell,12938
 Insectoid Cocoon (Item),13969
 Insectoid Eggs,17457
 Insectoid Hive Stairs,13342
-Insectoid Pore,10748
+Insectoid Pore,13367
 Insectoid Queen,14049
 Insectoid Remains,13408
 Instable Proto Matter,23516
@@ -3496,7 +3496,7 @@ Large Glowing Gem (Violet),8648
 Large Glowing Ruby,24934
 Large Glowing Sapphire,24935
 Large Hallowed Bone,19088
-Large Hole,868
+Large Hole,7522
 Large Hole (Covered),867
 Large Hole (Webs),874
 Large Painting (Eloise),12508
@@ -3609,8 +3609,8 @@ Lightsphere,24929
 Lilac Carpet,35888
 Lilac Carpet (Rolled-Up),35887
 Lilypad Backpack,39754
-Limestone Pedestal,9296
-Limestone Window,9573
+Limestone Pedestal,9300
+Limestone Window,9574
 Liodile Fang,40583
 Lion Amulet,34158
 Lion Axe,34253
@@ -3744,7 +3744,7 @@ Lump of Reed Flour Dough,31914
 Lump of Sacred Clay,11344
 Luna (TibiaGoals),36999
 Lunar Staff,7424
-Lush Grass,11711
+Lush Grass,11718
 Lute,2950
 Lutenist,37237
 Lyre,2949
@@ -4032,7 +4032,7 @@ Mossmasher Figurine,35591
 Mossy Fallen Tree,3980
 Mossy Fallen Tree (Something),3978
 Mossy Stone (Round),1887
-Mossy Wall (Cave),5557
+Mossy Wall (Cave),5559
 Mother Soil,947
 Mould,7817
 Mould Heart,34141
@@ -4077,7 +4077,7 @@ Mutated Skin Legs,40590
 Mycological Bow,16164
 Mycological Mace,16162
 Mysterious Fetish,3078
-Mysterious Machine,847
+Mysterious Machine,845
 Mysterious Metal Egg,19065
 Mysterious Ornate Chest,19068
 Mysterious Package (AVIN),899
@@ -4339,7 +4339,7 @@ Ornamented Scorpion Table,12493
 Ornamented Shield,3424
 Ornamented Stone Pedestal,21391
 Ornamented Stone Table,2353
-Ornamented Wall,1438
+Ornamented Wall,6853
 Ornate Bed,35874
 Ornate Cabinet,26163
 Ornate Canopic Jar,12511
@@ -4439,7 +4439,7 @@ Panther Paw,12040
 Pantibian Amphora,39707
 Paper Streamers,24496
 Papyrus Deed,32914
-Papyrus Scroll,11967
+Papyrus Scroll,11968
 Paralyse Rune,3165
 Paravent,1420
 Parcel,3503
@@ -4611,7 +4611,7 @@ Pile of Three Presents Kit,37563
 Pile of Wooden Planks,26123
 Pillar Railing,17620
 Pillar Vine,10856
-Pillory,5475
+Pillory,5476
 Pillow Backpack,24393
 Pinata,30315
 Pinata Dragon,25062
@@ -5090,7 +5090,7 @@ Rooted Evil (Broken Dream),20104
 Roots,33938
 Rope,3003
 Rope Belt,11492
-Rope Railing,2280
+Rope Railing,2288
 Rope-Ladder,9116
 Rorc Egg,18996
 Rorc Feather,18993
@@ -5140,7 +5140,7 @@ Rubbish (3),3126
 Rubbish (4),3127
 Rubbish (5),3128
 Rubbish Amulet,25296
-Rubble,5618
+Rubble,5623
 Ruby Fire Stone,28709
 Ruby Necklace,3016
 Ruddy Rock (Big),22286
@@ -5321,7 +5321,7 @@ Seafarer Table,42272
 Seafood Bucket,42302
 Seal of Quality,34079
 Sealed Scroll,28650
-Searing Fire,2137
+Searing Fire,2138
 Seashell Book (Blue),14173
 Seashell Book (Green),14175
 Seashell Book (Library Blue),14014
@@ -5524,7 +5524,7 @@ Skill Trainer (Magic),16202
 Skill Trainer (Sword),16198
 Skinning Knife,12672
 Skull (Item),3114
-Skull (Object),5015
+Skull (Object),5016
 Skull (Quest),28489
 Skull Belt,11480
 Skull Candle,5813
@@ -5664,7 +5664,7 @@ Small Turquoise Pillow,2391
 Small Whistle,12602
 Small White Pillow,2392
 Small Window,17901
-Small Wooden Fence,17931
+Small Wooden Fence,17932
 Smashed Stone Head,4851
 Smelly Leather Legs,21418
 Smelly Slime,31968
@@ -5954,7 +5954,7 @@ Stone Hammer,22320
 Stone Herb,3735
 Stone Ledge,9425
 Stone Nose,16137
-Stone Pedestal,8680
+Stone Pedestal,9523
 Stone Pedestal (Statue),8680
 Stone Pile,12725
 Stone Pile (Small),1823
@@ -5968,7 +5968,7 @@ Stone Table Kit,2786
 Stone Tablet with Ley Lines,27464
 Stone Tile (Sand Switch),419
 Stone Tiles,26121
-Stone Wall (Cave),381
+Stone Wall (Cave),384
 Stone Wall (Draft),22738
 Stone Wall (Falcon Bastion),28467
 Stone Wall (Venore),17200
@@ -6109,7 +6109,7 @@ Sulphider Shell,39375
 Sulphur Blossom Lamp (Lit),31724
 Sulphur Blossom Lamp (Unlit),31723
 Sulphur Powder,39376
-Sulphur Puddle,10693
+Sulphur Puddle,10710
 Sulphur Stone,36597
 Sulphurous Demonbone,28832
 Sulphurous Stone,10315
@@ -6148,7 +6148,7 @@ Svargrond Salmon Filet,29413
 Swamp,4744
 Swamp (Diggable),17950
 Swamp Grass,9686
-Swamp Lichen,16585
+Swamp Lichen,17816
 Swamplair Armor,8052
 Swampling Club,17824
 Swampling Moss,17822
@@ -6497,7 +6497,7 @@ Trophy of Jaul,14224
 Trophy of Obujos,14222
 Trophy of Tanjis,14223
 Trophy of a Strange Being,8591
-Trophy of a Strange Fish,8589
+Trophy of a Strange Fish,8590
 Tropical Fried Terrorbird,9082
 Tropical Marinated Tiger,29410
 Trough,2524
@@ -6673,7 +6673,7 @@ Verdant Carpet,26115
 Verdant Chair,26104
 Verdant Table,26111
 Verdant Trunk,26110
-Verminous Slime,10655
+Verminous Slime,10653
 Verocious Bat,12246
 Versicolour Fireworks Powder,30187
 Versicoloured Marble,33307
@@ -6974,7 +6974,7 @@ Witherblossom,12235
 Withered Pauldrons,27607
 Withered Plant,14032
 Withered Scalp,27608
-Witherstem,10714
+Witherstem,10715
 Wolf Backpack,22084
 Wolf Paw,5897
 Wolf Tooth Chain,3012
@@ -7140,3 +7140,468 @@ Zaogun Flag,10413
 Zaogun Shoulderplates,10414
 Zathroth' Redeemer,28749
 Zombie Dummy,12050
+Albino Dragon Leather,44157
+Altar,3524
+Ancient Iks Ritual Chalice,44432
+Animal Skull,3132
+Anvil,7843
+Apocalypse Mushroom,9894
+Aquarius Fungius,9862
+Arcane Dragon Robe,44623
+Astro Clock,751
+Atab's Mitmah Helmet,44729
+Badger Fur (Floor Decoration),2595
+Balista Bolt,44351
+Bamboo Plant,3770
+Bamboo Wardrobe,2458
+Banana Tree,5092
+Banana Tree (Harvestworthy),5094
+Barrel (Quest),2523
+Bars,2185
+Basalt Floor,15003
+Battering Ram,7899
+Bed (Dark-Haired Beauty),694
+Beech,3621
+Bench,2373
+Big Fern,3751
+Black Blisters,10690
+Blackboard,2605
+Blackened Flower,9884
+Block of Wood,2743
+Blood (Tile),18620
+Bloodspot,7139
+Blue Carpet,5572
+Blue Shrine Stone,1841
+Blueberry Bush,3700
+Bog Fingers Plant,3691
+Bog Water,12721
+Bone Totem,6972
+Bottled Dragon Breath,44179
+Branches,18458
+Brick Wall (Venore),17210
+Brick Window,6442
+Broken Brick Wall,6283
+Broken Flask (Green),2878
+Broken Mitmah Chestplate,44727
+Broken Mitmah Necklace,44438
+Broken Stone Pillar,8389
+Broken Stone Pillar (Ancient),2264
+Brown Bear Fur,2590
+Brown Carpet,5590
+Brown Pavement,7601
+Buffer Stop,7136
+Bulltaur Armor Scrap,44738
+Bulltaur Hoof,44737
+Bulltaur Horn,44736
+Bush,3681
+Buttress (Bones),6411
+Buttress (Wooden),1637
+Cactus (Large),3641
+Cactus (Sharp),3638
+Cactus (Spiky),3642
+Cactus (Thick),3637
+Carlin Banner,9292
+Carved Stone Tile (Claw),517
+Carved Stone Tile (Large Lizard),515
+Carved Stone Tile (Large Salamander),519
+Carved Stone Tile (Lizard),514
+Carved Stone Tile (Ornamented Lizard),518
+Carved Stone Tile (Ornamented),516
+Carved Stone Tile (Salamander),513
+Castle Flag,2019
+Cat's Food Mushroom,3916
+Cat's Food Mushrooms,3917
+Cave Entrance,7479
+Cave Entrance (Mine),7478
+Cave Painting,15527
+Celestial Map,755
+Ceremonial Brush,44433
+Chalk,20125
+Chalk Board,854
+Chest of Drawers (Quest),2434
+Chill Nettle,3870
+Chimney (Immobile),7856
+Cleat,4988
+Closed Trapdoor,475
+Coal (Immobile),7923
+Cobbled Pavement,870
+Cobra Statue,2057
+Cobwebs,2701
+Coconut Palm,3640
+Copper Valve (Item),21758
+Couch,2409
+Counter,2321
+Crane Plant,3873
+Crate (Usable),8745
+Crystal,7809
+Crystal Bed,44556
+Crystal Cabinet,44459
+Crystal Chair,44452
+Crystal Chest,44456
+Crystal Floor Lamp,44462
+Crystal Floor Lamp (Lit),44463
+Crystal Table (Store),44457
+Crystal Wall,15272
+Crystal Wall Lamp,44515
+Crystal Wall Lamp (Lit),44516
+Crystal of the Mitmah,44439
+Crystalized Blood,44752
+Dauntless Dragon Scale Armor,44621
+Dawn Singer,3875
+Dead Man's Saddle,3907
+Dead Man's Saddles,3907
+Dead Minotaur (Item),4272
+Dead Tree,3634
+Desertfire Plant,9824
+Devil's Tongue Flower,3899
+Dew Kisser Flower,3894
+Dirt (Object),9445
+Dirt Wall,367
+Doomato,10714
+Draccoon Santa,44755
+Dragolisk Eye,44746
+Dragolisk Poison Gland,44747
+Dragon Scales,10881
+Dragon Statue,747
+Dragonbone Tree,9811
+Dragons Nest Tree,3752
+Draw Well,1931
+Dried Grass,993
+Dried Grass Roof,1197
+Dry Bush,3698
+Dry Earth (Zao),10160
+Dry Grass,993
+Dusk Catcher,3690
+Dustbin,2526
+Dwarf Tree,3625
+Earth (Cracked),1728
+Earth (Tile Black),10534
+Earth Ground,368
+Eaves Gutter,8549
+Eldritch Carpet,36496
+Empty Basin,44618
+Empty Bucket,44650
+Enchanted Balista Bolt,44352
+Encrypted Notes,44739
+Exhalted Seal,44750
+Fairy Queen,3872
+Ferumbras Snowman,32787
+Figurehead (Big),7229
+Figurehead (Small),7231
+Finely Crafted Ornament,13440
+Fir Tree,3614
+Framework Window,6438
+Frog Leaf,3693
+Fryclops Axe,44525
+Fur (Tile),6809
+Giant Glimmer Cap Mushroom,3920
+Giant Jungle Rose,3878
+Giant Tree (Verminous),10621
+Giant Verminous,10705
+Giggle Mushroom,3914
+Giggle Mushrooms,3915
+Glimmer Cap Mushroom,3918
+Glimmer Cap Mushrooms,3919
+Gnome Baby,44520
+Gold Blossom,3887
+Gold-Scaled Sentinel,44751
+Grappletackle,10725
+Gravel,4568
+Greater Guardian Gem,44604
+Greater Marksman Gem,44607
+Greater Mystic Gem,44613
+Greater Sage Gem,44610
+Green Carpet,5581
+Green Fountain Bush,3750
+Green Wig Bush,3747
+Grey Sand,19278
+Grimy Wooden Plank,16489
+Grotto,13597
+Guardian Gem,44603
+Heralds Insignia,44753
+Heralds Wings,44754
+High Grass,9999
+Hole (Earth),7516
+Hole (Pitfall),595
+Hole (Rock),594
+Huge Telescope,750
+Humanoid Remains,3133
+Huntress Statue,2107
+Hydra Statue,7591
+Ice (Object),6714
+Ice (Tile),6686
+Ice Cabinet,32776
+Ice Chest,32783
+Ice Floor,6967
+Ice Hut,6756
+Ice Table,32777
+Icicles,6966
+Icy Bones (Rib),15764
+Idol of Tukh,44436
+Idol of the Forge,44742
+Immensely Powerful Crystal,44558
+Infected Throne,9899
+Iron Maiden,5474
+Jade Floor Lamp,11052
+Jagged Stones,7492
+Jug of Gold Lye,44435
+Jungle Bells Plant,3874
+Jungle Crown Plant,3749
+Jungle Dweller Bush,3744
+Jungle Grass (Tile),1019
+Jungle Rose,3879
+Jungle Umbrella Plant (Large),3759
+Jungle Umbrella Plant (Medium),3758
+Jungle Umbrella Plant (Small),3760
+Jutty,8728
+Ladder (Wood),1948
+Lady in the Fog Plant,3692
+Lamp (Lava),13661
+Large Black Crystal,10797
+Large Pearl Flower (Pink),3902
+Large Pearl Flower (Yellow),3921
+Large Throne,5916
+Lava Fountain,5075
+Lava Hole (Inactive),390
+Leaves,6273
+Lesser Guardian Gem,44602
+Lesser Marksman Gem,44605
+Lesser Mystic Gem,44611
+Lesser Sage Gem,44608
+Ley Triangulator,44677
+Limestone Pillar,9281
+Limestone Railing,9279
+Linen,267
+Lizards Tongue Bush,3748
+Loose Board,408
+Love Flower,3662
+Luxurious Couch,2417
+Mailbox (Wooden),3508
+Mammoth Bone,15778
+Mammoth Skull,6977
+Mango Tree,5155
+Mango Tree (Harvestworthy),5156
+Marksman Gem,44606
+Mast,4941
+Meadow Star,3890
+Mechanism,8618
+Mega Dragon Heart,44745
+Metal Fittings,5774
+Mire Sprout,3685
+Mold Floor,15027
+Molten Dragon Essence,44744
+Monumental Gate,44705
+Moon Herb,3686
+Moss Cap Mushroom,3909
+Mossy Stone (Normal),1840
+Mountain (Earth),1027
+Mountain (Wall),1116
+Mourning Mushroom,9896
+Mud (Tile),10605
+Mud Whip,3687
+Muddy Brick Wall,17224
+Muddy Floor,355
+Muddy Floor (Dark),10235
+Muddy Floor (Light),10243
+Muddy Water,10494
+Muzzle,7849
+Mysterious Machine (Activated),845
+Mystic Gem,44612
+Mystical Dragon Robe,44624
+Necrotic Grass,9892
+Nimmersatt's Seal,44743
+Nordic Wall Window,7028
+Obsidian Statue,746
+Old Tree,3636
+Omnious Trashcan,44563
+Orange Tree,3742
+Oriel Window,5044
+Oriental Carpet,2586
+Ornamented Floor,543
+Palisade,1619
+Palm,3639
+Part of a Giant Stone Dragon,10475
+Pear Tree,3619
+Pedestal,477
+Pepper Root Grass,9846
+Pestbringer,9900
+Pestilent Fern,9889
+Pilchi with Paint,44434
+Pile of Bones (Quest),4024
+Pile of Chopped Wood,2742
+Pillar (Royal),9429
+Pillar (Small),6986
+Pine,3626
+Pitch Black Gap,8811
+Plants (Object),1052
+Poison Trickle,5874
+Polar Bear Fur,2594
+Polished Idol of Tukh,44437
+Poplar,3622
+Purple Cardinal,3884
+Purple Kiss Bush,3753
+Rails,7130
+Rattleleaf Bush,9961
+Red Maple,3618
+Red Shrine Stone,1842
+Remains of a Spider Web,189
+Roof,8620
+Rosebush,3680
+Rotten Plant,9886
+Royal Blossom,3665
+Rudder Blade,4970
+Rutted Stone,11281
+Sacrificial Stone,3532
+Sage Gem,44609
+Sand (Brown),9531
+Sand (Light),9707
+Sand (White),104
+Sewer Grate,435
+Shackles,5481
+Shadow Plant,3683
+Shallow Water (Zao),10113
+Ship Cabin Wall,4908
+Ship Cabin Wall Window,4905
+Ship Rudder,7227
+Ship Rudder Hole,7219
+Sign,2017
+Sign (Left),2016
+Sign (Right),2014
+Skull (Animal),7569
+Slab with a Hyaena,34104
+Slab with a Lizard,34106
+Slab with a Scorpion,34107
+Slab with a Skull,32627
+Slab with a Snake,34105
+Sleeping Bear,7175
+Slime Fungus (Tile),12355
+Slime Table Mushroom,3912
+Slime Table Mushrooms,3913
+Slimy Wall,5563
+Sludge Fern,3694
+Small Basin,1940
+Small Boat,1764
+Small Branches,5561
+Small Fern,3754
+Small Fir Tree,3682
+Small Pearl Flower,3900
+Small Sail,1766
+Small Totem Pole,2299
+Snake Nest Bush,3746
+Snake Ornament,561
+Sneeze Blossom,3891
+Snowy Dead Tree (Branched),7021
+Snowy Dead Tree (Half Alive),3608
+Snowy Dead Tree (Rotten),7020
+Snowy Dead Tree (Twisted),7022
+Snowy Fir Tree,3609
+Some Pieces of Wood (Object),2744
+Some Sunflowers,3666
+Spider Web,187
+Spider Webs,9444
+Spikes (Wall Hangings),7233
+Spirit Container (Ratha-Empty),44527
+Spirit Container (Ratha-Full),44528
+Splintered Mitmah Gem,44728
+Staff Piece,44741
+Stairs (Brown),1958
+Stairs (Down),434
+Stairs (White),5257
+Stairs (Wood),5259
+Steering Wheel,4964
+Stone (Normal),1791
+Stone Base,6861
+Stone Coffin,1984
+Stone Coffin (Blue),1984
+Stone Coffin (Quest),1983
+Stone Coffin (Red),1984
+Stone Coffin (Yellow),1984
+Stone Floor,436
+Stone Floor (Banuta),504
+Stone Floor (Golden),418
+Stone Lichen,16415
+Stone Pillar,2152
+Stone Pillar (Ancient),2263
+Stone Pillar (Kazordoon Simple),7708
+Stone Railing,2168
+Stone Shelf,7259
+Stone Snake Pagoda,2093
+Stone Stairs,1978
+Stone Table (Immobile),7276
+Stone Throne,7280
+Stone Tile,429
+Stone Wall (Banuta),1562
+Stone Wall (Carlin),9336
+Stone Wall Window (Normal),6447
+Stones (Object),7915
+Strange Carving,599
+Strange Carving (Tile),599
+Strange Machine (Generator),8985
+Strange Statue,7629
+Strange Substance,44740
+Strangely Glowing Feelers,13665
+Strangely Glowing Feelers (Activated),13666
+Straw,5484
+Sulphur,10592
+Sunflower,3667
+Swamp Lilly,3689
+Swamp Reed,3688
+Swamp Tentacles,9097
+Sycamore,3615
+Tainted Plant,9876
+Tent,264
+The Beard of the Colossus,12006
+The Big Toe of the Colossus,12017
+The Face of the Colossus,12003
+The Fist of the Colossus,12011
+The Mitmah East Key,44673
+The Mitmah North Key,44672
+The Mitmah South Key,44674
+The Mitmah West Key,44675
+The Remains of a Spider Egg,234
+The Thumb of the Colossus,12010
+The Toes of the Colossus,12019
+Thornpeak Grass,9817
+Thread Tree,3743
+Throatslitter,9952
+Throatslitter (Rotten),9959
+Throne,2357
+Timber Archway,11332
+Timber Table,12022
+Timber Wall,10590
+Titans Orchid,3883
+Totem Pole,2301
+Tower Fern,3745
+Trapdoor,433
+Tree Hole,6452
+Tree Stump,7960
+Trollhair Plants,9847
+Turtle Sprouter,3876
+Unerring Dragon Scale Armor,44622
+Vampire Lord Statue,8325
+Velvet Petal,3898
+Ventilation Grille,4971
+Vines,7890
+Wagon (Cage),7956
+Wall Chains,5483
+Wardragon Claw,44748
+Wardragon Tooth,44749
+Wardrobe,2430
+Water Lily,3672
+Water Trickle,5664
+Water Wheel,5424
+Wheel,7776
+White Flower (Immobile),3656
+White Stone Tile,463
+White Stone Wall Window,1742
+Witches' Cauldron Plant,3885
+Wood (Bundle),7919
+Wooden Chair (Primitive),24528
+Wooden Coffin,2477
+Wooden Floor (Dark Brown),8316
+Wooden Floor (Rookgaard Border),7886
+Wooden Floor (Venore),15596
+Wooden Pillar,9429
+Wooden Railing,5254
+Wooden Wall,5264
+Wooden Wall (Nordic),6843

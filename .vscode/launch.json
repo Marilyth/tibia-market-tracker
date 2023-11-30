@@ -25,7 +25,8 @@
             "env": {
                 "PYTHONPATH": "${workspaceFolder}/src:${workspaceFolder}/tests"
             },
-            "justMyCode": true
+            "justMyCode": true,
+            "sudo": true
         },
         {
             "name": "Python: Current File (pytest)",
