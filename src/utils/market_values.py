@@ -3,10 +3,12 @@ from typing import List
 
 
 class NPCSaleData:
-    def __init__(self, name: str, sell_price: int, location: str):
+    def __init__(self, name: str, sell_price: int, location: str, currency_object_type_id: int, currency_quest_flag_display_name: str):
         self.name = name
         self.location = location
         self.price = sell_price
+        self.currency_object_type_id = currency_object_type_id
+        self.currency_quest_flag_display_name = currency_quest_flag_display_name
 
 
 class MarketValues:
@@ -92,9 +94,9 @@ class MarketValues:
 
             for sale_data in proto_item.flags.npcsaledata:
                 if sale_data.buy_price > 0:
-                    self.npc_buy.append(NPCSaleData(sale_data.name, sale_data.buy_price, sale_data.location))
+                    self.npc_buy.append(NPCSaleData(sale_data.name, sale_data.buy_price, sale_data.location, sale_data.currency_object_type_id, sale_data.currency_quest_flag_display_name))
                 if sale_data.sale_price > 0:
-                    self.npc_sell.append(NPCSaleData(sale_data.name, sale_data.sale_price, sale_data.location))
+                    self.npc_sell.append(NPCSaleData(sale_data.name, sale_data.sale_price, sale_data.location, sale_data.currency_object_type_id, sale_data.currency_quest_flag_display_name))
 
             return True
         else:
