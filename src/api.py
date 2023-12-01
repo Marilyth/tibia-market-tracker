@@ -244,7 +244,7 @@ async def get_item_metadata(request: Request, item_id: int = -1):
     Args:
         item_id (int, optional): The id of the item to get the metadata for. Defaults to -1 (all).
     """
-    metadata = mongo_manager.get_item_metadata()
+    metadata = mongo_manager.get_item_metadata(item_id)
 
     return {"metadata": metadata}
 
