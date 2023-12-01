@@ -1,5 +1,5 @@
 from utils.client import Client
-from utils.market_values import MarketValues
+from utils.data.market_values import MarketValues
 from utils.extraction.memory.memory_extraction import MemoryExtractor
 from utils.extraction.network.packet_sniffer import PacketSniffer
 from utils.extraction.network.packet_analyser import PacketAnalyser

@@ -1,4 +1,4 @@
-from utils.market_values import MarketValues
+from utils.data.market_values import MarketValues
 from utils.mongo_manager import MongoManager
 import uvicorn
 from fastapi import FastAPI, Response, Request, Depends, HTTPException, status
@@ -164,13 +164,12 @@ async def middleware(request: Request, call_next):
 # Set up API endpoints.
 @app.get("/market_values", dependencies=[Depends(bearer_auth)])
 @limiter.limit("1/5seconds;10/minute")
-async def get_market_values(request: Request, server: str, name: str = None, max_sell_price: int = None, min_buy_price: int = None, max_buy_price: int = None,
+async def get_market_values(request: Request, server: str, max_sell_price: int = None, min_buy_price: int = None, max_buy_price: int = None,
                             min_sell_price: int = None, max_flippers: int = None, min_flippers: int = None, skip: int = 0, limit: int = 100):
     """Returns the market values of the items which match the given criteria.
 
     Args:
         server (str): The server of the item.
-        name (str): The name of the item.
         max_sell_price (int): The maximum sell price of the item.
         min_buy_price (int): The minimum buy price of the item.
         max_buy_price (int): The maximum buy price of the item.
@@ -182,8 +181,6 @@ async def get_market_values(request: Request, server: str, name: str = None, max
 
     filters = []
 
-    if name:
-        filters.append(lambda value: name.lower() in value["name"].lower())
     if max_sell_price:
         filters.append(lambda value: value["sell_offer"] <= max_sell_price)
     if min_sell_price:
@@ -203,14 +200,14 @@ async def get_market_values(request: Request, server: str, name: str = None, max
 
 @app.get("/item_history", dependencies=[Depends(bearer_auth)])
 @limiter.limit("1/5seconds;10/minute")
-async def get_item_history(request: Request, server: str, item: str, start_time: float = None, end_time: float = None):
+async def get_item_history(request: Request, server: str, item_id: int, start_time: float = None, end_time: float = None):
     """Returns the history of the given item.
 
     Args:
         server (str): The server of the item.
-        item (str): The name of the item.
+        item_id (int): The id of the item.
     """
-    values = mongo_manager.get_item_history(item, server)
+    values = mongo_manager.get_item_history(item_id, server)
 
     if not values:
         return {"error": "Item does not exist, or has no data."}
@@ -238,6 +235,18 @@ async def get_events(request: Request):
     events = mongo_manager.get_events()
 
     return {"events": events}
+
+@app.get("/item_metadata", dependencies=[Depends(bearer_auth)])
+@limiter.limit("1/5seconds;10/minute")
+async def get_events(request: Request, item_id: int = -1):
+    """Returns the metadata for the given item, or all items if no item id is given.
+
+    Args:
+        item_id (int, optional): The id of the item to get the metadata for. Defaults to -1 (all).
+    """
+    metadata = mongo_manager.get_item_metadata()
+
+    return {"metadata": metadata}
 
 @app.get("/generate_token")
 async def generate_token(username: str, secret: str, days: int = 90):

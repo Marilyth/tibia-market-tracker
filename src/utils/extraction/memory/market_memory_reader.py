@@ -3,7 +3,7 @@ from typing import *
 from datetime import datetime, timedelta
 from utils.extraction.memory.memory_reader import MemoryReader
 import ctypes
-from utils.market_values import MarketValues
+from utils.data.market_values import MarketValues
 
 
 class MarketMemoryReader:
@@ -212,4 +212,4 @@ class MarketMemoryReader:
         self.last_id = item_id
 
         print(f"Finished reading memory: {item_id=}, {buy_offer=}, {sell_offer=}, {average_bought=}, {average_sold=}, {amount_bought=}, {amount_sold=}, {max_bought=}, {min_sold=}, {offers_within_24h=}, {sell_offers=}, {buy_offers=}, {max_sold=}, {min_bought=}")
-        return MarketValues(name, time.time(), sell_offer, buy_offer, average_sold, average_bought, amount_sold, amount_bought, max_sold, min_bought, max(offers_within_24h), sell_offers, buy_offers, min_sold, max_bought, item_id), was_duplicate
+        return MarketValues(time.time(), sell_offer, buy_offer, average_sold, average_bought, amount_sold, amount_bought, max_sold, min_bought, max(offers_within_24h), sell_offers, buy_offers, min_sold, max_bought, item_id), was_duplicate
