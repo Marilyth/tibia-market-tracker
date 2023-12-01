@@ -238,7 +238,7 @@ async def get_events(request: Request):
 
 @app.get("/item_metadata", dependencies=[Depends(bearer_auth)])
 @limiter.limit("1/5seconds;10/minute")
-async def get_events(request: Request, item_id: int = -1):
+async def get_item_metadata(request: Request, item_id: int = -1):
     """Returns the metadata for the given item, or all items if no item id is given.
 
     Args:

@@ -234,9 +234,9 @@ class MongoManager:
             
             # Put the values of the item into the latest history entry for convenience.
             for values, item in items:
-                item["name"] = values["name"]
+                item["id"] = values["id"]
 
-            return [item for name, item in items]
+            return [item for id, item in items]
         else:
             return []
         
