@@ -24,8 +24,26 @@ class ItemPricesCollection:
         """
         value_dict = market_values.__dict__
         value_dict.pop("id")
+        value_dict.pop("pretty_name")
+        value_dict.pop("internal_name")
+        value_dict.pop("npc_sell")
+        value_dict.pop("npc_buy")
+        value_dict.pop("category")
+        value_dict.pop("is_upgradeable")
 
         return value_dict
+    
+    @staticmethod
+    def NPCSaleData_to_mongo_dict(npc_sale_data: NPCSaleData) -> dict:
+        """Converts a NPCSaleData object to a dictionary for storage in MongoDB.
+
+        Args:
+            npc_sale_data (NPCSaleData): The NPCSaleData object to convert.
+
+        Returns:
+            dict: A dictionary containing the name, price and location of the NPCSaleData object.
+        """
+        return npc_sale_data.__dict__
     
     @staticmethod
     def NPCSaleData_to_mongo_dict(npc_sale_data: NPCSaleData) -> dict:
@@ -46,6 +64,8 @@ class ItemPricesCollection:
             dict: A dictionary containing the name and history of the ItemPricesCollection.
         """
         history = {}
+        npc_sell = []
+        npc_buy = []
 
         for server in self.history:
             history[server] = [ItemPricesCollection.MarketValues_to_mongo_dict(market_value) for market_value in self.history[server]]

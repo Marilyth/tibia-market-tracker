@@ -1,0 +1,47 @@
+package tibia.protobuf.sound;
+
+import "sounds-common.proto";
+
+message Sounds {
+ repeated Sound sound = 1;
+ repeated NumericSoundEffect numeric_sound_effect = 2;
+ repeated AmbienceStream ambience_stream = 3;
+ repeated AmbienceObjectStream ambience_object_stream = 4;
+ repeated MusicTemplate music_template = 5;
+}
+
+message Sound {
+ optional uint32 id = 1;
+ optional string filename = 2;
+ optional string original_filename = 3;
+ optional bool is_stream = 4;
+}
+
+message NumericSoundEffect {
+ optional uint32 id = 1;
+ optional ENumericSoundType numeric_sound_type = 2;
+ optional MinMaxFloat random_pitch = 3;
+ optional MinMaxFloat random_volume = 4;
+ optional SimpleSoundEffect simple_sound_effect = 5;
+ optional RandomSoundEffect random_sound_effect = 6;
+}
+
+message AmbienceStream {
+ optional uint32 id = 1;
+ optional uint32 looping_sound_id = 2;
+ repeated DelayedSoundEffect delayed_effects = 3;
+}
+
+message AmbienceObjectStream {
+ optional uint32 id = 1;
+ repeated uint32 counted_appearance_types = 2;
+ repeated AppearanceTypesCountSoundEffect sound_effects = 3;
+ optional uint32 max_sound_distance = 4;
+}
+
+message MusicTemplate {
+ optional uint32 id = 1;
+ optional uint32 sound_id = 2;
+ optional EMusicType music_type = 3;
+}
+
