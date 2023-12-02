@@ -1,5 +1,5 @@
 from utils.client import Client
-from utils.market_values import MarketValues
+from utils.data.market_values import MarketValues
 from utils.extraction.ocr.ocr_extraction import OCRExtractor
 from utils.extraction.memory.market_memory_reader import MarketMemoryReader
 from utils.wiki import Wiki
@@ -70,7 +70,7 @@ class MemoryExtractor(Extractor):
     def extract_market_values(self) -> List[MarketValues]:
         items = []
 
-        for category in tqdm(range(1, 25), desc="Category"):
+        for category in tqdm(range(1, 2), desc="Category"):
             try:
                 items.extend(self.crawl_market(category))
             except Exception as e:
@@ -119,7 +119,7 @@ class MemoryExtractor(Extractor):
                     if memory_fail_count >= 5:
                         raise e
 
-            self.client._wait_until_find("images/Category.png", click=True, cache=False)
+            self.client._wait_until_find("images/Category.png", click=True, cache=False, coordinate_deviation=1)
 
             # Go to the correct category.
             repeat_like_human(lambda: pyautogui.press("down"), category_index - 1, wait_time=0.1)
@@ -165,7 +165,7 @@ class MemoryExtractor(Extractor):
 
                     # If the id is the same as the last one, we have reached the end of the category.
                     if id == last_item_id:
-                        self.client._add_to_log(f"Probably reached end of {category_index=}: {values.name=} {values.id=}")
+                        self.client._add_to_log(f"Probably reached end of {category_index=}: {values.id=}")
                         break
                     
                     # If we have failed 10 times in a row, we should probably restart.
@@ -178,16 +178,12 @@ class MemoryExtractor(Extractor):
                     item_fail_count = 0
                     starting_index += 1
 
-                    if id not in Wiki.get_pretty_names():
+                    if id not in Wiki.get_marketable_proto_items():
                         self.client._add_to_log("Unknown item id: " + str(id) + ", category: " + str(category_index) + ", index: " + str(starting_index))
                     else:
-                        values.name = Wiki.get_pretty_names()[id]
-
-                    self.client._add_to_log(values)
-
-                    if values.name != "Unknown":
                         results.append(values)
 
+                    self.client._add_to_log(values)
                     last_item_id = id
 
                     # Wiggle every once in a while to avoid being kicked out.

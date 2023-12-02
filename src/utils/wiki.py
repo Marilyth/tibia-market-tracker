@@ -6,9 +6,9 @@ import sys
 import os
 
 # Add the proto directory to the path so that we can import from it.
-sys.path.append(os.path.join(os.path.dirname(__file__), "proto"))
+sys.path.append(os.path.join(os.path.dirname(__file__), "data", "proto"))
 
-from utils.proto import appearances_pb2
+from utils.data.proto import appearances_pb2
 
 
 class EventData:
@@ -134,7 +134,7 @@ class Wiki:
         return id_to_item, item_to_id
 
     @staticmethod
-    def get_pretty_names() -> Dict[int, str]:
+    def get_wiki_names() -> Dict[int, str]:
         """Returns a dictionary mapping item ids to their pretty names.
 
         Returns:

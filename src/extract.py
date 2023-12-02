@@ -11,20 +11,6 @@ from install_tibia import install_tibia, download_package
 dry_run: bool = False
 mongo_manager: MongoManager = None
 
-def update_item_data():
-    """
-    Updates the item data in the database.
-    """
-    from utils.market_values import MarketValues
-    for item_id in tqdm(Wiki.get_marketable_proto_items()):
-        mongo_manager._add_missing_fields("Antica", MarketValues("fire sword", -1, 100, 200, 300, 400, 500, 600, 700, 800, 900, -1, -1, -1, -1, item_id))
-
-def write_marketable_items():
-    items = Wiki().get_all_marketable_items()
-    with open("tracked_items.txt", "w") as f:
-        for item in items:
-            f.write(item + "\n")
-
 def write_events(results_location: str):
     """
     Writes all currently known events into the events.csv in the results_location.
@@ -71,12 +57,12 @@ def do_market_search(email: str, password: str, char_index: int, virtual_display
         market_values = extractor.extract_market_values()
         client.exit_tibia()
 
-        # Create the directory for the server if it does not exist.
-        for item in tqdm(market_values, desc="Updating item values"):
-            print(item)
+        if not dry_run:
+            print("Updating market values...")
+            mongo_manager.add_market_values(client.character_server, market_values)
 
-            if not dry_run:
-                mongo_manager.add_market_value(client.character_server, item)
+            print("Updating meta data...")
+            mongo_manager.update_item_metadata()
 
     if virtual_display:
         from pyvirtualdisplay import Display
