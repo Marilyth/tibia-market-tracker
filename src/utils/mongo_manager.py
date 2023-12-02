@@ -24,12 +24,6 @@ class ItemPricesCollection:
         """
         value_dict = market_values.__dict__
         value_dict.pop("id")
-        value_dict.pop("pretty_name")
-        value_dict.pop("internal_name")
-        value_dict.pop("npc_sell")
-        value_dict.pop("npc_buy")
-        value_dict.pop("category")
-        value_dict.pop("is_upgradeable")
 
         return value_dict
     
