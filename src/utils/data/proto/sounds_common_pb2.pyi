@@ -1,0 +1,770 @@
+from google.protobuf.internal import containers as _containers
+from google.protobuf.internal import enum_type_wrapper as _enum_type_wrapper
+from google.protobuf import descriptor as _descriptor
+from google.protobuf import message as _message
+from typing import ClassVar as _ClassVar, Iterable as _Iterable, Optional as _Optional
+
+DESCRIPTOR: _descriptor.FileDescriptor
+
+class ENumericSoundType(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    NUMERIC_SOUND_TYPE_UNKNOWN: _ClassVar[ENumericSoundType]
+    NUMERIC_SOUND_TYPE_SPELL_ATTACK: _ClassVar[ENumericSoundType]
+    NUMERIC_SOUND_TYPE_SPELL_HEALING: _ClassVar[ENumericSoundType]
+    NUMERIC_SOUND_TYPE_SPELL_SUPPORT: _ClassVar[ENumericSoundType]
+    NUMERIC_SOUND_TYPE_WEAPON_ATTACK: _ClassVar[ENumericSoundType]
+    NUMERIC_SOUND_TYPE_CREATURE_NOISE: _ClassVar[ENumericSoundType]
+    NUMERIC_SOUND_TYPE_CREATURE_DEATH: _ClassVar[ENumericSoundType]
+    NUMERIC_SOUND_TYPE_CREATURE_ATTACK: _ClassVar[ENumericSoundType]
+    NUMERIC_SOUND_TYPE_AMBIENCE_STREAM: _ClassVar[ENumericSoundType]
+    NUMERIC_SOUND_TYPE_FOOD_AND_DRINK: _ClassVar[ENumericSoundType]
+    NUMERIC_SOUND_TYPE_ITEM_MOVEMENT: _ClassVar[ENumericSoundType]
+    NUMERIC_SOUND_TYPE_EVENT: _ClassVar[ENumericSoundType]
+    NUMERIC_SOUND_TYPE_UI: _ClassVar[ENumericSoundType]
+    NUMERIC_SOUND_TYPE_WHISPER_WITHOUT_OPEN_CHAT: _ClassVar[ENumericSoundType]
+    NUMERIC_SOUND_TYPE_CHAT_MESSAGE: _ClassVar[ENumericSoundType]
+    NUMERIC_SOUND_TYPE_PARTY: _ClassVar[ENumericSoundType]
+    NUMERIC_SOUND_TYPE_VIP_LIST: _ClassVar[ENumericSoundType]
+    NUMERIC_SOUND_TYPE_RAID_ANNOUNCEMENT: _ClassVar[ENumericSoundType]
+    NUMERIC_SOUND_TYPE_SERVER_MESSAGE: _ClassVar[ENumericSoundType]
+    NUMERIC_SOUND_TYPE_SPELL_GENERIC: _ClassVar[ENumericSoundType]
+
+class EMusicType(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    MUSIC_TYPE_UNKNOWN: _ClassVar[EMusicType]
+    MUSIC_TYPE_MUSIC: _ClassVar[EMusicType]
+    MUSIC_TYPE_MUSIC_IMMEDIATE: _ClassVar[EMusicType]
+    MUSIC_TYPE_MUSIC_TITLE: _ClassVar[EMusicType]
+
+class ESoundEffectType(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    SOUND_EFFECT_TYPE_Silence: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_HumanCloseAttackFist: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterCloseAttackFist: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_CloseAttackSword: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_CloseAttackClub: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_CloseAttackAxe: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_DistAttackBow: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_DistAttackCrossbow: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_DistAttackThrow: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MagicalRangeAttack: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellOrRune: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_Other: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_PhysicalRangeMiss: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_DistAttackBowShot: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_DistAttackCrossBowShot: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_DistAttackThrowShot: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_DistAttackRodShot: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_DistAttackWandShot: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_BurstArrowEffect: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_DiamondArrowEffect: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_NoDamage: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterMeleeAttackFist: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterMeleeAttackClaw: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterMeleeAttackBite: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterMeleeAttackRip: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterMeleeAttackAcid: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterMeleeAttackMagic: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterMeleeAttackEthereal: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterMeleeAttackConstruct: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellLightHealing: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellIntenseHealing: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellUltimateHealing: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellIntenseHealingRune: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellUltimateHealingRune: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellHaste: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellLightMagicMissileRune: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellHeavyMagicMissileRune: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellSummonCreature: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellLight: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellGreatLight: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellConvinceCreatureRune: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellEnergyWave: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellChameleonRune: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellFireballRune: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellGreatFireballRune: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellFireBombRune: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellExplosionRune: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellFireWave: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellFindPerson: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellSuddenDeathRune: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellEnergyBeam: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellGreatEnergyBeam: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellHellsCore: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellFireFieldRune: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellPoisonFieldRune: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellEnergyFieldRune: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellFireWallRune: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellCurePoison: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellDestroyFieldRune: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellCurePoisonRune: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellPoisonWallRune: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellEnergyWallRune: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellSalvation: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellCreatureIllusion: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellStrongHaste: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellFood: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellStrongIceWave: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellMagicShield: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellInvisible: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellConjureExplosiveArrow: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellSoulfireRune: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellConjureArrow: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellParalyseRune: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellEnergyBombRune: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellWrathOfNature: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellStrongEtherealSpear: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellFrontSweep: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellBrutalStrike: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellAnnihilation: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellInviteGuests: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellInviteSubowners: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellKickGuest: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellEditDoor: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellUltimateLight: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellMagicRope: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellStalagmiteRune: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellDisintegrateRune: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellBerserk: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellLevitate: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellMassHealing: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellAnimateDeadRune: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellHealFriend: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellUndeadLegion: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellMagicWallRune: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellDeathStrike: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellEnergyStrike: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellFlameStrike: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellCancelInvisibility: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellPoisonBombRune: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellConjureWandOfDarkness: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellChallenge: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellWildGrowthRune: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellFierceBerserk: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellGroundshaker: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellWhirlwindThrow: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellEnchantSpear: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellEtherealSpear: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellIceStrike: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellTerraStrike: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellIcicleRune: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellAvalancheRune: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellStoneShowerRune: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellThunderstormRune: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellEternalWinter: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellRageOfTheSkies: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellTerraWave: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellIceWave: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellDivineMissile: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellWoundCleansing: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellDivineCaldera: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellDivineHealing: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellTrainParty: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellProtectParty: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellHealParty: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellEnchantParty: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellHolyMissileRune: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellCharge: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellProtector: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellBloodRage: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellSwiftFoot: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellSharpshooter: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellIgnite: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellCurse: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellElectrify: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellInflictWound: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellEnvenom: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellHolyFlash: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellCureBleeding: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellCureBurning: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellCureElectrification: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellCureCurse: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellPhysicalStrike: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellLightning: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellStrongFlameStrike: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellStrongEnergyStrike: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellStrongIceStrike: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellStrongTerraStrike: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellUltimateFlameStrike: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellUltimateEnergyStrike: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellUltimateIceStrike: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellUltimateTerraStrike: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellIntenseWoundCleansing: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellRecovery: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellIntenseRecovery: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellPractiseHealing: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellPractiseFireWave: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellPractiseMagicMissileRune: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellApprenticesStrike: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellMudAttack: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellChillOut: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellMagicPatch: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellBruiseBane: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellArrowCall: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellBuzz: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellScorch: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellLightestMissileRune: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellLightStoneShowerRune: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellSummonKnightFamiliar: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellSummonPaladinFamiliar: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellSummonSorcererFamiliar: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellSummonDruidFamiliar: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellChivalrousChallenge: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellDivineDazzle: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellFairWoundCleansing: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellGreatFireWave: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellRestoration: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellNaturesEmbrace: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellExposeWeakness: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellSapStrength: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellCancelMagicShield: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellSingleTargetFire: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellSingleTargetEnergy: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellSingleTargetEarth: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellSingleTargetIce: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellSingleTargetDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellSingleTargetHoly: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellSingleTargetHit: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellSingleTargetLifeDrain: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellSingleTargetManaDrain: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellSingleTargetDrowning: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellSingleTargetBleeding: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellSingleTargetHealing: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellSmallAreaFire: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellSmallAreaEnergy: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellSmallAreaEarth: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellSmallAreaIce: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellSmallAreaDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellSmallAreaHoly: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellSmallAreaHit: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellSmallAreaLifeDrain: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellSmallAreaManaDrain: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellSmallAreaDrowning: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellSmallAreaBleeding: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellSmallAreaHealing: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellLargeAreaFire: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellLargeAreaEnergy: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellLargeAreaEarth: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellLargeAreaIce: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellLargeAreaDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellLargeAreaHoly: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellLargeAreaHit: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellLargeAreaLifeDrain: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellLargeAreaManaDrain: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellLargeAreaDrowning: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellLargeAreaBleeding: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellLargeAreaHealing: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellWaveFire: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellWaveEnergy: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellWaveEarth: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellWaveIce: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellWaveDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellWaveHoly: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellWaveHit: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellWaveLifeDrain: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellWaveManaDrain: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellWaveDrowning: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellWaveBleeding: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellWaveHealing: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellDeleteField: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellChallenge: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellSpeed: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellDrunken: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellStrength: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellOutfit: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellSummon: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellMagicLevel: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellTeleport: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellHex: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellSuperDrunken: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellRoot: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellFear: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellHighRiskTeleport: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellMinion: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterSpellAgony: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_AmphibicBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_AquaticBeastBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_AquaticCritterBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_AquaticDeeplingBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_AquaticQuaraBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_BirdBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_ConstructBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_DemonBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_DragonBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_ElementalEarthBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_ElementalEnergyBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_ElementalFireBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_ElementalWaterBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_ExtraDimensionalBeastBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_ExtraDimensionalEnergyBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_ExtraDimensionalHorrorBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_FeyBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_GiantBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_HumanFemaleBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_HumanMaleBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_HumanoidGoblinBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_HumanoidOrcBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_LycanthropeBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MagicalEnergyBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MagicalHorrorBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MammalBearBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MammalCritterBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MammalDogBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MammalElephantBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MammalFeralBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MammalHorseBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MammalMammothBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_PhantomBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_PlantBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_ReptileLargeBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_ReptileSmallBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SlimeBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_UndeadBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_VerminCritterBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_VerminInsectBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_VerminRotwormBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_HumanSageBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_HumanCroneBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_ApeBark: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_AmphibicDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_AquaticBeastDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_AquaticCritterDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_AquaticDeeplingDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_AquaticQuaraDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_BirdDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_ConstructDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_DemonDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_DragonDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_ElementalEarthDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_ElementalEnergyDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_ElementalFireDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_ElementalWaterDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_ExtraDimensionalBeastDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_ExtraDimensionalEnergyDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_ExtraDimensionalHorrorDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_FeyDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_GiantDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_HumanFemaleDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_HumanMaleDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_HumanoidGoblinDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_HumanoidOrcDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_LycanthropeDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MagicalEnergyDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MagicalHorrorDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MammalBearDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MammalCritterDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MammalDogDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MammalElephantDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MammalFeralDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MammalHorseDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MammalMammothDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_MonsterDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_PhantomDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_PlantDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_ReptileLargeDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_ReptileSmallDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SlimeDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_UndeadDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_VerminCritterDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_VerminInsectDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_VerminRotwormDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_HumanSageDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_HumanCroneDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_ApeDeath: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_GodspellKillAllMonsters: _ClassVar[ESoundEffectType]
+NUMERIC_SOUND_TYPE_UNKNOWN: ENumericSoundType
+NUMERIC_SOUND_TYPE_SPELL_ATTACK: ENumericSoundType
+NUMERIC_SOUND_TYPE_SPELL_HEALING: ENumericSoundType
+NUMERIC_SOUND_TYPE_SPELL_SUPPORT: ENumericSoundType
+NUMERIC_SOUND_TYPE_WEAPON_ATTACK: ENumericSoundType
+NUMERIC_SOUND_TYPE_CREATURE_NOISE: ENumericSoundType
+NUMERIC_SOUND_TYPE_CREATURE_DEATH: ENumericSoundType
+NUMERIC_SOUND_TYPE_CREATURE_ATTACK: ENumericSoundType
+NUMERIC_SOUND_TYPE_AMBIENCE_STREAM: ENumericSoundType
+NUMERIC_SOUND_TYPE_FOOD_AND_DRINK: ENumericSoundType
+NUMERIC_SOUND_TYPE_ITEM_MOVEMENT: ENumericSoundType
+NUMERIC_SOUND_TYPE_EVENT: ENumericSoundType
+NUMERIC_SOUND_TYPE_UI: ENumericSoundType
+NUMERIC_SOUND_TYPE_WHISPER_WITHOUT_OPEN_CHAT: ENumericSoundType
+NUMERIC_SOUND_TYPE_CHAT_MESSAGE: ENumericSoundType
+NUMERIC_SOUND_TYPE_PARTY: ENumericSoundType
+NUMERIC_SOUND_TYPE_VIP_LIST: ENumericSoundType
+NUMERIC_SOUND_TYPE_RAID_ANNOUNCEMENT: ENumericSoundType
+NUMERIC_SOUND_TYPE_SERVER_MESSAGE: ENumericSoundType
+NUMERIC_SOUND_TYPE_SPELL_GENERIC: ENumericSoundType
+MUSIC_TYPE_UNKNOWN: EMusicType
+MUSIC_TYPE_MUSIC: EMusicType
+MUSIC_TYPE_MUSIC_IMMEDIATE: EMusicType
+MUSIC_TYPE_MUSIC_TITLE: EMusicType
+SOUND_EFFECT_TYPE_Silence: ESoundEffectType
+SOUND_EFFECT_TYPE_HumanCloseAttackFist: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterCloseAttackFist: ESoundEffectType
+SOUND_EFFECT_TYPE_CloseAttackSword: ESoundEffectType
+SOUND_EFFECT_TYPE_CloseAttackClub: ESoundEffectType
+SOUND_EFFECT_TYPE_CloseAttackAxe: ESoundEffectType
+SOUND_EFFECT_TYPE_DistAttackBow: ESoundEffectType
+SOUND_EFFECT_TYPE_DistAttackCrossbow: ESoundEffectType
+SOUND_EFFECT_TYPE_DistAttackThrow: ESoundEffectType
+SOUND_EFFECT_TYPE_MagicalRangeAttack: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellOrRune: ESoundEffectType
+SOUND_EFFECT_TYPE_Other: ESoundEffectType
+SOUND_EFFECT_TYPE_PhysicalRangeMiss: ESoundEffectType
+SOUND_EFFECT_TYPE_DistAttackBowShot: ESoundEffectType
+SOUND_EFFECT_TYPE_DistAttackCrossBowShot: ESoundEffectType
+SOUND_EFFECT_TYPE_DistAttackThrowShot: ESoundEffectType
+SOUND_EFFECT_TYPE_DistAttackRodShot: ESoundEffectType
+SOUND_EFFECT_TYPE_DistAttackWandShot: ESoundEffectType
+SOUND_EFFECT_TYPE_BurstArrowEffect: ESoundEffectType
+SOUND_EFFECT_TYPE_DiamondArrowEffect: ESoundEffectType
+SOUND_EFFECT_TYPE_NoDamage: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterMeleeAttackFist: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterMeleeAttackClaw: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterMeleeAttackBite: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterMeleeAttackRip: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterMeleeAttackAcid: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterMeleeAttackMagic: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterMeleeAttackEthereal: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterMeleeAttackConstruct: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellLightHealing: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellIntenseHealing: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellUltimateHealing: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellIntenseHealingRune: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellUltimateHealingRune: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellHaste: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellLightMagicMissileRune: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellHeavyMagicMissileRune: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellSummonCreature: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellLight: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellGreatLight: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellConvinceCreatureRune: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellEnergyWave: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellChameleonRune: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellFireballRune: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellGreatFireballRune: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellFireBombRune: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellExplosionRune: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellFireWave: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellFindPerson: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellSuddenDeathRune: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellEnergyBeam: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellGreatEnergyBeam: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellHellsCore: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellFireFieldRune: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellPoisonFieldRune: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellEnergyFieldRune: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellFireWallRune: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellCurePoison: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellDestroyFieldRune: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellCurePoisonRune: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellPoisonWallRune: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellEnergyWallRune: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellSalvation: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellCreatureIllusion: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellStrongHaste: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellFood: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellStrongIceWave: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellMagicShield: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellInvisible: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellConjureExplosiveArrow: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellSoulfireRune: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellConjureArrow: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellParalyseRune: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellEnergyBombRune: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellWrathOfNature: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellStrongEtherealSpear: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellFrontSweep: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellBrutalStrike: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellAnnihilation: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellInviteGuests: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellInviteSubowners: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellKickGuest: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellEditDoor: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellUltimateLight: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellMagicRope: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellStalagmiteRune: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellDisintegrateRune: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellBerserk: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellLevitate: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellMassHealing: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellAnimateDeadRune: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellHealFriend: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellUndeadLegion: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellMagicWallRune: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellDeathStrike: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellEnergyStrike: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellFlameStrike: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellCancelInvisibility: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellPoisonBombRune: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellConjureWandOfDarkness: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellChallenge: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellWildGrowthRune: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellFierceBerserk: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellGroundshaker: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellWhirlwindThrow: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellEnchantSpear: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellEtherealSpear: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellIceStrike: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellTerraStrike: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellIcicleRune: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellAvalancheRune: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellStoneShowerRune: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellThunderstormRune: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellEternalWinter: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellRageOfTheSkies: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellTerraWave: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellIceWave: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellDivineMissile: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellWoundCleansing: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellDivineCaldera: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellDivineHealing: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellTrainParty: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellProtectParty: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellHealParty: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellEnchantParty: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellHolyMissileRune: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellCharge: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellProtector: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellBloodRage: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellSwiftFoot: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellSharpshooter: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellIgnite: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellCurse: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellElectrify: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellInflictWound: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellEnvenom: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellHolyFlash: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellCureBleeding: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellCureBurning: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellCureElectrification: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellCureCurse: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellPhysicalStrike: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellLightning: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellStrongFlameStrike: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellStrongEnergyStrike: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellStrongIceStrike: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellStrongTerraStrike: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellUltimateFlameStrike: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellUltimateEnergyStrike: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellUltimateIceStrike: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellUltimateTerraStrike: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellIntenseWoundCleansing: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellRecovery: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellIntenseRecovery: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellPractiseHealing: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellPractiseFireWave: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellPractiseMagicMissileRune: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellApprenticesStrike: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellMudAttack: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellChillOut: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellMagicPatch: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellBruiseBane: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellArrowCall: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellBuzz: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellScorch: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellLightestMissileRune: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellLightStoneShowerRune: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellSummonKnightFamiliar: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellSummonPaladinFamiliar: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellSummonSorcererFamiliar: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellSummonDruidFamiliar: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellChivalrousChallenge: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellDivineDazzle: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellFairWoundCleansing: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellGreatFireWave: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellRestoration: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellNaturesEmbrace: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellExposeWeakness: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellSapStrength: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellCancelMagicShield: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellSingleTargetFire: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellSingleTargetEnergy: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellSingleTargetEarth: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellSingleTargetIce: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellSingleTargetDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellSingleTargetHoly: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellSingleTargetHit: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellSingleTargetLifeDrain: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellSingleTargetManaDrain: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellSingleTargetDrowning: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellSingleTargetBleeding: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellSingleTargetHealing: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellSmallAreaFire: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellSmallAreaEnergy: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellSmallAreaEarth: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellSmallAreaIce: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellSmallAreaDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellSmallAreaHoly: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellSmallAreaHit: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellSmallAreaLifeDrain: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellSmallAreaManaDrain: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellSmallAreaDrowning: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellSmallAreaBleeding: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellSmallAreaHealing: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellLargeAreaFire: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellLargeAreaEnergy: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellLargeAreaEarth: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellLargeAreaIce: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellLargeAreaDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellLargeAreaHoly: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellLargeAreaHit: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellLargeAreaLifeDrain: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellLargeAreaManaDrain: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellLargeAreaDrowning: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellLargeAreaBleeding: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellLargeAreaHealing: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellWaveFire: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellWaveEnergy: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellWaveEarth: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellWaveIce: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellWaveDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellWaveHoly: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellWaveHit: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellWaveLifeDrain: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellWaveManaDrain: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellWaveDrowning: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellWaveBleeding: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellWaveHealing: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellDeleteField: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellChallenge: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellSpeed: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellDrunken: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellStrength: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellOutfit: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellSummon: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellMagicLevel: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellTeleport: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellHex: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellSuperDrunken: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellRoot: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellFear: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellHighRiskTeleport: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellMinion: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterSpellAgony: ESoundEffectType
+SOUND_EFFECT_TYPE_AmphibicBark: ESoundEffectType
+SOUND_EFFECT_TYPE_AquaticBeastBark: ESoundEffectType
+SOUND_EFFECT_TYPE_AquaticCritterBark: ESoundEffectType
+SOUND_EFFECT_TYPE_AquaticDeeplingBark: ESoundEffectType
+SOUND_EFFECT_TYPE_AquaticQuaraBark: ESoundEffectType
+SOUND_EFFECT_TYPE_BirdBark: ESoundEffectType
+SOUND_EFFECT_TYPE_ConstructBark: ESoundEffectType
+SOUND_EFFECT_TYPE_DemonBark: ESoundEffectType
+SOUND_EFFECT_TYPE_DragonBark: ESoundEffectType
+SOUND_EFFECT_TYPE_ElementalEarthBark: ESoundEffectType
+SOUND_EFFECT_TYPE_ElementalEnergyBark: ESoundEffectType
+SOUND_EFFECT_TYPE_ElementalFireBark: ESoundEffectType
+SOUND_EFFECT_TYPE_ElementalWaterBark: ESoundEffectType
+SOUND_EFFECT_TYPE_ExtraDimensionalBeastBark: ESoundEffectType
+SOUND_EFFECT_TYPE_ExtraDimensionalEnergyBark: ESoundEffectType
+SOUND_EFFECT_TYPE_ExtraDimensionalHorrorBark: ESoundEffectType
+SOUND_EFFECT_TYPE_FeyBark: ESoundEffectType
+SOUND_EFFECT_TYPE_GiantBark: ESoundEffectType
+SOUND_EFFECT_TYPE_HumanFemaleBark: ESoundEffectType
+SOUND_EFFECT_TYPE_HumanMaleBark: ESoundEffectType
+SOUND_EFFECT_TYPE_HumanoidGoblinBark: ESoundEffectType
+SOUND_EFFECT_TYPE_HumanoidOrcBark: ESoundEffectType
+SOUND_EFFECT_TYPE_LycanthropeBark: ESoundEffectType
+SOUND_EFFECT_TYPE_MagicalEnergyBark: ESoundEffectType
+SOUND_EFFECT_TYPE_MagicalHorrorBark: ESoundEffectType
+SOUND_EFFECT_TYPE_MammalBearBark: ESoundEffectType
+SOUND_EFFECT_TYPE_MammalCritterBark: ESoundEffectType
+SOUND_EFFECT_TYPE_MammalDogBark: ESoundEffectType
+SOUND_EFFECT_TYPE_MammalElephantBark: ESoundEffectType
+SOUND_EFFECT_TYPE_MammalFeralBark: ESoundEffectType
+SOUND_EFFECT_TYPE_MammalHorseBark: ESoundEffectType
+SOUND_EFFECT_TYPE_MammalMammothBark: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterBark: ESoundEffectType
+SOUND_EFFECT_TYPE_PhantomBark: ESoundEffectType
+SOUND_EFFECT_TYPE_PlantBark: ESoundEffectType
+SOUND_EFFECT_TYPE_ReptileLargeBark: ESoundEffectType
+SOUND_EFFECT_TYPE_ReptileSmallBark: ESoundEffectType
+SOUND_EFFECT_TYPE_SlimeBark: ESoundEffectType
+SOUND_EFFECT_TYPE_UndeadBark: ESoundEffectType
+SOUND_EFFECT_TYPE_VerminCritterBark: ESoundEffectType
+SOUND_EFFECT_TYPE_VerminInsectBark: ESoundEffectType
+SOUND_EFFECT_TYPE_VerminRotwormBark: ESoundEffectType
+SOUND_EFFECT_TYPE_HumanSageBark: ESoundEffectType
+SOUND_EFFECT_TYPE_HumanCroneBark: ESoundEffectType
+SOUND_EFFECT_TYPE_ApeBark: ESoundEffectType
+SOUND_EFFECT_TYPE_AmphibicDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_AquaticBeastDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_AquaticCritterDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_AquaticDeeplingDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_AquaticQuaraDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_BirdDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_ConstructDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_DemonDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_DragonDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_ElementalEarthDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_ElementalEnergyDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_ElementalFireDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_ElementalWaterDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_ExtraDimensionalBeastDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_ExtraDimensionalEnergyDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_ExtraDimensionalHorrorDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_FeyDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_GiantDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_HumanFemaleDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_HumanMaleDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_HumanoidGoblinDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_HumanoidOrcDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_LycanthropeDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_MagicalEnergyDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_MagicalHorrorDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_MammalBearDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_MammalCritterDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_MammalDogDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_MammalElephantDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_MammalFeralDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_MammalHorseDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_MammalMammothDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_MonsterDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_PhantomDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_PlantDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_ReptileLargeDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_ReptileSmallDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_SlimeDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_UndeadDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_VerminCritterDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_VerminInsectDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_VerminRotwormDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_HumanSageDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_HumanCroneDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_ApeDeath: ESoundEffectType
+SOUND_EFFECT_TYPE_GodspellKillAllMonsters: ESoundEffectType
+
+class SimpleSoundEffect(_message.Message):
+    __slots__ = ("sound_id",)
+    SOUND_ID_FIELD_NUMBER: _ClassVar[int]
+    sound_id: int
+    def __init__(self, sound_id: _Optional[int] = ...) -> None: ...
+
+class RandomSoundEffect(_message.Message):
+    __slots__ = ("random_sound_id",)
+    RANDOM_SOUND_ID_FIELD_NUMBER: _ClassVar[int]
+    random_sound_id: _containers.RepeatedScalarFieldContainer[int]
+    def __init__(self, random_sound_id: _Optional[_Iterable[int]] = ...) -> None: ...
+
+class DelayedSoundEffect(_message.Message):
+    __slots__ = ("numeric_sound_effect_id", "delay_seconds")
+    NUMERIC_SOUND_EFFECT_ID_FIELD_NUMBER: _ClassVar[int]
+    DELAY_SECONDS_FIELD_NUMBER: _ClassVar[int]
+    numeric_sound_effect_id: int
+    delay_seconds: int
+    def __init__(self, numeric_sound_effect_id: _Optional[int] = ..., delay_seconds: _Optional[int] = ...) -> None: ...
+
+class AppearanceTypesCountSoundEffect(_message.Message):
+    __slots__ = ("count", "looping_sound_id")
+    COUNT_FIELD_NUMBER: _ClassVar[int]
+    LOOPING_SOUND_ID_FIELD_NUMBER: _ClassVar[int]
+    count: int
+    looping_sound_id: int
+    def __init__(self, count: _Optional[int] = ..., looping_sound_id: _Optional[int] = ...) -> None: ...
+
+class MinMaxFloat(_message.Message):
+    __slots__ = ("min", "max")
+    MIN_FIELD_NUMBER: _ClassVar[int]
+    MAX_FIELD_NUMBER: _ClassVar[int]
+    min: float
+    max: float
+    def __init__(self, min: _Optional[float] = ..., max: _Optional[float] = ...) -> None: ...

@@ -1,6 +1,6 @@
 from utils.client import Client
 import utils.extraction.ocr.ocr as screenshot
-from utils.market_values import MarketValues
+from utils.data.market_values import MarketValues
 from utils.extraction.extractor import Extractor
 from utils.human_movement import wait_like_human, repeat_like_human
 from typing import *
@@ -93,7 +93,7 @@ class OCRExtractor(Extractor):
                 buy_offer, sell_offer, approx_offers = scan_offers()
                 self.client.market_tab = "offers"
 
-            values = MarketValues(name, time.time(), sell_offer, buy_offer, average_sell_offer, average_buy_offer, sell_amount, buy_amount, highest_sell_offer, lowest_buy_offer, approx_offers, -1, -1, lowest_sell_offer, highest_buy_offer, id if id else None)
+            values = MarketValues(time.time(), sell_offer, buy_offer, average_sell_offer, average_buy_offer, sell_amount, buy_amount, highest_sell_offer, lowest_buy_offer, approx_offers, -1, -1, lowest_sell_offer, highest_buy_offer, id if id else None)
             
             return values
         except pyautogui.FailSafeException as e:
@@ -102,4 +102,4 @@ class OCRExtractor(Extractor):
             self.client._add_to_log(f"Market search failed for {name}: {e}")
             traceback.print_exc()
 
-            return MarketValues(name, time.time(), -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1)
+            return MarketValues(time.time(), -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1)

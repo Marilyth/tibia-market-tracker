@@ -1,22 +1,26 @@
-from data.market_values import MarketValues
+from utils.data.market_values import MarketValues, ItemMetaData
 
 
-def test_MarketValuesToString_GivenValues_ReturnsExpected():
-    market_values = MarketValues("Item Name", 1.0, 100, 90, 110, 80, 1000, 500, 120, 70, 200)
-    assert str(market_values) == "item name,100,90,110,80,1000,500,200"
+def test_LoadValues_ReturnsExpected():
+    # Assign
+    fire_sword = ItemMetaData(3280)
+    tibia_coins = ItemMetaData(22118)
+    
+    # Act
+    fire_sword.load_from_proto()
+    fire_sword.load_wiki_name()
+    tibia_coins.load_from_proto()
+    tibia_coins.load_wiki_name()
 
-def test_MarketValues_BuyLowerThanLowest_ReturnsLowest():
-    market_values = MarketValues("Item Name", 1.0, 0, 10, 0, 0, 0, 1, 0, 20, 20)
-    assert market_values.buy_offer == 20
+    # Assert
+    assert fire_sword.category == "Swords"
+    assert fire_sword.is_upgradeable == True
+    assert fire_sword.name == "fire sword"
+    assert not fire_sword.npc_sell
+    assert any([npc.name == "Nah'bob" for npc in fire_sword.npc_buy])
 
-def test_MarketValues_SellOfferHigherowerThanHighest_ReturnsHighest():
-    market_values = MarketValues("Item Name", 1.0, 20, 0, 0, 0, 1, 0, 10, 0, 20)
-    assert market_values.sell_offer == 10
-
-def test_MarketValues_SellOfferHigherowerThanHighestNoSold_ReturnsOffer():
-    market_values = MarketValues("Item Name", 1.0, 20, 0, 0, 0, 0, 0, 10, 0, 20)
-    assert market_values.sell_offer == 20
-
-def test_HistoryString_GivenValues_ReturnsExpected():
-    market_values = MarketValues("Item Name", 1.0, 100, 90, 110, 80, 1000, 500, 120, 70, 200)
-    assert market_values.history_string() == "100,90,1000,500,200,1.0"
+    assert tibia_coins.category == "Tibia Coins"
+    assert tibia_coins.is_upgradeable == False
+    assert tibia_coins.name == "Tibia Coins"
+    assert not tibia_coins.npc_sell
+    assert not tibia_coins.npc_buy

@@ -1,5 +1,5 @@
 from utils.client import Client
-from utils.market_values import MarketValues
+from utils.data.market_values import MarketValues
 from utils.extraction.ocr.ocr_extraction import OCRExtractor
 from utils.extraction.memory.market_memory_reader import MarketMemoryReader
 from utils.wiki import Wiki
@@ -20,36 +20,6 @@ class MemoryExtractor(Extractor):
         super().__init__(client)
         self.ocr_extractor = OCRExtractor(client)
         self.market_reader: MarketMemoryReader = None
-
-        # if file exists.
-        if os.path.exists("items.csv"):
-            # Load self.id_to_name and self.name_to_id from items.csv instead
-            self.id_to_name = {}
-            self.name_to_id = {}
-            with open("items.csv", "r") as f:
-                for line in f.readlines():
-                    if len(line) >= 3:
-                        values = line.split(",")
-                        id = values[-1]
-                        name = ",".join(values[:-1])
-
-                        self.id_to_name[int(id)] = name
-                        self.name_to_id[name] = int(id)
-
-        # Load item ids from wiki, or from items.csv if wiki is down.
-        try: 
-            self.wiki_id_to_name, self.wiki_name_to_id = Wiki().get_item_ids()
-
-            # Merge the two dictionaries.
-            self.id_to_name = {**self.id_to_name, **self.wiki_id_to_name}
-            self.name_to_id = {**self.name_to_id, **self.wiki_name_to_id}
-
-            # Save the item ids to items.csv.
-            with open("items.csv", "w+") as f:
-                for key, value in self.name_to_id.items():
-                    f.write(f"{key},{value}\n")
-        except Exception as e:
-            self.client._add_to_log(f"Failed to get item ids from wiki. {e}")
     
     def setup(self):
         self.client.start_game()
@@ -150,7 +120,7 @@ class MemoryExtractor(Extractor):
                     if memory_fail_count >= 5:
                         raise e
 
-            self.client._wait_until_find("images/Category.png", click=True, cache=False)
+            self.client._wait_until_find("images/Category.png", click=True, cache=False, coordinate_deviation=1)
 
             # Go to the correct category.
             repeat_like_human(lambda: pyautogui.press("down"), category_index, wait_time=0.1)
@@ -196,7 +166,7 @@ class MemoryExtractor(Extractor):
 
                     # If the id is the same as the last one, we have reached the end of the category.
                     if id == last_item_id:
-                        self.client._add_to_log(f"Probably reached end of {category_index=}: {values.name=} {values.id=}")
+                        self.client._add_to_log(f"Probably reached end of {category_index=}: {values.id=}")
                         break
                     
                     # If we have failed 10 times in a row, we should probably restart.
@@ -209,16 +179,12 @@ class MemoryExtractor(Extractor):
                     item_fail_count = 0
                     starting_index += 1
 
-                    if id not in self.id_to_name:
+                    if id not in Wiki.get_marketable_proto_items():
                         self.client._add_to_log("Unknown item id: " + str(id) + ", category: " + str(category_index) + ", index: " + str(starting_index))
                     else:
-                        values.name = self.id_to_name[id]
-
-                    self.client._add_to_log(values)
-
-                    if values.name != "Unknown":
                         results.append(values)
 
+                    self.client._add_to_log(values)
                     last_item_id = id
 
                     # Wiggle every once in a while to avoid being kicked out.

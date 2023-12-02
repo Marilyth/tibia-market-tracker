@@ -2,6 +2,13 @@ from datetime import datetime
 from typing import Dict, List, Tuple
 import requests
 import re
+import sys
+import os
+
+# Add the proto directory to the path so that we can import from it.
+sys.path.append(os.path.join(os.path.dirname(__file__), "data", "proto"))
+
+from utils.data.proto import appearances_pb2
 
 
 class EventData:
@@ -13,11 +20,16 @@ class EventData:
         return f"{self.date.strftime('%Y.%m.%d')},{','.join(self.events)}"
 
 
+proto_items = {}
+id_to_pretty_name = {}
+pretty_name_to_id = {}
+
 class Wiki:
     def __init__(self):
         pass
 
-    def get_all_marketable_items(self) -> List[str]:
+    @staticmethod
+    def get_all_marketable_items() -> List[str]:
         """
         Fetches all marketable item names from the tibia fandom wiki.
         The documentation for fandom apis are available at https://www.mediawiki.org/wiki/API:Main_page.
@@ -36,7 +48,8 @@ class Wiki:
 
         return sorted(set([item.split(" (")[0] for item in items]))
 
-    def get_events(self, after_date: datetime = None) -> List[EventData]:
+    @staticmethod
+    def get_events(after_date: datetime = None) -> List[EventData]:
         """
         Scrapes the event calendar from tibia.com and returns a list of EventData objects.
         
@@ -89,7 +102,8 @@ class Wiki:
         
         return event_data
 
-    def get_item_ids(self) -> Tuple[Dict[int, str], Dict[str, int]]:
+    @staticmethod
+    def get_item_ids() -> Tuple[Dict[int, str], Dict[str, int]]:
         """Fetches the items and their ids from https://tibia.fandom.com/wiki/Item_IDs
 
         Returns:
@@ -118,3 +132,64 @@ class Wiki:
                     item_to_id[item[0]] =  id_value
 
         return id_to_item, item_to_id
+
+    @staticmethod
+    def get_wiki_names() -> Dict[int, str]:
+        """Returns a dictionary mapping item ids to their pretty names.
+
+        Returns:
+            Dict[int, str]: A dictionary mapping item ids to their pretty names.
+        """
+        global id_to_pretty_name, pretty_name_to_id
+
+        if id_to_pretty_name:
+            return id_to_pretty_name
+
+        # if file exists.
+        if os.path.exists("items.csv"):
+            with open("items.csv", "r") as f:
+                for line in f.readlines():
+                    if len(line) >= 3:
+                        values = line.split(",")
+                        id = values[-1]
+                        name = ",".join(values[:-1])
+
+                        id_to_pretty_name[int(id)] = name
+                        pretty_name_to_id[name] = int(id)
+
+        # Load item ids from wiki, or from items.csv if wiki is down.
+        try: 
+            wiki_id_to_name, wiki_name_to_id = Wiki.get_item_ids()
+
+            # Merge the two dictionaries.
+            id_to_pretty_name = {**id_to_pretty_name, **wiki_id_to_name}
+            pretty_name_to_id = {**pretty_name_to_id, **wiki_name_to_id}
+
+            # Save the item ids to items.csv.
+            with open("items.csv", "w+") as f:
+                for key, value in pretty_name_to_id.items():
+                    f.write(f"{key},{value}\n")
+        except Exception as e:
+            print(f"Failed to get item ids from wiki. {e}")
+        
+        return id_to_pretty_name
+
+    @staticmethod
+    def get_marketable_proto_items() -> Dict[int, appearances_pb2.Appearance]:
+        """Parses the appearance.dat file, and returns all items with the market flag set.
+
+        Returns:
+            Dict[int, appearances_pb2.Appearance]: A dictionary mapping item ids to Appearance objects.
+        """
+        if not proto_items:
+            assets_folder = os.path.expanduser("/root/.local/share/CipSoft GmbH/Tibia/packages/Tibia/assets")
+            appearances_dat_file_name = [file_name for file_name in os.listdir(assets_folder) if file_name.startswith("appearances-") and file_name.endswith(".dat")][0]
+
+            appearances = appearances_pb2.Appearances()
+            appearances.ParseFromString(open(f"{assets_folder}/{appearances_dat_file_name}", "rb").read())
+
+            for item in appearances.object:
+                if str(item.flags.market):
+                    proto_items[item.id] = item
+
+        return proto_items
