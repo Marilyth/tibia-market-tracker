@@ -4,6 +4,7 @@ import requests
 import re
 import sys
 import os
+import json
 
 # Add the proto directory to the path so that we can import from it.
 sys.path.append(os.path.join(os.path.dirname(__file__), "data", "proto"))
@@ -47,60 +48,6 @@ class Wiki:
                 break
 
         return sorted(set([item.split(" (")[0] for item in items]))
-
-    @staticmethod
-    def get_events(after_date: datetime = None) -> List[EventData]:
-        """
-        Scrapes the event calendar from tibia.com and returns a list of EventData objects.
-        
-        Args:
-            after_date (datetime, optional): Only return events after this date. Defaults to None.
-           
-        Returns:
-            List[EventData]: A list of EventData objects.
-        """
-        # TODO: Consider reading ~/.local/share/CipSoft GmbH/Tibia/packages/Tibia/cache/eventschedule.json after logging in.
-        event_data: List[EventData] = []
-        response = requests.get("https://www.tibia.com/news/?subtopic=eventcalendar").text
-        events = response.split("\"eventscheduletable\"")[-1].split("</table>")[0].split("<td style")[1:]
-        events = [event.split("</td>")[0] for event in events]
-
-        today = datetime.today()
-        month_modifier = -1
-        today_reached = False
-        for event in events:
-            try:
-                day = int(re.search(">([0-9]{1,2}) </span", event).group(1))
-
-                # Event table can wrap to month before or next month, handle these cases.
-                if day <= today.day and not today_reached:
-                    month_modifier = 0
-                if not today_reached and day == today.day:
-                    today_reached = True
-                elif today_reached and month_modifier == 0 and day < today.day:
-                    month_modifier = 1
-
-                month = today.month + month_modifier
-
-                # Handle edge cases of changing year when covering multiple months.
-                year = today.year
-                if month == 12 and month_modifier == -1:
-                    year -=1
-                elif month == 1 and month_modifier == 1:
-                    year += 1
-
-                event_names = [event_name for event_name in [text.split(">")[-1] for text in event.split("</div>")[:-1]] if len(event_name) > 0]
-
-                data_datetime = datetime(year, month, day)
-                data = EventData(data_datetime, event_names)
-                
-                if after_date is None or data_datetime > after_date:
-                    event_data.append(data)
-
-            except Exception as e:
-                print(f"Parsing event info failed for {event}: {e}")
-        
-        return event_data
 
     @staticmethod
     def get_item_ids() -> Tuple[Dict[int, str], Dict[str, int]]:
@@ -193,3 +140,38 @@ class Wiki:
                     proto_items[item.id] = item
 
         return proto_items
+
+    @staticmethod
+    def get_event_data() -> EventData:
+        """Returns today's EventData object.
+
+        Returns:
+            EventData: Today's EventData object.
+        """
+        event_schedule_json = os.path.expanduser("/root/.local/share/CipSoft GmbH/Tibia/packages/Tibia/cache/eventschedule.json")
+
+        if not os.path.exists(event_schedule_json):
+            raise Exception("Failed to find event schedule json file. Make sure to log in to the game at least once.")
+        
+        with open(event_schedule_json, "r") as f:
+            event_schedule = f.read()
+            json_data = json.loads(event_schedule)["eventlist"]
+
+            today = datetime.today().date()
+            events_today = []
+
+            for event in json_data:
+                # Convert unix timestamps to dates.
+                start_date = datetime.fromtimestamp(event["startdate"]).date()
+                end_date = datetime.fromtimestamp(event["enddate"]).date()
+                name = event["name"]
+
+                # If the event starts or ends today, add an asterisk to the name.
+                if start_date == today or end_date == today:
+                    name = f"*{name}"
+
+                # If today is between the start and end date, add the event to the list.
+                if start_date <= today <= end_date:
+                    events_today.append(event["name"])
+
+            return EventData(datetime(year=today.year, month=today.month, day=today.day), events_today)

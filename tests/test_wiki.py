@@ -31,21 +31,6 @@ class TestWiki:
 
         # Assert
         assert len(items) > 3100
-
-    def test_GetEvents_WhenCalled_ReturnsAtLeast20Days(self):
-        # Act
-        events = self.wiki.get_events()
-
-        # Assert
-        assert len(events) > 20
-
-    def test_GetEvents_WhenCalledWithAfterDate_ReturnsDaysAfterDate(self):
-        # Act
-        events = self.wiki.get_events()
-        after_events = self.wiki.get_events(events[-2].date)
-
-        # Assert
-        assert len(after_events) == 1
     
     def test_GetMarketableProtoItems_ReturnsExpected(self):
         # Act
@@ -55,3 +40,13 @@ class TestWiki:
         assert len(items) > 3600 and len(items) < 30000
         assert any([item.name == "fire sword" for item in items.values()])
         assert not any([item.name == "crystal bed" for item in items.values()])
+
+    def test_GetEventData_ReturnsExpected(self):
+        # Act
+        event = self.wiki.get_event_data()
+        today = datetime.today()
+
+        # Assert
+        assert event.date.year == today.year
+        assert event.date.month == today.month
+        assert event.date.day == today.day
