@@ -11,40 +11,21 @@ from install_tibia import install_tibia, download_package
 dry_run: bool = False
 mongo_manager: MongoManager = None
 
-def write_events(results_location: str):
+def update_events():
     """
-    Writes all currently known events into the events.csv in the results_location.
+    Writes today's events to the database.
     """
     try:
-        last_date = datetime.min
+        event = Wiki.get_event_data()
 
-        if os.path.exists(os.path.join(results_location, "events.csv")):
-            with open(os.path.join(results_location, "events.csv"), "r") as event_file:
-                previous_events = [event for event in event_file.readlines() if event and not str.isspace(event)]
-                if previous_events:
-                    last_date = datetime.strptime(previous_events[-1].split(",")[0], "%Y.%m.%d")
-
-        with open(os.path.join(results_location, "events.csv"), "a+") as event_file:
-            events = [event for event in Wiki().get_events(last_date) if event.date <= datetime.today()]
-
-            if dry_run:
-                return
-
-            if events:
-                # Write all events that are in the past up until today to the events file.
-                # This is done so that spontaneous events that are added to the schedule are not missed.
-                event_file.write("\n".join([event.__str__() for event in events]) + "\n")
-
-                for event in events:
-                    mongo_manager.add_event(event)
+        if not dry_run:
+            mongo_manager.add_event(event)
     except Exception as e:
         traceback.print_exc()
         print(f"Writing events failed: {e}")
 
 
 def do_market_search(email: str, password: str, char_index: int, virtual_display: bool, virtual_display_visible: bool):
-    write_events("./results")
-
     def market_search():
         from utils.extraction.memory.memory_extraction import MemoryExtractor
         from utils.extraction.extractor import Extractor
@@ -63,6 +44,9 @@ def do_market_search(email: str, password: str, char_index: int, virtual_display
 
             print("Updating meta data...")
             mongo_manager.update_item_metadata()
+
+            print("Updating events...")
+            update_events()
 
     if virtual_display:
         from pyvirtualdisplay import Display
