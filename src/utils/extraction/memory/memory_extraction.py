@@ -70,7 +70,7 @@ class MemoryExtractor(Extractor):
     def extract_market_values(self) -> List[MarketValues]:
         items = []
 
-        for category in tqdm(range(1, 2), desc="Category"):
+        for category in tqdm(range(1, 25), desc="Category"):
             try:
                 items.extend(self.crawl_market(category))
             except Exception as e:

@@ -90,7 +90,7 @@ def move_mouse_like_human(x: int, y: int, target_deviation: int = 5):
         y_path_bezier[i] += uniform(-y_distance / 2, y_distance / 2)
 
     steps = int(duration // 10)
-    line_progress = [easeInOutQuad(t / steps) for t in range(steps)]
+    line_progress = [easeInOutQuad(t / (steps - 1)) for t in range(steps)]
     
     x_path = [cubic_bezier(t_i, x_path_bezier[0], x_path_bezier[1], x_path_bezier[2], x_path_bezier[3]) for t_i in line_progress]
     y_path = [cubic_bezier(t_i, y_path_bezier[0], y_path_bezier[1], y_path_bezier[2], y_path_bezier[3]) for t_i in line_progress]
@@ -100,8 +100,8 @@ def move_mouse_like_human(x: int, y: int, target_deviation: int = 5):
     pyautogui.PAUSE = 0.01
 
     # Move the mouse to the target positions along the path.
-    for x, y in zip(x_path, y_path):
-        pyautogui.moveTo(x, y)
+    for x_step, y_step in zip(x_path, y_path):
+        pyautogui.moveTo(x_step, y_step)
     
     # Reset delay.
     pyautogui.PAUSE = previous_pause
