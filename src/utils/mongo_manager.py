@@ -157,14 +157,12 @@ class MongoManager:
         """
         self.access_logs.insert_one({"ip": ip, "time": datetime.now().isoformat(), "endpoint": endpoint, "parameters": parameters, "status": status})
 
-    def update_item_metadata(self):
+    def update_item_metadata(self, items: List[ItemMetaData]):
         """Used to update the item metadata in the database.
         """
         requests: List[pymongo.UpdateOne] = []
 
-        for item in [ItemMetaData(id) for id in Wiki.get_marketable_proto_items()]:
-            item.load_from_proto()
-            item.load_wiki_name()
+        for item in items:
             item_id = item.id
 
             item_dict = item.__dict__
@@ -187,10 +185,6 @@ class MongoManager:
         requests: List[pymongo.UpdateOne] = []
 
         for values_item in market_values:
-            # Don't add items that are not marketable.
-            if not values_item.id in Wiki.get_marketable_proto_items():
-                return
-
             item_id = values_item.id
 
             # Check if the item already exists in the database. Load the name.

@@ -1,7 +1,9 @@
 from utils.data.market_values import MarketValues
+from utils.wiki import EventData
 from utils.mongo_manager import MongoManager
+from utils.json_helper import json_to_object
 import uvicorn
-from fastapi import FastAPI, Response, Request, Depends, HTTPException, status
+from fastapi import FastAPI, Response, Request, Depends, HTTPException, status, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -11,10 +13,10 @@ from slowapi.errors import RateLimitExceeded
 import json
 import os
 import asyncio
-from typing import Dict, Tuple, List
+from typing import Dict, Tuple, List, Annotated
 import time
 from utils.jwt_helper import JWTHelper
-
+from datetime import datetime
 
 # Set up the API.
 limiter = Limiter(key_func=get_remote_address, default_limits=["1/2seconds"])
@@ -45,6 +47,21 @@ jwt_helper = JWTHelper(config["jwtSecret"])
 mongo_manager: MongoManager = MongoManager(config["mongodbConnectionString"])
 
 # Helpers.
+def check_secret(secret: str):
+    """Checks if the given secret is valid.
+
+    Args:
+        secret (str): The secret to check.
+
+    Raises:
+        HTTPException: If the secret is invalid.
+    """
+    if secret != config["jwtSecret"]:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid secret."
+        )
+
 def bearer_auth(credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     """Checks if the given credentials are valid.
     
@@ -165,37 +182,45 @@ async def middleware(request: Request, call_next):
     return response
 
 # Set up API endpoints.
-@app.get("/market_values", dependencies=[Depends(bearer_auth)])
+@app.get("/market_values")#, dependencies=[Depends(bearer_auth)])
 @limiter.limit("1/5seconds;10/minute")
 async def get_market_values(request: Request, server: str, max_sell_price: int = None, min_buy_price: int = None, max_buy_price: int = None,
-                            min_sell_price: int = None, max_flippers: int = None, min_flippers: int = None, skip: int = 0, limit: int = 100):
+                            min_sell_price: int = None, max_flippers: int = None, min_flippers: int = None, skip: int = 0, limit: int = 100,
+                            item_ids: str = None):
     """Returns the market values of the items which match the given criteria.
 
     Args:
         server (str): The server of the item.
+        item_ids (List[int]): A comma seperated list of ids of the items. If not provided, all items are returned.
         max_sell_price (int): The maximum sell price of the item.
         min_buy_price (int): The minimum buy price of the item.
         max_buy_price (int): The maximum buy price of the item.
         min_sell_price (int): The minimum sell price of the item.
         max_flippers (int): The maximum number of flippers of the item.
         min_flippers (int): The minimum number of flippers of the item.
+        skip (int): The number of items to skip.
+        limit (int): The maximum number of items to return.
     """
     last_checked, values = await get_fullscan_async(server)
 
     filters = []
 
-    if max_sell_price:
-        filters.append(lambda value: value["sell_offer"] <= max_sell_price)
-    if min_sell_price:
-        filters.append(lambda value: value["sell_offer"] >= min_sell_price)
-    if min_buy_price:
-        filters.append(lambda value: value["buy_offer"] >= min_buy_price)
-    if max_buy_price:
-        filters.append(lambda value: value["buy_offer"] <= max_buy_price)
-    if max_flippers:
-        filters.append(lambda value: value["active_traders"] <= max_flippers)
-    if min_flippers:
-        filters.append(lambda value: value["active_traders"] >= min_flippers)
+    if not item_ids:
+        if max_sell_price:
+            filters.append(lambda value: value["sell_offer"] <= max_sell_price)
+        if min_sell_price:
+            filters.append(lambda value: value["sell_offer"] >= min_sell_price)
+        if min_buy_price:
+            filters.append(lambda value: value["buy_offer"] >= min_buy_price)
+        if max_buy_price:
+            filters.append(lambda value: value["buy_offer"] <= max_buy_price)
+        if max_flippers:
+            filters.append(lambda value: value["active_traders"] <= max_flippers)
+        if min_flippers:
+            filters.append(lambda value: value["active_traders"] >= min_flippers)
+    else:
+        item_ids = [int(id) for id in item_ids.split(",")]
+        filters.append(lambda value: value["id"] in item_ids)
 
     values = [value for value in values if all([filter(value) for filter in filters])]
 
@@ -251,7 +276,7 @@ async def get_item_metadata(request: Request, item_id: int = -1):
 
     return {"metadata": metadata}
 
-@app.get("/generate_token")
+@app.get("/generate_token", include_in_schema=False)
 async def generate_token(username: str, secret: str, days: int = 90):
     """Generates a token for the given username, if the secret is correct.
 
@@ -263,13 +288,53 @@ async def generate_token(username: str, secret: str, days: int = 90):
     Returns:
         str: The token.
     """
-    if secret != config["jwtSecret"]:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid secret."
-        )
+    check_secret(secret)
 
     return jwt_helper.create_token(username, days)
+
+@app.post("/add_event", include_in_schema=False)
+async def add_event(request: Request, secret: str, event: Annotated[str, Body()]):
+    """Adds the given event to the database.
+
+    Args:
+        event (str): The event to add in JSON format.
+    """
+    check_secret(secret)
+
+    # Convert the event to an object.
+    event = json_to_object(event)
+    event.date = datetime.strptime(event.date, "%Y-%m-%d %H:%M:%S")
+
+    mongo_manager.add_event(event)
+
+@app.post("/add_market_values", include_in_schema=False)
+async def add_market_values(request: Request, secret: str, values: Annotated[str, Body()]):
+    """Adds the given market values to the database.
+
+    Args:
+        values (str): The market values to add in JSON format.
+    """
+    check_secret(secret)
+
+    # Convert the values to an object.
+    values = json_to_object(values)
+    mongo_manager.add_market_values(values.server, values.data)
+
+    # Remove the fullscan from the cache.
+    full_scans.pop(values.server, None)
+
+@app.post("/update_item_metadata", include_in_schema=False)
+async def update_item_metadata(request: Request, secret: str, metadata: Annotated[str, Body()]):
+    """Adds the given item metadata to the database.
+
+    Args:
+        metadata (str): The item metadata to add in JSON format.
+    """
+    check_secret(secret)
+
+    # Convert the metadata to an object.
+    metadata = json_to_object(metadata)
+    mongo_manager.update_item_metadata(metadata)
 
 if __name__ == "__main__":
     log_config = uvicorn.config.LOGGING_CONFIG
