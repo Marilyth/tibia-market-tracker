@@ -1,17 +1,48 @@
 from utils.extraction.network.packet_analyser import PacketAnalyser
 import os
+import traceback
 
 
 class TestDebugger:
     def setup_method(self):
-        self.analyzer = PacketAnalyser(output=True)
+        self.analyzer = PacketAnalyser(record=True)
+
+    def test_RecordedTraffic_CanDecrypt(self):
+        # Arrange
+        packages = []
+        with open(os.path.join(os.path.dirname(__file__), "example_traffic_analysis", "recorded_traffic.txt"), "rb") as f:
+            example_network_packet = f.readlines()
+            key_string = example_network_packet[0].decode("utf-8").replace("[", "").replace("]", "").replace(" ", "").replace("\n", "").split(",")
+            keys = [int(key) for key in key_string]
+            self.analyzer.set_key(keys)
+
+            for packet in example_network_packet[1:]:
+                if b"Raw: " in packet:
+                    data = packet.split(b"Raw: ")[1]
+                    data = eval(data)
+                    packages.append([data, packet.split(b" > ")[0].split(b" ")[-1]])
+        
+        # Act
+        decrypted_payloads = []
+        for package, sender in packages:
+            try:
+                result = self.analyzer._decrypt_packet(package, sender.decode("utf-8"))
+                if result:
+                    decrypted_payloads.append(result)
+            except Exception as e:
+                traceback.print_exc()
+                print(f"Failed to decrypt package: {e}")
+                assert False
+
+        # Assert
+        assert len(decrypted_payloads) > 0
 
     def test_ExampleTraffic_CanDecrypt(self):
         # Arrange
         self.analyzer.set_key([0x91c43868, 0x5462b10e, 0xd9f0c56d, 0x46928fd6])
 
         packages = []
-        with open(os.path.join(os.path.dirname(__file__), "example_traffic.txt"), "rb") as f:
+        with open(os.path.join(os.path.dirname(__file__), "example_traffic_analysis", "example_traffic.txt"), "rb") as f:
             example_network_packet = f.readlines()
 
             for packet in example_network_packet:
@@ -24,7 +55,7 @@ class TestDebugger:
         decrypted_payloads = []
         for package, sender in packages:
             try:
-                result = self.analyzer._decrypt_packet(package, sender)
+                result = self.analyzer._decrypt_packet(package, sender.decode("utf-8"))
                 if result:
                     decrypted_payloads.append(result)
             except Exception as e:

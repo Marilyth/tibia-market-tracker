@@ -8,7 +8,7 @@ import traceback
 from install_tibia import install_tibia, download_package
 import requests
 
-dry_run: bool = False
+dry_run: bool = True
 api_url: str = "https://api.tibiamarket.top:8001"
 config: dict = None
 
@@ -56,6 +56,8 @@ def do_market_search(email: str, password: str, char_index: int, virtual_display
 
         market_values = extractor.extract_market_values()
         client.exit_tibia()
+
+        print(f"Market values: {len(market_values)}")
 
         if not dry_run:
             print("Updating market values...")

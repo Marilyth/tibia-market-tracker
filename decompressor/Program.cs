@@ -35,7 +35,7 @@ while(true){
 
         if (ret != zlibConst.Z_OK)
         {
-            throw new Exception($"zlib inflate failed: {ret}");
+            throw new Exception($"zlib inflate failed: {ret}, input: {input}");
         }
 
         // Length of the decompressed data.
@@ -50,6 +50,10 @@ while(true){
     }
     catch(Exception e){
         Console.WriteLine(e.Message);
+        
+        // Write error to file.
+        File.AppendAllText("error.log", $"{DateTime.Now} - {e.Message}\n");
+
         break;
     }
 }

@@ -3,6 +3,8 @@ from typing import List
 import zlib
 import binascii
 from utils.extraction.network.packet_names import client_commands, server_commands
+from utils.extraction.network.market_packet_reader import MarketPacketReader, MarketPacketValues
+from utils.json_helper import object_to_json
 from scapy.all import *
 import time
 import sys
@@ -13,13 +15,14 @@ from threading import Lock
 
 
 class PacketAnalyser:
-    def __init__(self, rounds: int = 64, byte_order: str = sys.byteorder, output: bool = False):
+    def __init__(self, rounds: int = 64, byte_order: str = sys.byteorder, record: bool = False):
         """Initialises an XTeaDecrypter.
 
         Args:
             key (List[int]): The key to use for decryption.
             rounds (int, optional): The number of rounds to use for decryption. Defaults to 64.
             byte_order (str, optional): The byte order to use for decryption. Defaults to "little".
+            record (bool, optional): Whether to record the traffic to a file. Defaults to False.
         """
         self.decompressor = {}
         self.byte_order = byte_order
@@ -30,19 +33,18 @@ class PacketAnalyser:
         self.xtea = None
         self.output = None
         self.incomplete_packets = []
+        self.results: List[MarketPacketValues] = []
         self.decrompression_stream = bytes()
         self.queue_lock = Lock()
         self.prev = bytes()
 
-        if output:
+        if record:
             self.output = open(f"traffic_{time.time()}.txt", "w+")
 
-    def log(self, text: str):
+    def log_traffic(self, text: str):
         if self.output:
             self.output.write(text + "\n")
             self.output.flush()
-        else:
-            print(text)
 
     def set_key(self, key: List[int]):
         if len(key) != 4:
@@ -55,7 +57,8 @@ class PacketAnalyser:
 
         self.xtea = new(self.key_string, mode=MODE_ECB, rounds=self.rounds, endian="<" if self.byte_order == "little" else ">")
 
-        self.log(f"Key set to {key}.")
+        print(f"Key set to {self.key}.")
+        self.log_traffic(f"{self.key}")
 
     @staticmethod
     def command_type_to_name(type: int, commands: dict) -> str:
@@ -96,8 +99,8 @@ class PacketAnalyser:
         """
         missing_bytes = (8 - len(data) % 8) % 8
 
-        return data + b"\x00" * missing_bytes   
-    
+        return data + b"\x00" * missing_bytes
+
     def add_to_queue(self, packet: Packet):
         """Adds a packet to the queue.
 
@@ -145,20 +148,35 @@ class PacketAnalyser:
                 
                 for packet in packets:
                     load = packet[Raw].load if Raw in packet else None
-                    self.log(f"{packet.summary()}: {load}")
-                    #self._decrypt_packet(packet[Raw].load if Raw in packet else None, packet["IP"].src)
-                    pass
+                    self.log_traffic(f"{packet.summary()}: {load}")
+
+                    try:
+                        result = self._decrypt_packet(packet[Raw].load if Raw in packet else None, f"{packet['IP'].src}:{packet['TCP'].sport}")
+                    
+                        if result:
+                            payload, command_name = result
+                            packet_reader = MarketPacketReader(payload)
+                            try:
+                                packet_reader.read_packet()
+                                self.results.append(packet_reader.result)
+                            except Exception as e:
+                                if "packet type" not in str(e):
+                                    traceback.print_exc()
+                                    print(f"Error while reading market packet {payload}: {e}")
+                    except Exception as e:
+                        traceback.print_exc()
+                        print(f"Error while reading packet: {e}")
             except Exception as e:
                 # Print stacktrace
                 traceback.print_exc()
-                self.log(f"Error while decrypting packet: {e}")
+                print(f"Error while decrypting packet: {e}")
             finally:
                 self.queue_lock.release()
             
         except Exception as e:
             # Print stacktrace
             traceback.print_exc()
-            self.log(f"Error while decrypting packet: {e}")
+            print(f"Error while decrypting packet: {e}")
         
     @staticmethod
     def bytes_to_readable_string(data: bytes) -> str:
@@ -228,7 +246,7 @@ class PacketAnalyser:
         if not raw_data:
             return
         
-        from_server = b":7171" in sender
+        from_server = ":7171" in sender
 
         #self.log(f"{raw_data}\n")
 
@@ -272,28 +290,22 @@ class PacketAnalyser:
 
         # Assert that the decryption was successful.
         #assert decrypted_packet_length <= len(decrypted_data[2:])
-        payload = decrypted_data[2:decrypted_packet_length + 2]
+        payload = decrypted_data[:decrypted_packet_length + 2]
 
         if not is_valid:
             if not from_server:
-                self.log(f"Invalid compression flag: {compression_flag}")
+                print(f"Invalid compression flag: {compression_flag}")
                 return
             else:
                 raise Exception(f"Invalid compression flag: {compression_flag}")
                 return
         
         if is_compressed:
-            decrypted_data = self.decompress_bytes(payload, sender)
-            payload = decrypted_data[2:]
-        
-        hex_data = binascii.hexlify(decrypted_data)
-        hex_payload = binascii.hexlify(payload)
+            decrypted_data = self.decompress_bytes(payload[2:], sender)
+            payload = decrypted_data
 
-        command = payload[0] if payload else -1
+        command = payload[2] if payload else -1
         command_name = self.command_type_to_name(command, client_commands if not from_server else server_commands)
-
-        if not command_name == "ClientCheck" and not "Ping" in command_name and not "Invalid" in command_name:
-            self.log(f"Decrypted {is_compressed=} {packet_size=} {len(raw_data) - 2=} {sender=} {sequence_number=} {command} {command_name} {hex_data=}")
 
         return payload, command_name
     
