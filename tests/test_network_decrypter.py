@@ -1,4 +1,5 @@
 from utils.extraction.network.packet_analyser import PacketAnalyser
+from utils.extraction.network.market_packet_reader import MarketPacketReader
 import os
 import traceback
 
@@ -28,7 +29,10 @@ class TestDebugger:
             try:
                 result = self.analyzer._decrypt_packet(package, sender.decode("utf-8"))
                 if result:
-                    decrypted_payloads.append(result)
+                    decrypted_payloads.append((result, sender))
+                    if result[-1] == "MarketDetail" and b"172." in sender:
+                        market_value = MarketPacketReader(result[0])
+                        market_value.read_packet()
             except Exception as e:
                 traceback.print_exc()
                 print(f"Failed to decrypt package: {e}")

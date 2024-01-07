@@ -90,6 +90,8 @@ class NetworkExtractor(Extractor):
             repeat_like_human(lambda: pyautogui.press("down"), starting_index, wait_time=0.06, target_deviation=0.01)
             wait_like_human(8)
 
+        fail_count = 0
+
         while True:
             pyautogui.PAUSE = 0.01
             self.packet_analyser.results = []
@@ -102,9 +104,14 @@ class NetworkExtractor(Extractor):
             was_processed = wait_until(lambda: len(self.packet_analyser.results) > 0, 2, 0.01)
 
             if not was_processed:
+                fail_count += 1
+
                 # We are probably at the end of the list.
-                self.client._add_to_log("Failed to process packet. Continuing with next category.")
-                break
+                if fail_count >= 5:
+                    self.client._add_to_log("Failed to process packet. Continuing with next category.")
+                    break
+                else:
+                    continue
 
             # Get the result.
             result = self.packet_analyser.results.pop(0)
