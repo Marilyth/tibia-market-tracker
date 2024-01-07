@@ -6,3 +6,4 @@ tqdm
 jwt
 PyJWT
 requests
+protobuf
