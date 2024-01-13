@@ -3,6 +3,7 @@ from utils.data.market_values import MarketValues
 from utils.extraction.memory.memory_extraction import MemoryExtractor
 from utils.extraction.network.packet_sniffer import PacketSniffer
 from utils.extraction.network.packet_analyser import PacketAnalyser
+from utils.extraction.network.tcp_reassembler import TCPReassembler
 from utils.extraction.network.market_packet_reader import MarketPacketValues
 from utils.extraction.network.debugger import XteaDebugger
 from utils.extraction.extractor import Extractor
@@ -21,15 +22,17 @@ class NetworkExtractor(Extractor):
     def __init__(self, client: Client):
         super().__init__(client)
         self.memory_extractor = MemoryExtractor(client)
-        self.packet_sniffer = PacketSniffer()
-        self.packet_analyser = PacketAnalyser(record=False)
+        self.packet_sniffer = PacketSniffer(record=True)
+        self.packet_analyser = PacketAnalyser(record=True)
+        self.tcp_reassembler = TCPReassembler()
+        self.tcp_reassembler.set_new_data_callback(self.packet_analyser.handle_packet)
         self.xtea_key = None
 
-    def setup(self):
+    def setup(self, manual_session: bool = False):
         """
         Sets up the network extraction by sniffing packets, logging in, extracting the XTEA key, and opening the market.
         """
-        self.packet_sniffer.sniff(self.packet_analyser.add_to_queue)
+        self.packet_sniffer.sniff(self.tcp_reassembler.add_to_queue)
         self.client.start_game()
         self.client.login_to_game()
         self.xtea_key = XteaDebugger(self.client.tibia_process_id).find_key()
@@ -37,12 +40,16 @@ class NetworkExtractor(Extractor):
         if not self.client.open_market():
             self.client.exit_tibia()
             raise Exception("Failed to open market.")
+        
+        # Don't actually do anything if this is a manual session.
+        while manual_session:
+            time.sleep(1)
 
     def extract_market_values(self) -> List[MarketValues]:
         items: List[MarketPacketValues] = []
         market_value_items: List[MarketValues] = []
 
-        for category in tqdm(market_categories, desc=f"Category"):
+        for category in tqdm(market_categories[:-1], desc=f"Category"):
             try:
                 items.extend(self.crawl_market(category.index))
             except Exception as e:

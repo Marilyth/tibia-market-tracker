@@ -15,14 +15,13 @@ from threading import Lock
 
 
 class PacketAnalyser:
-    def __init__(self, rounds: int = 64, byte_order: str = sys.byteorder, record: bool = False):
+    def __init__(self, rounds: int = 64, byte_order: str = sys.byteorder):
         """Initialises an XTeaDecrypter.
 
         Args:
             key (List[int]): The key to use for decryption.
             rounds (int, optional): The number of rounds to use for decryption. Defaults to 64.
             byte_order (str, optional): The byte order to use for decryption. Defaults to "little".
-            record (bool, optional): Whether to record the traffic to a file. Defaults to False.
         """
         self.decompressor = {}
         self.byte_order = byte_order
@@ -38,14 +37,6 @@ class PacketAnalyser:
         self.queue_lock = Lock()
         self.prev = bytes()
 
-        if record:
-            self.output = open(f"traffic_{time.time()}.txt", "w+")
-
-    def log_traffic(self, text: str):
-        if self.output:
-            self.output.write(text + "\n")
-            self.output.flush()
-
     def set_key(self, key: List[int]):
         if len(key) != 4:
             raise ValueError("Key must be 4 integers long.")
@@ -58,7 +49,6 @@ class PacketAnalyser:
         self.xtea = new(self.key_string, mode=MODE_ECB, rounds=self.rounds, endian="<" if self.byte_order == "little" else ">")
 
         print(f"Key set to {self.key}.")
-        self.log_traffic(f"{self.key}")
 
     @staticmethod
     def command_type_to_name(type: int, commands: dict) -> str:
@@ -101,11 +91,11 @@ class PacketAnalyser:
 
         return data + b"\x00" * missing_bytes
 
-    def add_to_queue(self, packet: Packet):
-        """Adds a packet to the queue.
+    def handle_packet(self, packet: Packet):
+        """Handles a Tibia packet.
 
         Args:
-            packet (Packet): The packet to add.
+            packet (Packet): The packet to handle.
         """
         try:
             # Print packet flag, i.e. S, A, PA, SA, etc.
@@ -116,67 +106,27 @@ class PacketAnalyser:
             packet_load = len(packet[Raw].load) if Raw in packet else 0
 
             self.queue_lock.acquire()
-
-            try:
-                if packet_src not in self.queue:
-                    self.queue[packet_src] = {"current_seq": packet_seq, "packets": {packet_seq: packet}}
-                else:
-                    self.queue[packet_src]["packets"][packet_seq] = packet
-                
-                if not self.key:
-                    return
-                
-                # Get all packets in the queue, which are in order starting from current_seq.
-                packets = []
-                while True:
-                    current_seq = self.queue[packet_src]["current_seq"]
-                    if current_seq in self.queue[packet_src]["packets"]:
-                        packets.append(self.queue[packet_src]["packets"].pop(current_seq))
-                        packet_length = len(packets[-1][Raw].load) if Raw in packets[-1] else 0
-                        packet_flags = packets[-1]["TCP"].flags
-
-                        if packet_length == 0 and packet_flags != "A":
-                            packet_length = 1
-
-                        self.queue[packet_src]["current_seq"] += packet_length
-                    else:
-                        break
-                
-                # Clean up all packets with sequence numbers lower than current_seq. They are probably duplicates.
-                for packet_seq in [packet_seq for packet_seq in self.queue[packet_src]["packets"] if packet_seq < self.queue[packet_src]["current_seq"]]:
-                    self.queue[packet_src]["packets"].pop(packet_seq)
-                
-                for packet in packets:
-                    load = packet[Raw].load if Raw in packet else None
-                    self.log_traffic(f"{packet.summary()}: {load}")
-
-                    try:
-                        result = self._decrypt_packet(packet[Raw].load if Raw in packet else None, f"{packet['IP'].src}:{packet['TCP'].sport}")
-                    
-                        if result:
-                            payload, command_name = result
-                            packet_reader = MarketPacketReader(payload)
-                            try:
-                                packet_reader.read_packet()
-                                self.results.append(packet_reader.result)
-                            except Exception as e:
-                                if "packet type" not in str(e):
-                                    traceback.print_exc()
-                                    print(f"Error while reading market packet {payload}: {e}")
-                    except Exception as e:
+            load = packet[Raw].load if Raw in packet else None
+            result = self._decrypt_packet(packet[Raw].load if Raw in packet else None, f"{packet['IP'].src}:{packet['TCP'].sport}")
+        
+            if result:
+                payload, command_name = result
+                packet_reader = MarketPacketReader(payload)
+                try:
+                    packet_reader.read_packet()
+                    self.results.append(packet_reader.result)
+                except Exception as e:
+                    if "packet type" not in str(e):
                         traceback.print_exc()
-                        print(f"Error while reading packet: {e}")
-            except Exception as e:
-                # Print stacktrace
-                traceback.print_exc()
-                print(f"Error while decrypting packet: {e}")
-            finally:
-                self.queue_lock.release()
+                        print(f"Error while reading market packet {payload}: {e}")
             
         except Exception as e:
             # Print stacktrace
             traceback.print_exc()
             print(f"Error while decrypting packet: {e}")
+
+        finally:
+            self.queue_lock.release()
         
     @staticmethod
     def bytes_to_readable_string(data: bytes) -> str:

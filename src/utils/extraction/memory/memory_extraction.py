@@ -24,7 +24,6 @@ class MemoryExtractor(Extractor):
     def setup(self):
         self.client.start_game()
         self.client.login_to_game()
-        self.market_reader = MarketMemoryReader(self.client.tibia_process_id)
         
         if not self.client.open_market():
             self.client.exit_tibia()
@@ -69,9 +68,10 @@ class MemoryExtractor(Extractor):
         self.market_reader.get_current_market_values("tibia coins", scan_run=True)
 
     def extract_market_values(self) -> List[MarketValues]:
+        self.market_reader = MarketMemoryReader(self.client.tibia_process_id)
         items = []
 
-        for category in tqdm(market_categories, desc=f"Category"):
+        for category in tqdm(market_categories[:-1], desc=f"Category"):
             try:
                 items.extend(self.crawl_market(category.index))
             except Exception as e:

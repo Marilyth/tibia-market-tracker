@@ -1,45 +1,37 @@
 from utils.extraction.network.packet_analyser import PacketAnalyser
-from utils.extraction.network.market_packet_reader import MarketPacketReader
+from utils.extraction.network.market_packet_reader import MarketPacketValues
+from utils.extraction.network.packet_sniffer import PacketSniffer
+from utils.extraction.network.tcp_reassembler import TCPReassembler
 import os
 import traceback
+import time
 
 
 class TestDebugger:
     def setup_method(self):
-        self.analyzer = PacketAnalyser(record=True)
+        self.analyzer = PacketAnalyser()
+        self.sniffer = PacketSniffer(interface=None)
+        self.tcp_reassembler = TCPReassembler()
 
-    def test_RecordedTraffic_CanDecrypt(self):
+    def test_RecordedTraffic_CanRead(self):
         # Arrange
-        packages = []
-        with open(os.path.join(os.path.dirname(__file__), "example_traffic_analysis", "recorded_traffic.txt"), "rb") as f:
-            example_network_packet = f.readlines()
-            key_string = example_network_packet[0].decode("utf-8").replace("[", "").replace("]", "").replace(" ", "").replace("\n", "").split(",")
-            keys = [int(key) for key in key_string]
-            self.analyzer.set_key(keys)
-
-            for packet in example_network_packet[1:]:
-                if b"Raw: " in packet:
-                    data = packet.split(b"Raw: ")[1]
-                    data = eval(data)
-                    packages.append([data, packet.split(b" > ")[0].split(b" ")[-1]])
+        self.tcp_reassembler.set_new_data_callback(self.analyzer.handle_packet)
         
+        # Read the xtea key from key.txt.
+        with open(os.path.join(os.path.dirname(__file__), "example_traffic_analysis", "key.txt"), "r") as f:
+            key = f.read().strip()
+            key = key.split(",")
+            key = [int(k) for k in key]
+            self.analyzer.set_key(key)
+
         # Act
-        decrypted_payloads = []
-        for package, sender in packages:
-            try:
-                result = self.analyzer._decrypt_packet(package, sender.decode("utf-8"))
-                if result:
-                    decrypted_payloads.append((result, sender))
-                    if result[-1] == "MarketDetail" and b"172." in sender:
-                        market_value = MarketPacketReader(result[0])
-                        market_value.read_packet()
-            except Exception as e:
-                traceback.print_exc()
-                print(f"Failed to decrypt package: {e}")
-                assert False
+        self.sniffer.sniff(self.tcp_reassembler.add_to_queue, pcap=os.path.join(os.path.dirname(__file__), "example_traffic_analysis", "recording.pcap"), sniff_async=False)
+        all_results = self.analyzer.results
+        unique_results = set([result.id for result in self.analyzer.results])
 
         # Assert
-        assert len(decrypted_payloads) > 0
+        assert all_results
+        assert len(unique_results) > 3600
 
     def test_ExampleTraffic_CanDecrypt(self):
         # Arrange
