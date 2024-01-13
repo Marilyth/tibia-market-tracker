@@ -120,19 +120,25 @@ class PacketAnalyser:
         packet_load = len(packet[Raw].load) if Raw in packet else 0
 
         load = packet[Raw].load if Raw in packet else None
-        result = self._decrypt_packet(packet[Raw].load if Raw in packet else None, f"{packet['IP'].src}:{packet['TCP'].sport}")
-    
-        if result:
-            payload, command_name = result
-            packet_reader = MarketPacketReader(payload)
-            try:
-                if "172" in packet_src:
+
+        next_data = packet[Raw].load if Raw in packet else None
+
+        # A packet might contain multiple commands. Handle them one by one.
+        while next_data:
+            result = self._decrypt_packet(next_data, f"{packet['IP'].src}:{packet['TCP'].sport}")
+            next_data = None
+        
+            if result:
+                payload, command_name, next_data = result
+
+                packet_reader = MarketPacketReader(payload)
+                try:
                     packet_reader.read_packet()
                     self.results.append(packet_reader.result)
-            except Exception as e:
-                if "packet type" not in str(e):
-                    traceback.print_exc()
-                    print(f"Error while reading market packet {payload}: {e}")
+                except Exception as e:
+                    if "packet type" not in str(e):
+                        traceback.print_exc()
+                        print(f"Error while reading market packet {payload}: {e}")
 
     def handle_packet(self, packet: Packet):
         """Handles a Tibia packet.
@@ -256,6 +262,12 @@ class PacketAnalyser:
             if packet[1] == sender:
                 raise Exception("Unfinished packet was not completed.")
 
+        # If size is bigger than the actual size, there is another packet appended to this one.
+        next_data = None
+        if packet_size < actual_size:
+            next_data = raw_data[2 + packet_size:]
+            raw_data = raw_data[:packet_size + 2]
+        
         decrypted_data = self.decrypt(raw_data[6:6 + packet_size])
 
         # Read encrypted_packet_length.
@@ -277,13 +289,8 @@ class PacketAnalyser:
             decrypted_data = self.decompress_bytes(payload[2:], sender)
             payload = decrypted_data
 
-        # If size is bigger than the actual size, the packet is not complete yet.
-        if packet_size > actual_size:
-            self.incomplete_packets.append((raw_data, sender))
-            return
-
         command = payload[2] if payload else -1
         command_name = self.command_type_to_name(command, client_commands if not from_server else server_commands)
 
-        return payload, command_name
+        return payload, command_name, next_data
     

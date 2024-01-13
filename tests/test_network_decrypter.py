@@ -31,7 +31,10 @@ class TestDebugger:
 
         # Assert
         assert all_results
-        assert len(unique_results) > 3600
+        assert 31578 in unique_results # Bear skin
+        assert 3587 in unique_results # Banana
+        assert len(unique_results) == 609
+
 
     def test_ExampleTraffic_CanDecrypt(self):
         # Arrange

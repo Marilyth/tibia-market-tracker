@@ -19,7 +19,6 @@ class TCPReassembler:
         """Initialises a TCPReassembler.
         """
         self.queue = {}
-        self.output = None
         self.queue_lock = Lock()
         self.new_data_callback = None
 
@@ -30,23 +29,6 @@ class TCPReassembler:
             callback (Callable[[Packet], None]): The callback function.
         """
         self.new_data_callback = callback
-
-    def get_next_packet(self, source: str, timeout: int = 60) -> Optional[Packet]:
-        """Returns the next packet of the TCP stream.
-
-        Args:
-            timeout (int, optional): The timeout in seconds. Defaults to 60.
-
-        Returns:
-            Optional[Packet]: The next packet of the TCP stream.
-        """
-        if source not in self.queue:
-            raise Exception(f"Source {source} not found in queue.")
-
-        if len(self.output_queue) == 0:
-            wait_until(lambda: len(self.output_queue) > 0, timeout=timeout)
-        
-        return self.output_queue.pop(0)
 
     def add_to_queue(self, packet: Packet):
         """Adds a packet to the queue.

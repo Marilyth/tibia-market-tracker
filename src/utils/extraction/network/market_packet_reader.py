@@ -88,17 +88,16 @@ class MarketPacketReader:
         Raises:
             Exception: If the packet type is not 0xF9.
         """
+        # Search for the continuation packet.
         while True:
             packet_type = struct.unpack("B", self._read_bytes(1))[0]
 
             if packet_type == 0xF9:
-                break
+                unknown = struct.unpack("B", self._read_bytes(1))[0]
+                item_id = struct.unpack("H", self._read_bytes(2))[0]
 
-        unknown = struct.unpack("B", self._read_bytes(1))[0]
-        item_id = struct.unpack("H", self._read_bytes(2))[0]
-
-        if item_id != self.result.id:
-            raise Exception(f"Item id mismatch: {item_id} != {self.result.id}")
+                if item_id == self.result.id:
+                    break
 
         if self.result.tier > -1:
             self.result.tier = struct.unpack("B", self._read_bytes(1))[0]
