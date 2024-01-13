@@ -90,8 +90,6 @@ class TCPReassembler:
 
                             if self.new_data_callback:
                                 self.new_data_callback(packet)
-
-                            return
                     
                     # If the packet seq is equal to the current sequence, it is the next packet in the sequence.
                     elif seq == self.queue[packet_src]["current_seq"]:
@@ -107,12 +105,11 @@ class TCPReassembler:
                         # Add the packet to the output queue.
                         if self.new_data_callback:
                             self.new_data_callback(packet)
-
-                        return
                 
                     # Clean up all packets with timestamp older than 30 seconds.
-                    if time.time() - timestamp > 30:
-                        del self.queue[packet_src]["packets"][seq]
+                    else:
+                        if time.time() - timestamp > 30:
+                            del self.queue[packet_src]["packets"][seq]
             except Exception as e:
                 # Print stacktrace
                 traceback.print_exc()

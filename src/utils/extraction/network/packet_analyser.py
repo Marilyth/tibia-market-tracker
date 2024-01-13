@@ -25,12 +25,11 @@ class PacketAnalyser:
         """
         self.decompressor = {}
         self.byte_order = byte_order
-        self.queue = {}
+        self.queue = []
         self.rounds = rounds
         self.key = None
         self.key_string = None
         self.xtea = None
-        self.output = None
         self.incomplete_packets = []
         self.results: List[MarketPacketValues] = []
         self.decrompression_stream = bytes()
@@ -41,14 +40,25 @@ class PacketAnalyser:
         if len(key) != 4:
             raise ValueError("Key must be 4 integers long.")
 
+
+        self.queue_lock.acquire()
+
         self.key = key
         self.key_string = b""
         for key in self.key:
             self.key_string += key.to_bytes(4, byteorder=self.byte_order, signed=False)
 
         self.xtea = new(self.key_string, mode=MODE_ECB, rounds=self.rounds, endian="<" if self.byte_order == "little" else ">")
-
         print(f"Key set to {self.key}.")
+
+        # Handle all packets in the queue.
+        for packet in self.queue:
+            try:
+                self._handle_packet(packet)
+            except Exception as e:
+                pass
+        
+        self.queue_lock.release()
 
     @staticmethod
     def command_type_to_name(type: int, commands: dict) -> str:
@@ -91,40 +101,53 @@ class PacketAnalyser:
 
         return data + b"\x00" * missing_bytes
 
+    def _handle_packet(self, packet: Packet):
+        """Helper function to handle a packet.
+
+        Args:
+            packet (Packet): The packet to handle.
+        """
+        # If the key is not set yet, add the packet to the queue and handle later.
+        if self.key is None:
+            self.queue.append(packet)
+            return
+        
+        # Print packet flag, i.e. S, A, PA, SA, etc.
+        packet_src = packet['IP'].src
+        packet_src_port = packet['TCP'].sport
+        packet_src = f"{packet_src}:{packet_src_port}"
+        packet_seq = packet['TCP'].seq
+        packet_load = len(packet[Raw].load) if Raw in packet else 0
+
+        load = packet[Raw].load if Raw in packet else None
+        result = self._decrypt_packet(packet[Raw].load if Raw in packet else None, f"{packet['IP'].src}:{packet['TCP'].sport}")
+    
+        if result:
+            payload, command_name = result
+            packet_reader = MarketPacketReader(payload)
+            try:
+                if "172" in packet_src:
+                    packet_reader.read_packet()
+                    self.results.append(packet_reader.result)
+            except Exception as e:
+                if "packet type" not in str(e):
+                    traceback.print_exc()
+                    print(f"Error while reading market packet {payload}: {e}")
+
     def handle_packet(self, packet: Packet):
         """Handles a Tibia packet.
 
         Args:
             packet (Packet): The packet to handle.
         """
-        try:
-            # Print packet flag, i.e. S, A, PA, SA, etc.
-            packet_src = packet['IP'].src
-            packet_src_port = packet['TCP'].sport
-            packet_src = f"{packet_src}:{packet_src_port}"
-            packet_seq = packet['TCP'].seq
-            packet_load = len(packet[Raw].load) if Raw in packet else 0
-
-            self.queue_lock.acquire()
-            load = packet[Raw].load if Raw in packet else None
-            result = self._decrypt_packet(packet[Raw].load if Raw in packet else None, f"{packet['IP'].src}:{packet['TCP'].sport}")
+        self.queue_lock.acquire()
         
-            if result:
-                payload, command_name = result
-                packet_reader = MarketPacketReader(payload)
-                try:
-                    packet_reader.read_packet()
-                    self.results.append(packet_reader.result)
-                except Exception as e:
-                    if "packet type" not in str(e):
-                        traceback.print_exc()
-                        print(f"Error while reading market packet {payload}: {e}")
-            
+        try:
+            self._handle_packet(packet)
         except Exception as e:
             # Print stacktrace
             traceback.print_exc()
             print(f"Error while decrypting packet: {e}")
-
         finally:
             self.queue_lock.release()
         
@@ -253,6 +276,11 @@ class PacketAnalyser:
         if is_compressed:
             decrypted_data = self.decompress_bytes(payload[2:], sender)
             payload = decrypted_data
+
+        # If size is bigger than the actual size, the packet is not complete yet.
+        if packet_size > actual_size:
+            self.incomplete_packets.append((raw_data, sender))
+            return
 
         command = payload[2] if payload else -1
         command_name = self.command_type_to_name(command, client_commands if not from_server else server_commands)
