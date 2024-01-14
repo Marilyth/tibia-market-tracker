@@ -184,6 +184,31 @@ class MarketPacketValues:
         day_bought = self.buy_history[0].traded if len(self.buy_history) > 0 else -1
         day_sold = self.sell_history[0].traded if len(self.sell_history) > 0 else -1
 
+        # Calculate NPC profit.
+        meta_data = ItemMetaData(self.id)
+        meta_data.load_from_proto()
+        gold_sell_data = [sell_data for sell_data in meta_data.npc_sell if sell_data.is_gold()]
+        gold_buy_data = [buy_data for buy_data in meta_data.npc_buy if buy_data.is_gold()]
+        lowest_npc_sell_offer = min([sell_data.price for sell_data in gold_sell_data]) if len(gold_sell_data) > 0 else -1
+        highest_npc_buy_offer = max([buy_data.price for buy_data in gold_buy_data]) if len(gold_buy_data) > 0 else -1
+
+        # Buy from players, sell to NPC.
+        total_immediate_profit = 0
+        if highest_npc_buy_offer > 0:
+            for player_sell_offer in self.sell_offers:
+                if player_sell_offer.price >= highest_npc_buy_offer:
+                    break
+
+                total_immediate_profit += (highest_npc_buy_offer - player_sell_offer.price) * player_sell_offer.amount
+        
+        # Buy from NPC, sell to players.
+        if lowest_npc_sell_offer > 0:
+            for player_buy_offer in self.buy_offers:
+                if player_buy_offer.price <= lowest_npc_sell_offer:
+                    break
+
+                total_immediate_profit += (player_buy_offer.price - lowest_npc_sell_offer) * player_buy_offer.amount
+
         buy_offers = len(self.buy_offers)
         sell_offers = len(self.sell_offers)
 
@@ -195,7 +220,7 @@ class MarketPacketValues:
                             month_highest_sell_offer, month_lowest_buy_offer, min(active_sell_offers, active_buy_offers),
                             sell_offers, buy_offers, month_lowest_sell_offer, month_highest_buy_offer, self.id,
                             day_sell_offer, day_buy_offer, day_sold, day_bought, day_highest_sell_offer, day_lowest_sell_offer,
-                            day_highest_buy_offer, day_lowest_buy_offer)
+                            day_highest_buy_offer, day_lowest_buy_offer, total_immediate_profit)
 
 
 class HistoryPacketValue:

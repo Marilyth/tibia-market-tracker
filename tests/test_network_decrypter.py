@@ -26,7 +26,9 @@ class TestDebugger:
 
         # Act
         self.sniffer.sniff(self.tcp_reassembler.add_to_queue, pcap=os.path.join(os.path.dirname(__file__), "example_traffic_analysis", "recording.pcap"), sniff_async=False)
-        all_results = self.analyzer.results
+        all_results = [result.convert_to_marketvalues() for result in self.analyzer.results]
+        # sort all_results by total_immediate_profit
+        all_results.sort(key=lambda x: x.total_immediate_profit, reverse=True)
         unique_results = set([result.id for result in self.analyzer.results])
 
         # Assert

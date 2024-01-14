@@ -10,6 +10,14 @@ class NPCSaleData:
         self.currency_object_type_id = currency_object_type_id
         self.currency_quest_flag_display_name = currency_quest_flag_display_name
 
+    def is_gold(self) -> bool:
+        """Returns True if the currency is gold, False otherwise.
+
+        Returns:
+            bool: True if the currency is gold, False otherwise.
+        """
+        return self.currency_object_type_id == 0 and self.currency_quest_flag_display_name == ""
+
 class ItemMetaData:
     def __init__(self, id: int):
         self.id = id
@@ -56,7 +64,7 @@ class ItemMetaData:
 class MarketValues:
     def __init__(self, time: float, sell_offer: int, buy_offer: int, month_sell_offer: int, month_buy_offer: int, sold: int, bought: int, highest_sell: int, lowest_buy: int, approx_offers: int, 
                  sell_offers: int, buy_offers: int, lowest_sell: int, highest_buy: int, id: int, day_sell_offer: int = -1, day_buy_offer: int = -1, day_sold: int = -1, day_bought: int = -1, 
-                 day_highest_sell: int = -1, day_lowest_sell: int = -1, day_highest_buy: int = -1, day_lowest_buy: int = -1):
+                 day_highest_sell: int = -1, day_lowest_sell: int = -1, day_highest_buy: int = -1, day_lowest_buy: int = -1, total_immediate_profit: int = -1):
         self.buy_offer: int = max(buy_offer, lowest_buy) if bought > 0 and lowest_buy > -1 else buy_offer
         self.sell_offer: int = min(sell_offer, highest_sell) if sold > 0 and highest_sell > -1 else sell_offer
         self.month_sell_offer: int = month_sell_offer
@@ -82,6 +90,7 @@ class MarketValues:
         self.day_lowest_sell: int = day_lowest_sell
         self.day_highest_buy: int = day_highest_buy
         self.day_lowest_buy: int = day_lowest_buy
+        self.total_immediate_profit: int = total_immediate_profit
 
     def get_metadata(self, load_wiki_name: bool = True) -> ItemMetaData:
         """Returns the metadata of the item.

@@ -42,6 +42,7 @@ class TestDebugger:
 
         # Act
         reader.read_packet()
+        market_values = reader.result.convert_to_marketvalues()
 
         # Assert
         assert reader.result.id == 3280 # Tibia Coins
