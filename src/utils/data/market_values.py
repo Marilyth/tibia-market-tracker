@@ -15,6 +15,7 @@ class ItemMetaData:
         self.id = id
         self.category: str = None
         self.is_upgradeable: bool = False
+        self.tier: int = -1
         self.name: str = None
         self.npc_sell: List[NPCSaleData] = []
         self.npc_buy: List[NPCSaleData] = []
@@ -38,6 +39,8 @@ class ItemMetaData:
             proto_item = proto_items[self.id]
             self.category = str(proto_item.flags.market).split("ITEM_CATEGORY_")[-1].split("\n")[0].replace("_", " ").title()
             self.is_upgradeable = len(str(proto_item.flags.upgradeclassification)) > 0
+            if self.is_upgradeable:
+                self.tier = int(str(proto_item.flags.upgradeclassification).split("upgrade_classification: ")[-1])
             self.name = proto_item.name
 
             for sale_data in proto_item.flags.npcsaledata:
@@ -51,7 +54,9 @@ class ItemMetaData:
             return False
 
 class MarketValues:
-    def __init__(self, time: float, sell_offer: int, buy_offer: int, month_sell_offer: int, month_buy_offer: int, sold: int, bought: int, highest_sell: int, lowest_buy: int, approx_offers: int, sell_offers: int, buy_offers: int, lowest_sell: int, highest_buy: int, id: int):
+    def __init__(self, time: float, sell_offer: int, buy_offer: int, month_sell_offer: int, month_buy_offer: int, sold: int, bought: int, highest_sell: int, lowest_buy: int, approx_offers: int, 
+                 sell_offers: int, buy_offers: int, lowest_sell: int, highest_buy: int, id: int, day_sell_offer: int = -1, day_buy_offer: int = -1, day_sold: int = -1, day_bought: int = -1, 
+                 day_highest_sell: int = -1, day_lowest_sell: int = -1, day_highest_buy: int = -1, day_lowest_buy: int = -1):
         self.buy_offer: int = max(buy_offer, lowest_buy) if bought > 0 and lowest_buy > -1 else buy_offer
         self.sell_offer: int = min(sell_offer, highest_sell) if sold > 0 and highest_sell > -1 else sell_offer
         self.month_sell_offer: int = month_sell_offer
@@ -67,6 +72,16 @@ class MarketValues:
         self.buy_offers: int = buy_offers
         self.sell_offers: int = sell_offers
         self.id: int = id
+
+        # Network data. This can not be extracted from other extraction methods.
+        self.day_sell_offer: int = day_sell_offer
+        self.day_buy_offer: int = day_buy_offer
+        self.day_sold: int = day_sold
+        self.day_bought: int = day_bought
+        self.day_highest_sell: int = day_highest_sell
+        self.day_lowest_sell: int = day_lowest_sell
+        self.day_highest_buy: int = day_highest_buy
+        self.day_lowest_buy: int = day_lowest_buy
 
     def get_metadata(self, load_wiki_name: bool = True) -> ItemMetaData:
         """Returns the metadata of the item.

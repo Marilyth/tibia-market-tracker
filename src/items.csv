@@ -102,6 +102,7 @@ Antler-Horn Helmet,40588
 Antlers,10297
 Anvil (Store),35186
 Ape Fur,5883
+Apocalypse Mushroom,9894
 Apples,24490
 Apron,33933
 Arbalest,5803
@@ -398,6 +399,7 @@ Birthday Layer Cake,37533
 Bitter Calyx,10712
 Bitter-Smack Leaf,25217
 Black Bishop Token,3544
+Black Blisters,10690
 Black Candle,9099
 Black Castle Token,3542
 Black Crystal,10870
@@ -945,6 +947,8 @@ Cask of Brown Ale,137
 Cask of Brown Ale (Item),8774
 Castle Shield,3435
 Cat in a Basket,23452
+Cat's Food Mushroom,3916
+Cat's Food Mushrooms,3917
 Cat's Paw,5479
 Cateroide's Doll,22151
 Cateroide's Doll (Activated),22152
@@ -1043,6 +1047,7 @@ Chest,2482
 Chest Full of Witchcraft,43680
 Chest of Abundance,28946
 Chest of Drawers,2434
+Chest of Drawers (Quest),2434
 Chicken Feather,5890
 Chilli Con Carniphila,29412
 Chimney,7863
@@ -1459,6 +1464,7 @@ Dead Goblin (Decaying Quest),22686
 Dead Goblin (Fresh Quest),22687
 Dead Goblin (Rotten Quest),22685
 Dead Holy Bog Frog,22693
+Dead Man's Saddle,3907
 Dead Rat (Oramond),21850
 Dead Snake (Item),4000
 Dead Tree (Birch),958
@@ -1567,6 +1573,7 @@ Depth Scutum,13998
 Destroy Field Rune,3148
 Devil Helmet,3356
 Devourer Core,23686
+Dew Kisser Flower,3894
 Dewberries,43892
 Dewberry Palm,43944
 Dewberry Palm Leaf,43894
@@ -1676,6 +1683,7 @@ Dragon's Nest (Hatched),14099
 Dragon's Nest (Hatching),14757
 Dragon's Tail,11457
 Dragonbone Staff,7430
+Dragonbone Tree,9811
 Dragonfetish,3206
 Dragonfruit,11682
 Draken Boots,4033
@@ -1722,6 +1730,7 @@ Dropping Water,16249
 Drowned Seaman's Skull,21770
 Drum,2952
 Dry Earth,982
+Dry Earth (Zao),10160
 Dry Flower,24840
 Dry Piece of Wood,11982
 Dry Solstice Tree,9996
@@ -2537,6 +2546,8 @@ Giant Dreadcoil,10737
 Giant Emerald,30060
 Giant Eye,10280
 Giant Footprint,2766
+Giant Glimmer Cap Mushroom,3920
+Giant Jungle Rose,3878
 Giant Pacifier,21199
 Giant Ruby,30059
 Giant Sapphire,30061
@@ -2551,6 +2562,8 @@ Giant Sword,3281
 Giant Tentacle,27619
 Giant Topaz,32623
 Giant Tree,3807
+Giggle Mushroom,3914
+Giggle Mushrooms,3915
 Gilded Birthday Cup,24951
 Gilded Blessed Shield,37165
 Gilded Crown,34332
@@ -2584,6 +2597,8 @@ Glass Lens,39241
 Glass Tube,21766
 Glass of Goo,19371
 Gleaming Starlight Vial,25732
+Glimmer Cap Mushroom,3918
+Glimmer Cap Mushrooms,3919
 Glimmering Soil,941
 Glistening Bone,23522
 Glistening Stone,19810
@@ -2688,6 +2703,7 @@ Goblin Statue Kit,2804
 God Flowers,2981
 Goddess Statue,9449
 Godly Fireworks Rocket,37456
+Gold Blossom,3887
 Gold Coin,3031
 Gold Converter,23722
 Gold Cup,32921
@@ -2951,6 +2967,7 @@ Grey Backpack,2870
 Grey Bag,2862
 Grey Raven,31352
 Grey Raven Kit,30372
+Grey Sand,19278
 Grey Stones,25113
 Grey Tome,2851
 Grey-Blue Powder,22660
@@ -3480,6 +3497,7 @@ Large Amphora,2904
 Large Amphora Kit,2805
 Large Basin,19095
 Large Berg Crystal (Pillar),19312
+Large Black Crystal,10797
 Large Candelabrum,8523
 Large Cauldron,2007
 Large Cauldron (Cobra),31287
@@ -3884,6 +3902,7 @@ Maxxen Santa,21952
 Maxxenius Head,29942
 Mead Horn,7141
 Mead Horn (Empty),7140
+Meadow Star,3890
 Mean Knight Sword,17109
 Mean Paladin Spear,17110
 Meandi,12580
@@ -4029,6 +4048,7 @@ Mortal Mace,31580
 Mortar,34366
 Mosaic,34003
 Moss,8500
+Moss Cap Mushroom,3909
 Mossmasher Figurine,35591
 Mossy Fallen Tree,3980
 Mossy Fallen Tree (Something),3978
@@ -4040,12 +4060,21 @@ Mould Heart,34141
 Mould Robe,34148
 Mouldy Cheese,3120
 Mouldy Powder,35596
+Mountain (Earth),1027
+Mountain (Wall),1116
+Mourning Mushroom,9896
 Mouthpiece for a Horn,20057
 Mr Jones's Piano,21372
 Mr. Punish's Handcuffs,6537
 Muck Remover,16101
 Muck Rod,16117
 Mucus Plug,16102
+Mud (Tile),10605
+Mud Whip,3687
+Muddy Brick Wall,17224
+Muddy Floor,355
+Muddy Floor (Dark),10235
+Muddy Floor (Light),10243
 Mug,2880
 Mummy Disguise,144
 Murcion's Mycelium,43965
@@ -4129,6 +4158,7 @@ Necromantic Remains,33984
 Necromantic Robe,11475
 Necromantic Rust,21196
 Necrometer,21124
+Necrotic Grass,9892
 Necrotic Rod,3069
 Net,12186
 Net (Fishing),31489
@@ -4512,6 +4542,7 @@ Pendulet,29429
 Pendulum,20141
 Pendulum Clock,2448
 Pendulum Clock Kit,2801
+Pepper Root Grass,9846
 Peppermoon Bells,21088
 Percht Broom,30282
 Percht Handkerchief,30284
@@ -4528,6 +4559,7 @@ Perfume Gatherer (Second),17672
 Perfume Gatherer (Third),17673
 Pester Maws,20109
 Pester Maws (Broken Dream),20105
+Pestilent Fern,9889
 Pet Pig,16166
 Petrified Scream,10420
 Phantasmal Axe,32616
@@ -4879,6 +4911,7 @@ Rat Cheese,17821
 Rat God Doll,17825
 Ratana,17812
 Ratmiral's Hat,35613
+Rattleleaf Bush,9961
 Rattling Gourd,22650
 Ravager's Axe,3331
 Raven Herb,5953
@@ -5204,6 +5237,7 @@ Sample of Monster Blood,27874
 Sample of Sand Wasp Honey,8760
 Sample of Venorean Spice,8759
 Sand,231
+Sand (Brown),9531
 Sand (Field),1715
 Sand Trickle,18614
 Sandals,3551
@@ -5580,6 +5614,8 @@ Slime Gobbler,12077
 Slime Heart,21194
 Slime Mould,12601
 Slime Slide,21049
+Slime Table Mushroom,3912
+Slime Table Mushrooms,3913
 Slimy Leaf Tentacle,21197
 Slimy Leg,27623
 Slimy Valve,21150
@@ -5688,6 +5724,7 @@ Snakebite Rod,3066
 Snapping Fireworks Rocket,37450
 Sneaky Stabber of Eliteness,9594
 Sneaky Stabber of Eliteness (Jammed),9595
+Sneeze Blossom,3891
 Sniper Arrow,7364
 Sniper Gloves,5875
 Snow,6593
@@ -6197,6 +6234,7 @@ Tail of Corruption,11672
 Tainted Blood Essence,19133
 Tainted Glooth Capsule,21816
 Tainted Heart,43854
+Tainted Plant,9876
 Tall Dark Cypress,19676
 Tall Dusky Cypress,20117
 Tall Dusky Cypress (Broken Dream),20102
@@ -6365,6 +6403,13 @@ Thick Trunk,2352
 Thorn,9643
 Thorn Seed,24965
 Thorn Spitter,14768
+Thornpeak Grass,9817
+Thread Tree,3743
+Thread Tree (Parrot),6094
+Thread of Screw,5032
+Three Cans,24483
+Throatslitter,9959
+Throne,2357
 Thread Tree (Parrot),6094
 Thread of Screw,5032
 Three Cans,24483
@@ -6490,6 +6535,7 @@ Tribal Mask,3403
 Triple Bolt Crossbow,19356
 Troll Green,3741
 Troll Skull,29990
+Trollhair Plants,9847
 Trollroot,11515
 Trophy Stand,872
 Trophy of Feroxa,22104
@@ -7606,3 +7652,8 @@ Unerring Dragon Scale Armor,44622
 Wardragon Claw,44748
 Wardragon Tooth,44749
 Wooden Chair (Primitive),24528
+Crystallised Blood,44752
+Darklight Field,43626
+Darklight Spark,43590
+Exalted Seal,44750
+Spheric Teleporter,36874

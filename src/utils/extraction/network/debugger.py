@@ -53,11 +53,13 @@ class XteaDebugger:
         
         gdb_output = subprocess.run(command, capture_output=True).stdout.decode("utf-8")
         keys = [key for key in gdb_output.split(":\t")[1].split("\n")[0].split("\t") if key]
-
-        print(keys)
         
         # Keys are in 0x00 format, convert to bytes.
         keys = [int(key, 16) for key in keys]
+
+        # Write key to file for debugging purposes.
+        with open("key.txt", "w") as f:
+            f.write(",".join([str(k) for k in keys]))
 
         return keys
         

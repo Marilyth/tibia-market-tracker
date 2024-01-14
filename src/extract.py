@@ -46,15 +46,18 @@ def update_metadata():
 def do_market_search(email: str, password: str, char_index: int, virtual_display: bool, virtual_display_visible: bool):
     def market_search():
         from utils.extraction.memory.memory_extraction import MemoryExtractor
+        from utils.extraction.network.network_extraction import NetworkExtractor
         from utils.extraction.extractor import Extractor
         from utils.client import Client
 
         client = Client("./Tibia/Tibia", email, password, char_index)
-        extractor: Extractor = MemoryExtractor(client)
+        extractor: Extractor = NetworkExtractor(client)
         extractor.setup()
 
         market_values = extractor.extract_market_values()
         client.exit_tibia()
+
+        print(f"Market values: {len(market_values)}")
 
         if not dry_run:
             print("Updating market values...")
