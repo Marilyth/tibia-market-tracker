@@ -8,7 +8,7 @@ import traceback
 from install_tibia import install_tibia, download_package
 import requests
 
-dry_run: bool = True
+dry_run: bool = False
 api_url: str = "https://api.tibiamarket.top:8001"
 config: dict = None
 

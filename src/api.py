@@ -71,7 +71,7 @@ def bearer_auth(credentials: HTTPAuthorizationCredentials = Depends(bearer_schem
     Raises:
         HTTPException: If the credentials are invalid.
     """
-    username, reason = jwt_helper.verify_token(credentials.credentials)
+    username, reason = jwt_helper.verify_token(credentials.credentials, verify_expired=False)
     if not username:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
