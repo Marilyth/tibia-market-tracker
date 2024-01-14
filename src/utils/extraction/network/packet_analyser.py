@@ -121,8 +121,8 @@ class PacketAnalyser:
         packet_load = len(packet[Raw].load) if Raw in packet else 0
 
         # There seem to be multiple identical streams when talking to Tibia.
-        # The first one is being blocked by us.
-        if packet_src == self.blocked_src:
+        # The first one is being blocked by us. Also ignore all streams that are not from Tibia 7171.
+        if packet_src == self.blocked_src or packet_src_port != 7171:
             return
 
         load = packet[Raw].load if Raw in packet else None

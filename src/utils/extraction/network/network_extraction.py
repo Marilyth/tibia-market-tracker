@@ -122,6 +122,7 @@ class NetworkExtractor(Extractor):
                     # Retry the item.
                     if result:
                         wait_like_human(0.3, 0.05)
+                        self.packet_analyser.results = []
                         pyautogui.press("up")
                         
                         was_processed = wait_until(lambda: len(self.packet_analyser.results) > 0, 2, 0.01)
