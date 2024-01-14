@@ -62,7 +62,7 @@ class NetworkExtractor(Extractor):
         for item in items:
             market_values = item.convert_to_marketvalues()
             market_value_items.append(market_values)
-            print(f"Converted to market_value_item: {object_to_json(market_values)}")
+            #print(f"Converted to market_value_item: {object_to_json(market_values)}")
 
         return market_value_items
 
@@ -98,13 +98,14 @@ class NetworkExtractor(Extractor):
             wait_like_human(8)
 
         fail_count = 0
+        result = None
 
         while True:
             pyautogui.PAUSE = 0.01
             self.packet_analyser.results = []
 
             # Go to the next item.
-            wait_like_human(0.5, 0.05)
+            wait_like_human(0.3, 0.05)
             pyautogui.press("down")
 
             # Wait for the packet to be processed.
@@ -113,17 +114,31 @@ class NetworkExtractor(Extractor):
             if not was_processed:
                 fail_count += 1
 
-                # We are probably at the end of the list.
+                # Reading the item failed 5 times. Continue with next category.
                 if fail_count >= 5:
-                    self.client._add_to_log("Failed to process packet. Continuing with next category.")
+                    print("Failed to process packet. Continuing with next category.")
                     break
                 else:
+                    # Retry the item.
+                    if result:
+                        wait_like_human(0.3, 0.05)
+                        pyautogui.press("up")
+                        
+                        was_processed = wait_until(lambda: len(self.packet_analyser.results) > 0, 2, 0.01)
+                        if was_processed:
+                            test_result = self.packet_analyser.results.pop(0)
+
+                            if test_result.id != result.id:
+                                print("Reached end of category. Going up did not yield the last item.")
+                                break
+                    
                     continue
 
             # Get the result.
+            fail_count = 0
             result = self.packet_analyser.results.pop(0)
             results.append(result)
 
-            print(f"Received market packet: {object_to_json(result)}")
+            print(f"Received market packet for {result.id}")
 
         return results

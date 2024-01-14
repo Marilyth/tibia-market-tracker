@@ -30,6 +30,7 @@ class PacketAnalyser:
         self.key = None
         self.key_string = None
         self.xtea = None
+        self.blocked_src: str = None
         self.incomplete_packets = []
         self.results: List[MarketPacketValues] = []
         self.decrompression_stream = bytes()
@@ -119,8 +120,12 @@ class PacketAnalyser:
         packet_seq = packet['TCP'].seq
         packet_load = len(packet[Raw].load) if Raw in packet else 0
 
-        load = packet[Raw].load if Raw in packet else None
+        # There seem to be multiple identical streams when talking to Tibia.
+        # The first one is being blocked by us.
+        if packet_src == self.blocked_src:
+            return
 
+        load = packet[Raw].load if Raw in packet else None
         next_data = packet[Raw].load if Raw in packet else None
 
         # A packet might contain multiple commands. Handle them one by one.
@@ -137,6 +142,9 @@ class PacketAnalyser:
                     self.results.append(packet_reader.result)
                 except Exception as e:
                     if "packet type" not in str(e):
+                        if not self.blocked_src:
+                            self.blocked_src = packet_src
+                            print(f"Blocked {packet_src} due to error: {e}")
                         traceback.print_exc()
                         print(f"Error while reading market packet {payload}: {e}")
 
@@ -151,7 +159,6 @@ class PacketAnalyser:
         try:
             self._handle_packet(packet)
         except Exception as e:
-            # Print stacktrace
             traceback.print_exc()
             print(f"Error while decrypting packet: {e}")
         finally:
@@ -260,7 +267,8 @@ class PacketAnalyser:
         # Unfinished packet was not completed. Remove it.
         for packet in self.incomplete_packets[:]:
             if packet[1] == sender:
-                raise Exception("Unfinished packet was not completed.")
+                print("Unfinished packet was not completed. Removing.")
+                self.incomplete_packets.remove(packet)
 
         # If size is bigger than the actual size, there is another packet appended to this one.
         next_data = None
