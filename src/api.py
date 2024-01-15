@@ -197,7 +197,7 @@ async def middleware(request: Request, call_next):
     return response
 
 # Set up API endpoints.
-@app.get("/market_values")#, dependencies=[Depends(bearer_auth)])
+@app.get("/market_values", dependencies=[Depends(bearer_auth)])
 @limiter.limit("1/5seconds;10/minute")
 async def get_market_values(request: Request, server: str, max_sell_price: int = None, min_buy_price: int = None, max_buy_price: int = None,
                             min_sell_price: int = None, max_flippers: int = None, min_flippers: int = None, skip: int = 0, limit: int = 100,
@@ -291,7 +291,7 @@ async def get_item_metadata(request: Request, item_id: int = -1):
 
     return {"metadata": metadata}
 
-@app.get("/world_data")
+@app.get("/world_data", dependencies=[Depends(bearer_auth)])
 async def get_world_data(server: str = None):
     """Returns the world data for all worlds. I.e. the last time the market was scanned.
     Optionally returns only the data for the given server.
