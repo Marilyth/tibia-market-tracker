@@ -291,11 +291,17 @@ async def get_item_metadata(request: Request, item_id: int = -1):
 
     return {"metadata": metadata}
 
-@app.get("/world_data", dependencies=[Depends(bearer_auth)])
-async def get_world_data():
+@app.get("/world_data")
+async def get_world_data(server: str = None):
     """Returns the world data for all worlds. I.e. the last time the market was scanned.
+    Optionally returns only the data for the given server.
     """
-    return get_cached_world_data()
+    world_data = get_cached_world_data()
+
+    if server:
+        world_data = WorldDataResponse([world for world in world_data.worlds if world.name.lower() == server.lower()])
+
+    return world_data
 
 @app.get("/generate_token", include_in_schema=False)
 async def generate_token(username: str, secret: str, days: int = 90):
