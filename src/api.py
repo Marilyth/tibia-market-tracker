@@ -16,6 +16,7 @@ import asyncio
 from typing import Dict, Tuple, List, Annotated
 import time
 from utils.jwt_helper import JWTHelper
+from utils.data.world_data import WorldDataResponse, WorldData
 from datetime import datetime
 
 # Set up the API.
@@ -42,6 +43,7 @@ with open(os.path.join(os.path.dirname(__file__), "config", "config.json"), "r")
 # Set up any caches.
 full_scans: Dict[str, Tuple[float, List[MarketValues]]] = {}
 fullscan_lock = asyncio.Lock()
+world_data: WorldDataResponse = None
 
 jwt_helper = JWTHelper(config["jwtSecret"])
 mongo_manager: MongoManager = MongoManager(config["mongodbConnectionString"])
@@ -105,6 +107,19 @@ async def get_fullscan_async(server: str):
         fullscan_lock.release()
 
     return full_scans[server]
+
+def get_cached_world_data():
+    """Gets the world data.
+
+    Returns:
+        WorldDataResponse: The world data.
+    """
+    global world_data
+
+    if not world_data:
+        world_data = mongo_manager.get_world_data()
+
+    return world_data
 
 def log_request_result(request: Request, result: Response):
     """Logs the result of the request being made.
@@ -276,6 +291,12 @@ async def get_item_metadata(request: Request, item_id: int = -1):
 
     return {"metadata": metadata}
 
+@app.get("/world_data", dependencies=[Depends(bearer_auth)])
+async def get_world_data():
+    """Returns the world data for all worlds. I.e. the last time the market was scanned.
+    """
+    return get_cached_world_data()
+
 @app.get("/generate_token", include_in_schema=False)
 async def generate_token(username: str, secret: str, days: int = 90):
     """Generates a token for the given username, if the secret is correct.
@@ -314,6 +335,8 @@ async def add_market_values(request: Request, secret: str, values: Annotated[str
     Args:
         values (str): The market values to add in JSON format.
     """
+    global world_data
+
     check_secret(secret)
 
     # Convert the values to an object.
@@ -322,6 +345,8 @@ async def add_market_values(request: Request, secret: str, values: Annotated[str
 
     # Remove the fullscan from the cache.
     full_scans.pop(values.server, None)
+
+    world_data = None
 
 @app.post("/update_item_metadata", include_in_schema=False)
 async def update_item_metadata(request: Request, secret: str, metadata: Annotated[str, Body()]):

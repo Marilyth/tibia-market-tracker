@@ -1,6 +1,7 @@
 import pymongo
 from utils.data.market_values import MarketValues, NPCSaleData, ItemMetaData
 from utils.wiki import EventData, Wiki
+from utils.data.world_data import WorldData, WorldDataResponse
 from typing import List
 import os
 from tqdm import tqdm
@@ -269,3 +270,22 @@ class MongoManager:
             return list(self.item_meta_data.find({}, {"_id": 0}))
         
         return self.item_meta_data.find_one({"id": item_id}, {"_id": 0})
+
+    def get_world_data(self) -> dict:
+        """Gets the latest item update time for each server for the item 22118 (tibia coin).
+
+        Returns:
+            dict: The world data from the database.
+        """
+        query = {"id": 22118}
+
+        pipeline = [
+            {"$match": query},
+            {"$project": {"history": {"$objectToArray": "$history"}}},
+            # Only take the last entry of each element in the history list, but keep the server name.
+            {"$project": {"history": {"$map": {"input": "$history", "as": "history", "in": {"k": "$$history.k", "v": {"$slice": ["$$history.v", -1]}}}}}},
+        ]
+
+        item = list(self.item_prices.aggregate(pipeline))[0]
+
+        return WorldDataResponse([WorldData(name=kvp["k"], last_update=datetime.utcfromtimestamp(kvp["v"][0]["time"])) for kvp in item["history"]])
