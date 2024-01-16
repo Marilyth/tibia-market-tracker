@@ -156,7 +156,7 @@ class Client:
                     self._add_to_log("Opening depot")
 
                     # Needs to be adjusted if the resolution is not 1600x900 fullscreen!
-                    move_mouse_like_human(645, 320)
+                    move_mouse_like_human(645, 345)
                     pyautogui.leftClick()
 
                     # Tried to open depot, check if it worked.
