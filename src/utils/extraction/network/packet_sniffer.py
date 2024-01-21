@@ -1,6 +1,7 @@
 from scapy.all import sniff, Packet, AsyncSniffer, Raw, wrpcap
 from typing import Callable
 import sys
+from scapy.all import conf
 
 
 class PacketSniffer:
@@ -9,6 +10,9 @@ class PacketSniffer:
         self.interface = interface
         self.record = record
         self.callback = None
+
+        # Set scapy config to use_pcap=True, using C, to avoid packet loss.
+        conf.use_pcap = True
 
         if record:
             # Clear the recording file.

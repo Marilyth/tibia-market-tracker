@@ -22,7 +22,7 @@ class NetworkExtractor(Extractor):
     def __init__(self, client: Client):
         super().__init__(client)
         self.memory_extractor = MemoryExtractor(client)
-        self.packet_sniffer = PacketSniffer(record=True)
+        self.packet_sniffer = PacketSniffer(record=False)
         self.packet_analyser = PacketAnalyser()
         self.tcp_reassembler = TCPReassembler()
         self.tcp_reassembler.set_new_data_callback(self.packet_analyser.handle_packet)
