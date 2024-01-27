@@ -197,7 +197,7 @@ async def middleware(request: Request, call_next):
     return response
 
 # Set up API endpoints.
-@app.get("/market_values")
+@app.get("/market_values", dependencies=[Depends(bearer_auth)])
 @limiter.limit("1/5seconds;10/minute")
 async def get_market_values(request: Request, server: str, max_sell_price: int = None, min_buy_price: int = None, max_buy_price: int = None,
                             min_sell_price: int = None, max_flippers: int = None, min_flippers: int = None, skip: int = 0, limit: int = 100,
@@ -241,7 +241,7 @@ async def get_market_values(request: Request, server: str, max_sell_price: int =
 
     return values[skip:skip+limit]
 
-@app.get("/item_history")
+@app.get("/item_history", dependencies=[Depends(bearer_auth)])
 @limiter.limit("1/5seconds;10/minute")
 async def get_item_history(request: Request, server: str, item_id: int, start_days_ago: int = 30, end_days_ago: int = -1) -> List[MarketValues]:
     """Returns the history of the given item.
@@ -270,7 +270,7 @@ async def get_item_history(request: Request, server: str, item_id: int, start_da
     
     return values
 
-@app.get("/events")
+@app.get("/events", dependencies=[Depends(bearer_auth)])
 @limiter.limit("1/5seconds;10/minute")
 async def get_events(request: Request, start_days_ago: int = 30, end_days_ago: int = -1) -> List[EventData]:
     """Returns all tracked tibia events so far.
