@@ -1,4 +1,4 @@
-from utils.data.market_values import MarketValues
+from utils.data.market_values import MarketValues, ItemMetaData
 from utils.wiki import EventData
 from utils.mongo_manager import MongoManager
 from utils.json_helper import json_to_object
@@ -16,8 +16,8 @@ import asyncio
 from typing import Dict, Tuple, List, Annotated
 import time
 from utils.jwt_helper import JWTHelper
-from utils.data.world_data import WorldDataResponse, WorldData
-from datetime import datetime
+from utils.data.world_data import WorldData
+from datetime import datetime, timedelta
 
 # Set up the API.
 limiter = Limiter(key_func=get_remote_address, default_limits=["1/2seconds"])
@@ -43,7 +43,7 @@ with open(os.path.join(os.path.dirname(__file__), "config", "config.json"), "r")
 # Set up any caches.
 full_scans: Dict[str, Tuple[float, List[MarketValues]]] = {}
 fullscan_lock = asyncio.Lock()
-world_data: WorldDataResponse = None
+world_data: List[WorldData] = None
 
 jwt_helper = JWTHelper(config["jwtSecret"])
 mongo_manager: MongoManager = MongoManager(config["mongodbConnectionString"])
@@ -99,7 +99,7 @@ async def get_fullscan_async(server: str):
             if not values:
                 return None, []
 
-            values = sorted(values, key=lambda x: (x["sell_offers"] + x["buy_offers"]) if "buy_offers" in x else 0, reverse=True)
+            values = sorted(values, key=lambda x: (x.sell_offers + x.buy_offers), reverse=True)
             full_scans[server] = (time.time(), values)
     except Exception as e:
         print(f"Error while reading fullscan: {e}")
@@ -108,7 +108,7 @@ async def get_fullscan_async(server: str):
 
     return full_scans[server]
 
-def get_cached_world_data():
+def get_cached_world_data() -> List[WorldData]:
     """Gets the world data.
 
     Returns:
@@ -128,9 +128,9 @@ def log_request_result(request: Request, result: Response):
         request (fastapi.Request): The request being made.
         result (fastapi.Response): The result of the request.
     """
-    mongo_manager.add_access_log(request.client.host, request.url.path, request.url.query, result.status_code)
+    pass#mongo_manager.add_access_log(request.client.host, request.url.path, request.url.query, result.status_code)
 
-def filter_outliers(values: List[Dict[str, float]], keys: List[str], outlier_factor: float = 5, neighbour_search_range: int = 10):
+def filter_outliers(values: List[MarketValues], keys: List[str], outlier_factor: float = 5, neighbour_search_range: int = 10):
     """Filter out outliers in the values list (spikes in values that are too high or too low).
 
     Args:
@@ -142,7 +142,7 @@ def filter_outliers(values: List[Dict[str, float]], keys: List[str], outlier_fac
     for i, value in enumerate(values):
         if i > 0 and i < len(values) - 1:
             for stat_name in keys:
-                current = value[stat_name]
+                current = getattr(value, stat_name)
                 
                 if current == -1:
                     continue
@@ -150,7 +150,7 @@ def filter_outliers(values: List[Dict[str, float]], keys: List[str], outlier_fac
                 # Find the value before this one, that is not -1.
                 before = -1
                 for j in range(i - 1, max(i - neighbour_search_range, 0), -1):
-                    before = values[j][stat_name]
+                    before = getattr(values[j], stat_name)
                     if before != -1:
                         break
                     
@@ -160,7 +160,7 @@ def filter_outliers(values: List[Dict[str, float]], keys: List[str], outlier_fac
                 # Find the value after this one, that is not -1.
                 after = -1
                 for j in range(i + 1, min(i + neighbour_search_range, len(values))):
-                    after = values[j][stat_name]
+                    after = getattr(values[j], stat_name)
                     if after != -1:
                         break
                 
@@ -169,7 +169,7 @@ def filter_outliers(values: List[Dict[str, float]], keys: List[str], outlier_fac
                 
                 if current > before * outlier_factor and current > after * outlier_factor or\
                     current < before / outlier_factor and current < after / outlier_factor:
-                    value[stat_name] = -1
+                    setattr(value, stat_name, -1)
 
 # Middleware.
 @app.middleware("http")
@@ -197,24 +197,24 @@ async def middleware(request: Request, call_next):
     return response
 
 # Set up API endpoints.
-@app.get("/market_values", dependencies=[Depends(bearer_auth)])
+@app.get("/market_values")
 @limiter.limit("1/5seconds;10/minute")
 async def get_market_values(request: Request, server: str, max_sell_price: int = None, min_buy_price: int = None, max_buy_price: int = None,
                             min_sell_price: int = None, max_flippers: int = None, min_flippers: int = None, skip: int = 0, limit: int = 100,
-                            item_ids: str = None):
+                            item_ids: str = None) -> List[MarketValues]:
     """Returns the market values of the items which match the given criteria.
 
     Args:
-        server (str): The server of the item.
-        item_ids (List[int]): A comma seperated list of ids of the items. If not provided, all items are returned.
-        max_sell_price (int): The maximum sell price of the item.
-        min_buy_price (int): The minimum buy price of the item.
-        max_buy_price (int): The maximum buy price of the item.
-        min_sell_price (int): The minimum sell price of the item.
-        max_flippers (int): The maximum number of flippers of the item.
-        min_flippers (int): The minimum number of flippers of the item.
-        skip (int): The number of items to skip.
-        limit (int): The maximum number of items to return.
+    - **server** (str): The (case sensitive) server of the item.
+    - **item_ids** (List[int]): A comma seperated list of ids of the items. If not provided, all items are returned.
+    - **max_sell_price** (int): The maximum sell price of the item.
+    - **min_buy_price** (int): The minimum buy price of the item.
+    - **max_buy_price** (int): The maximum buy price of the item.
+    - **min_sell_price** (int): The minimum sell price of the item.
+    - **max_flippers** (int): The maximum number of flippers of the item.
+    - **min_flippers** (int): The minimum number of flippers of the item.
+    - **skip** (int): The number of items to skip. Defaults to 0.
+    - **limit** (int): The maximum number of items to return. Defaults to 100.
     """
     last_checked, values = await get_fullscan_async(server)
 
@@ -222,89 +222,103 @@ async def get_market_values(request: Request, server: str, max_sell_price: int =
 
     if not item_ids:
         if max_sell_price:
-            filters.append(lambda value: value["sell_offer"] <= max_sell_price)
+            filters.append(lambda value: value.sell_offer <= max_sell_price)
         if min_sell_price:
-            filters.append(lambda value: value["sell_offer"] >= min_sell_price)
+            filters.append(lambda value: value.sell_offer >= min_sell_price)
         if min_buy_price:
-            filters.append(lambda value: value["buy_offer"] >= min_buy_price)
+            filters.append(lambda value: value.buy_offer >= min_buy_price)
         if max_buy_price:
-            filters.append(lambda value: value["buy_offer"] <= max_buy_price)
+            filters.append(lambda value: value.buy_offer <= max_buy_price)
         if max_flippers:
-            filters.append(lambda value: value["active_traders"] <= max_flippers)
+            filters.append(lambda value: value.active_traders <= max_flippers)
         if min_flippers:
-            filters.append(lambda value: value["active_traders"] >= min_flippers)
+            filters.append(lambda value: value.active_traders >= min_flippers)
     else:
         item_ids = [int(id) for id in item_ids.split(",")]
-        filters.append(lambda value: value["id"] in item_ids)
+        filters.append(lambda value: value.id in item_ids)
 
     values = [value for value in values if all([filter(value) for filter in filters])]
 
-    return {"total_results": len(values), "values": values[skip:skip+limit]}
+    return values[skip:skip+limit]
 
-@app.get("/item_history", dependencies=[Depends(bearer_auth)])
+@app.get("/item_history")
 @limiter.limit("1/5seconds;10/minute")
-async def get_item_history(request: Request, server: str, item_id: int, start_time: float = None, end_time: float = None):
+async def get_item_history(request: Request, server: str, item_id: int, start_days_ago: int = 30, end_days_ago: int = -1) -> List[MarketValues]:
     """Returns the history of the given item.
 
     Args:
-        server (str): The server of the item.
-        item_id (int): The id of the item.
+    - **server** (str): The (case sensitive) server of the item.
+    - **item_id** (int): The id of the item.
+    - **start_days_ago** (int, optional): The number of days ago to start the history from. Defaults to 30.
+    - **end_days_ago** (int, optional): The number of days ago to end the history at. Defaults to -1 (all).
     """
     values = mongo_manager.get_item_history(item_id, server)
-
-    if not values:
-        return {"error": "Item does not exist, or has no data."}
-
-    scan_time = values[-1]["time"]
+    
     filters = []
 
-    if start_time:
-        filters.append(lambda value: value["time"] >= start_time)
-    if end_time:
-        filters.append(lambda value: value["time"] <= end_time)
+    if start_days_ago > -1:
+        start_date = datetime.now() - timedelta(days=start_days_ago)
+        filters.append(lambda value: value.time >= start_date.timestamp())
+    if end_days_ago > -1:
+        end_date = datetime.now() - timedelta(days=end_days_ago)
+        filters.append(lambda value: value.time <= end_date.timestamp())
 
     values = [value for value in values if all([filter(value) for filter in filters])]
     
     # Filter out outliers (spikes in values that are too high or too low).
-    filter_outliers(values, ["buy_offer", "sell_offer", "sold", "bought", "month_sell_offer", "month_buy_offer"])
+    filter_outliers(values, ["buy_offer", "sell_offer", "month_sold", "month_bought", "month_average_sell", "month_average_buy"])
     
-    return {"last_updated": scan_time, "history": values}
+    return values
 
-@app.get("/events", dependencies=[Depends(bearer_auth)])
+@app.get("/events")
 @limiter.limit("1/5seconds;10/minute")
-async def get_events(request: Request):
+async def get_events(request: Request, start_days_ago: int = 30, end_days_ago: int = -1) -> List[EventData]:
     """Returns all tracked tibia events so far.
+
+    Args:
+    - **start_days_ago** (int, optional): The number of days ago to start the history from. Defaults to 30.
+    - **end_days_ago** (int, optional): The number of days ago to end the history at. Defaults to -1 (all).
     """
     events = mongo_manager.get_events()
 
-    return {"events": events}
+    if start_days_ago > -1:
+        start_date = datetime.now() - timedelta(days=start_days_ago)
+        events = [event for event in events if event.date >= start_date]
+    if end_days_ago > -1:
+        end_date = datetime.now() - timedelta(days=end_days_ago)
+        events = [event for event in events if event.date <= end_date]
 
-@app.get("/item_metadata", dependencies=[Depends(bearer_auth)])
+    return events
+
+@app.get("/item_metadata")
 @limiter.limit("1/5seconds;10/minute")
-async def get_item_metadata(request: Request, item_id: int = -1):
+async def get_item_metadata(request: Request, item_id: int = -1) -> List[ItemMetaData]:
     """Returns the metadata for the given item, or all items if no item id is given.
 
     Args:
-        item_id (int, optional): The id of the item to get the metadata for. Defaults to -1 (all).
+    - **item_id** (int, optional): The id of the item to get the metadata for. Defaults to -1 (all).
     """
     metadata = mongo_manager.get_item_metadata(item_id)
 
-    return {"metadata": metadata}
+    return metadata
 
-@app.get("/world_data", dependencies=[Depends(bearer_auth)])
-async def get_world_data(server: str = None):
+@app.get("/world_data")
+async def get_world_data(server: str = None) -> List[WorldData]:
     """Returns the world data for all worlds. I.e. the last time the market was scanned.
     Optionally returns only the data for the given server.
+
+    Args:
+    - **server** (str, optional): The (case sensitive) server to get the world data for. Defaults to None (all).
     """
     world_data = get_cached_world_data()
 
     if server:
-        world_data = WorldDataResponse([world for world in world_data.worlds if world.name.lower() == server.lower()])
+        world_data = [world for world in world_data if world.name == server]
 
     return world_data
 
 @app.get("/generate_token", include_in_schema=False)
-async def generate_token(username: str, secret: str, days: int = 90):
+async def generate_token(username: str, secret: str, days: int = 90) -> str:
     """Generates a token for the given username, if the secret is correct.
 
     Args:

@@ -50,7 +50,7 @@ class MemoryExtractor(Extractor):
                 
                 # Find the current items values, and search for them in memory.
                 values = self.ocr_extractor.search_item(item, id)
-                self.market_reader.find_current_memory(values.buy_offer, values.sell_offer, values.highest_buy, values.highest_sell, values.id)
+                self.market_reader.find_current_memory(values.buy_offer, values.sell_offer, values.month_highest_buy, values.month_highest_sell, values.id)
                 
                 self.client._add_to_log(len(self.market_reader.sell_offer_reader.addresses))
                 self.client._add_to_log(len(self.market_reader.buy_offer_reader.addresses))
