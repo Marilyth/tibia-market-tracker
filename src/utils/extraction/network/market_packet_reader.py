@@ -187,27 +187,45 @@ class MarketPacketValues:
         # Calculate NPC profit.
         meta_data = ItemMetaData(self.id)
         meta_data.load_from_proto()
+        weight = float(self.details[14].split(" oz")[0]) if self.details[14] else 0
         gold_sell_data = [sell_data for sell_data in meta_data.npc_sell if sell_data.is_gold()]
         gold_buy_data = [buy_data for buy_data in meta_data.npc_buy if buy_data.is_gold()]
-        lowest_npc_sell_offer = min([sell_data.price for sell_data in gold_sell_data]) if len(gold_sell_data) > 0 else -1
-        highest_npc_buy_offer = max([buy_data.price for buy_data in gold_buy_data]) if len(gold_buy_data) > 0 else -1
+        sorted_sell_data = sorted(gold_sell_data, key=lambda x: x.price)
+        sorted_buy_data = sorted(gold_buy_data, key=lambda x: x.price, reverse=True)
+
+        npc_trade_steps = [[0],[0]]
+        npc_trade_steps_info = ""
 
         # Buy from players, sell to NPC.
         total_immediate_profit = 0
-        if highest_npc_buy_offer > 0:
+        if sorted_buy_data and sorted_buy_data[0].price > 0:
             for player_sell_offer in self.sell_offers:
-                if player_sell_offer.price >= highest_npc_buy_offer:
+                if player_sell_offer.price >= sorted_buy_data[0].price:
                     break
 
-                total_immediate_profit += (highest_npc_buy_offer - player_sell_offer.price) * player_sell_offer.amount
+                total_immediate_profit += (sorted_buy_data[0].price - player_sell_offer.price) * player_sell_offer.amount
+                npc_trade_steps[0][0] += player_sell_offer.amount
+                npc_trade_steps[0].append(f"Buy {player_sell_offer.amount}x from {player_sell_offer.name} for {player_sell_offer.price}.")
+
+        if npc_trade_steps[0][0] > 0:
+            npc_trade_steps[0].append(f"Sell {npc_trade_steps[0][0]}x to NPC {sorted_buy_data[0].name} in {sorted_buy_data[0].location} for {sorted_buy_data[0].price}.")
+            npc_trade_steps[0].append(f"Total oz: {npc_trade_steps[0][0]}.")
         
         # Buy from NPC, sell to players.
-        if lowest_npc_sell_offer > 0:
+        if sorted_sell_data and sorted_sell_data[0].price > 0:
             for player_buy_offer in self.buy_offers:
-                if player_buy_offer.price <= lowest_npc_sell_offer:
+                if player_buy_offer.price <= sorted_sell_data[0].price:
                     break
 
-                total_immediate_profit += (player_buy_offer.price - lowest_npc_sell_offer) * player_buy_offer.amount
+                total_immediate_profit += (player_buy_offer.price - sorted_sell_data[0].price) * player_buy_offer.amount
+                npc_trade_steps[1][0] += player_buy_offer.amount
+                npc_trade_steps[1].append(f"Sell {player_buy_offer.amount}x to {player_buy_offer.name} for {player_buy_offer.price}.")
+
+        if npc_trade_steps[1][0] > 0:
+            npc_trade_steps[1].insert(1, f"Buy {npc_trade_steps[1][0]}x from NPC {sorted_sell_data[0].name} in {sorted_sell_data[0].location} for {sorted_sell_data[0].price}.")
+            npc_trade_steps[1].append(f"Profit: {total_immediate_profit}.")
+
+        npc_trade_steps_info = "\n".join(npc_trade_steps[0][1:] + npc_trade_steps[1][1:])
 
         buy_offers = len(self.buy_offers)
         sell_offers = len(self.sell_offers)
@@ -220,7 +238,7 @@ class MarketPacketValues:
                             month_highest_sell_offer, month_lowest_buy_offer, min(active_sell_offers, active_buy_offers),
                             sell_offers, buy_offers, month_lowest_sell_offer, month_highest_buy_offer, self.id,
                             day_sell_offer, day_buy_offer, day_sold, day_bought, day_highest_sell_offer, day_lowest_sell_offer,
-                            day_highest_buy_offer, day_lowest_buy_offer, total_immediate_profit)
+                            day_highest_buy_offer, day_lowest_buy_offer, total_immediate_profit, npc_trade_steps_info)
 
 
 class HistoryPacketValue:

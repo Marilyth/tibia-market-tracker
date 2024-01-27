@@ -5,6 +5,7 @@ import re
 import sys
 import os
 import json
+from pydantic import BaseModel
 
 # Add the proto directory to the path so that we can import from it.
 sys.path.append(os.path.join(os.path.dirname(__file__), "data", "proto"))
@@ -12,10 +13,11 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "data", "proto"))
 from utils.data.proto import appearances_pb2
 
 
-class EventData:
-    def __init__(self, date: datetime, events: List[str]):
-        self.date = date
-        self.events = events
+class EventData(BaseModel):
+    """A data class containing information about the events of a given day.
+    """
+    date: datetime
+    events: List[str]
 
     def __str__(self) -> str:
         return f"{self.date.strftime('%Y.%m.%d')},{','.join(self.events)}"

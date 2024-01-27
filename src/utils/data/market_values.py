@@ -1,14 +1,16 @@
 from utils.wiki import Wiki
-from typing import List
+from typing import List, Optional
+from pydantic import BaseModel
 
 
-class NPCSaleData:
-    def __init__(self, name: str, sell_price: int, location: str, currency_object_type_id: int, currency_quest_flag_display_name: str):
-        self.name = name
-        self.location = location
-        self.price = sell_price
-        self.currency_object_type_id = currency_object_type_id
-        self.currency_quest_flag_display_name = currency_quest_flag_display_name
+class NPCSaleData(BaseModel):
+    """A data class containing information about an NPC item sale.
+    """
+    name: str
+    location: str
+    price: int
+    currency_object_type_id: int
+    currency_quest_flag_display_name: str
 
     def is_gold(self) -> bool:
         """Returns True if the currency is gold, False otherwise.
@@ -18,16 +20,17 @@ class NPCSaleData:
         """
         return self.currency_object_type_id == 0 and self.currency_quest_flag_display_name == ""
 
-class ItemMetaData:
-    def __init__(self, id: int):
-        self.id = id
-        self.category: str = None
-        self.is_upgradeable: bool = False
-        self.tier: int = -1
-        self.name: str = None
-        self.npc_sell: List[NPCSaleData] = []
-        self.npc_buy: List[NPCSaleData] = []
-        self.wiki_name: str = None
+
+class ItemMetaData(BaseModel):
+    """A data class containing meta information about an item.
+    """
+    id: int
+    category: Optional[str] = None
+    tier: int = -1
+    name: Optional[str] = None
+    npc_sell: List[NPCSaleData] = None
+    npc_buy: List[NPCSaleData] = None
+    wiki_name: Optional[str] = None
 
     def load_wiki_name(self):
         """Load the pretty name of the item from the wiki.
@@ -44,10 +47,12 @@ class ItemMetaData:
         proto_items = Wiki.get_marketable_proto_items()
         
         if self.id in proto_items:
+            self.npc_buy = []
+            self.npc_sell = []
             proto_item = proto_items[self.id]
             self.category = str(proto_item.flags.market).split("ITEM_CATEGORY_")[-1].split("\n")[0].replace("_", " ").title()
-            self.is_upgradeable = len(str(proto_item.flags.upgradeclassification)) > 0
-            if self.is_upgradeable:
+            is_upgradeable = len(str(proto_item.flags.upgradeclassification)) > 0
+            if is_upgradeable:
                 self.tier = int(str(proto_item.flags.upgradeclassification).split("upgrade_classification: ")[-1])
             self.name = proto_item.name
 
@@ -61,36 +66,40 @@ class ItemMetaData:
         else:
             return False
 
-class MarketValues:
-    def __init__(self, time: float, sell_offer: int, buy_offer: int, month_sell_offer: int, month_buy_offer: int, sold: int, bought: int, highest_sell: int, lowest_buy: int, approx_offers: int, 
-                 sell_offers: int, buy_offers: int, lowest_sell: int, highest_buy: int, id: int, day_sell_offer: int = -1, day_buy_offer: int = -1, day_sold: int = -1, day_bought: int = -1, 
-                 day_highest_sell: int = -1, day_lowest_sell: int = -1, day_highest_buy: int = -1, day_lowest_buy: int = -1, total_immediate_profit: int = -1):
-        self.buy_offer: int = max(buy_offer, lowest_buy) if bought > 0 and lowest_buy > -1 else buy_offer
-        self.sell_offer: int = min(sell_offer, highest_sell) if sold > 0 and highest_sell > -1 else sell_offer
-        self.month_sell_offer: int = month_sell_offer
-        self.month_buy_offer: int = month_buy_offer
-        self.sold: int = sold
-        self.bought: int = bought
-        self.time: float = time
-        self.active_traders: int = approx_offers
-        self.highest_sell: int = highest_sell
-        self.lowest_buy: int = lowest_buy
-        self.lowest_sell: int = lowest_sell
-        self.highest_buy: int = highest_buy
-        self.buy_offers: int = buy_offers
-        self.sell_offers: int = sell_offers
-        self.id: int = id
 
-        # Network data. This can not be extracted from other extraction methods.
-        self.day_sell_offer: int = day_sell_offer
-        self.day_buy_offer: int = day_buy_offer
-        self.day_sold: int = day_sold
-        self.day_bought: int = day_bought
-        self.day_highest_sell: int = day_highest_sell
-        self.day_lowest_sell: int = day_lowest_sell
-        self.day_highest_buy: int = day_highest_buy
-        self.day_lowest_buy: int = day_lowest_buy
-        self.total_immediate_profit: int = total_immediate_profit
+class MarketValues(BaseModel):
+    """A data class containing information about the market values of an item.
+    """
+    id: int
+    time: float
+    buy_offer: int = -1
+    sell_offer: int = -1
+    month_average_sell: int = -1
+    month_average_buy: int = -1
+    month_sold: int = -1
+    month_bought: int = -1
+    active_traders: int = -1
+    month_highest_sell: int = -1
+    month_lowest_buy: int = -1
+    month_lowest_sell: int = -1
+    month_highest_buy: int = -1
+    buy_offers: int = -1
+    sell_offers: int = -1
+    day_average_sell: int = -1
+    day_average_buy: int = -1
+    day_sold: int = -1
+    day_bought: int = -1
+    day_highest_sell: int = -1
+    day_lowest_sell: int = -1
+    day_highest_buy: int = -1
+    day_lowest_buy: int = -1
+    total_immediate_profit: int = -1
+    total_immediate_profit_info: str = ""
+
+
+    def __post_init__(self):
+        self.buy_offer: int = max(self.buy_offer, self.month_lowest_buy) if self.month_bought > 0 and self.month_lowest_buy > -1 else self.buy_offer
+        self.sell_offer: int = min(self.sell_offer, self.month_highest_sell) if self.month_sold > 0 and self.month_highest_sell > -1 else self.sell_offer
 
     def get_metadata(self, load_wiki_name: bool = True) -> ItemMetaData:
         """Returns the metadata of the item.

@@ -1,7 +1,7 @@
 import pymongo
 from utils.data.market_values import MarketValues, NPCSaleData, ItemMetaData
 from utils.wiki import EventData, Wiki
-from utils.data.world_data import WorldData, WorldDataResponse
+from utils.data.world_data import WorldData
 from typing import List
 import os
 from tqdm import tqdm
@@ -59,8 +59,6 @@ class ItemPricesCollection:
             dict: A dictionary containing the name and history of the ItemPricesCollection.
         """
         history = {}
-        npc_sell = []
-        npc_buy = []
 
         for server in self.history:
             history[server] = [ItemPricesCollection.MarketValues_to_mongo_dict(market_value) for market_value in self.history[server]]
@@ -69,7 +67,7 @@ class ItemPricesCollection:
 
 
 class MongoManager:
-    def __init__(self, connection_string: str, database_name: str = "TibiaMarketTracker"):
+    def __init__(self, connection_string: str, database_name: str = "TibiaMarketTracker_Dev"):
         self.client = pymongo.MongoClient(connection_string)
         self.database = self.client[database_name]
         self.item_prices = self.database["ItemPrices"]
@@ -203,7 +201,7 @@ class MongoManager:
 
         self.item_prices.bulk_write(requests)
 
-    def get_item_history(self, id: int, server: str) -> List[dict]:
+    def get_item_history(self, id: int, server: str) -> List[MarketValues]:
         """Gets the history of the item on the given server.
 
         Args:
@@ -217,11 +215,12 @@ class MongoManager:
         item = self.item_prices.find_one({"id": id}, {"history": {server: 1}})
 
         if item:
-            return item["history"][server]
+            items = item["history"][server]
+            return [MarketValues(id=id, **item) for item in items if item]
         else:
             return []
         
-    def get_latest_market_values(self, server: str) -> List[dict]:
+    def get_latest_market_values(self, server: str) -> List[MarketValues]:
         """Gets the market values of the items which match the given criteria.
 
         Args:
@@ -245,19 +244,22 @@ class MongoManager:
             for values, item in items:
                 item["id"] = values["id"]
 
-            return [item for id, item in items]
+            return [MarketValues(**item) for id, item in items]
         else:
             return []
         
-    def get_events(self) -> List[dict]:
+    def get_events(self) -> List[EventData]:
         """Gets all events from the database.
 
         Returns:
             List[EventData]: The events from the database.
         """
-        return list(self.events.find({}, {"_id": 0}))
+        events = list(self.events.find({}, {"_id": 0}))
+        events = [EventData(**event) for event in events]
+
+        return events
     
-    def get_item_metadata(self, item_id: int = -1) -> dict:
+    def get_item_metadata(self, item_id: int = -1) -> List[ItemMetaData]:
         """Gets the item metadata from the database.
 
         Args:
@@ -267,11 +269,15 @@ class MongoManager:
             dict: The item metadata from the database.
         """
         if item_id == -1:
-            return list(self.item_meta_data.find({}, {"_id": 0}))
+            meta_datas = list(self.item_meta_data.find({}, {"_id": 0}))
+        else:
+            meta_datas = [self.item_meta_data.find_one({"id": item_id}, {"_id": 0})]
         
-        return self.item_meta_data.find_one({"id": item_id}, {"_id": 0})
+        meta_datas = [ItemMetaData(**meta_data) for meta_data in meta_datas if meta_data]
 
-    def get_world_data(self) -> dict:
+        return meta_datas
+
+    def get_world_data(self) -> List[WorldData]:
         """Gets the latest item update time for each server for the item 22118 (tibia coin).
 
         Returns:
@@ -288,4 +294,4 @@ class MongoManager:
 
         item = list(self.item_prices.aggregate(pipeline))[0]
 
-        return WorldDataResponse([WorldData(name=kvp["k"], last_update=datetime.utcfromtimestamp(kvp["v"][0]["time"])) for kvp in item["history"]])
+        return [WorldData(name=kvp["k"], last_update=datetime.utcfromtimestamp(kvp["v"][0]["time"])) for kvp in item["history"]]
