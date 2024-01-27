@@ -7,3 +7,4 @@ jwt
 PyJWT
 requests
 protobuf
+pydantic

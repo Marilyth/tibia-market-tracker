@@ -17,3 +17,4 @@ PyJWT
 scapy
 xtea
 protobuf
+pydantic

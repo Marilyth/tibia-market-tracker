@@ -255,7 +255,7 @@ class MongoManager:
             List[EventData]: The events from the database.
         """
         events = list(self.events.find({}, {"_id": 0}))
-        events = [EventData(**event) for event in events]
+        events = [EventData(events=event["events"], date=datetime.strptime(event["date"], "%Y.%m.%d")) for event in events]
 
         return events
     

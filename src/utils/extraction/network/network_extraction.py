@@ -49,7 +49,7 @@ class NetworkExtractor(Extractor):
         items: List[MarketPacketValues] = []
         market_value_items: List[MarketValues] = []
 
-        for category in tqdm(market_categories[:-1], desc=f"Category"):
+        for category in tqdm(market_categories[:1], desc=f"Category"):
             try:
                 items.extend(self.crawl_market(category.index))
             except Exception as e:

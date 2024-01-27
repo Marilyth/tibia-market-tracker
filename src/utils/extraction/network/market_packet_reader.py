@@ -33,7 +33,7 @@ class MarketPacketReader:
 
         self.result.id = struct.unpack("H", self._read_bytes(2))[0]
 
-        meta_data = ItemMetaData(self.result.id)
+        meta_data = ItemMetaData(id=self.result.id)
         meta_data.load_from_proto()
         self.result.tier = meta_data.tier
 
@@ -185,7 +185,7 @@ class MarketPacketValues:
         day_sold = self.sell_history[0].traded if len(self.sell_history) > 0 else -1
 
         # Calculate NPC profit.
-        meta_data = ItemMetaData(self.id)
+        meta_data = ItemMetaData(id=self.id)
         meta_data.load_from_proto()
         weight = float(self.details[14].split(" oz")[0]) if self.details[14] else 0
         gold_sell_data = [sell_data for sell_data in meta_data.npc_sell if sell_data.is_gold()]
@@ -209,7 +209,8 @@ class MarketPacketValues:
 
         if npc_trade_steps[0][0] > 0:
             npc_trade_steps[0].append(f"Sell {npc_trade_steps[0][0]}x to NPC {sorted_buy_data[0].name} in {sorted_buy_data[0].location} for {sorted_buy_data[0].price}.")
-            npc_trade_steps[0].append(f"Total oz: {npc_trade_steps[0][0]}.")
+            npc_trade_steps[0].append(f"Profit: {total_immediate_profit}.")
+            npc_trade_steps[0].append(f"Total oz: {npc_trade_steps[0][0] * weight}.")
         
         # Buy from NPC, sell to players.
         if sorted_sell_data and sorted_sell_data[0].price > 0:
@@ -224,6 +225,7 @@ class MarketPacketValues:
         if npc_trade_steps[1][0] > 0:
             npc_trade_steps[1].insert(1, f"Buy {npc_trade_steps[1][0]}x from NPC {sorted_sell_data[0].name} in {sorted_sell_data[0].location} for {sorted_sell_data[0].price}.")
             npc_trade_steps[1].append(f"Profit: {total_immediate_profit}.")
+            npc_trade_steps[1].append(f"Total oz: {npc_trade_steps[1][0] * weight}.")
 
         npc_trade_steps_info = "\n".join(npc_trade_steps[0][1:] + npc_trade_steps[1][1:])
 
@@ -234,11 +236,7 @@ class MarketPacketValues:
         active_sell_offers = len([x for x in self.sell_offers if time() - x.timestamp < 86400])
         active_buy_offers = len([x for x in self.buy_offers if time() - x.timestamp < 86400])
 
-        return MarketValues(time(), sell_offer, buy_offer, month_sell_offer, month_buy_offer, month_sold, month_bought,
-                            month_highest_sell_offer, month_lowest_buy_offer, min(active_sell_offers, active_buy_offers),
-                            sell_offers, buy_offers, month_lowest_sell_offer, month_highest_buy_offer, self.id,
-                            day_sell_offer, day_buy_offer, day_sold, day_bought, day_highest_sell_offer, day_lowest_sell_offer,
-                            day_highest_buy_offer, day_lowest_buy_offer, total_immediate_profit, npc_trade_steps_info)
+        return MarketValues(id=self.id, time=time(), buy_offer=buy_offer, sell_offer=sell_offer, month_average_sell=month_sell_offer, month_average_buy=month_buy_offer, month_sold=month_sold, month_bought=month_bought, active_traders=active_buy_offers + active_sell_offers, month_highest_sell=month_highest_sell_offer, month_lowest_buy=month_lowest_buy_offer, month_lowest_sell=month_lowest_sell_offer, month_highest_buy=month_highest_buy_offer, buy_offers=buy_offers, sell_offers=sell_offers, day_average_sell=day_sell_offer, day_average_buy=day_buy_offer, day_sold=day_sold, day_bought=day_bought, day_highest_sell=day_highest_sell_offer, day_lowest_sell=day_lowest_sell_offer, day_highest_buy=day_highest_buy_offer, day_lowest_buy=day_lowest_buy_offer, total_immediate_profit=total_immediate_profit, total_immediate_profit_info=npc_trade_steps_info)
 
 
 class HistoryPacketValue:

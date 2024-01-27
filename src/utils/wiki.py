@@ -176,4 +176,4 @@ class Wiki:
                 if start_date <= today <= end_date:
                     events_today.append(event["name"])
 
-            return EventData(datetime(year=today.year, month=today.month, day=today.day), events_today)
+            return EventData(date=datetime(year=today.year, month=today.month, day=today.day), events=events_today)
