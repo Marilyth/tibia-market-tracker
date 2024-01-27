@@ -9,7 +9,7 @@ from install_tibia import install_tibia, download_package
 import requests
 
 dry_run: bool = False
-api_url: str = "https://api.tibiamarket.top:8001"
+api_url: str = "https://api.tibiamarket.top"
 config: dict = None
 
 def update_events():
@@ -31,7 +31,7 @@ def update_metadata():
     Updates the item metadata in the database.
     """
     try:
-        meta_data = [ItemMetaData(id) for id in Wiki.get_marketable_proto_items()]
+        meta_data = [ItemMetaData(id=id) for id in Wiki.get_marketable_proto_items()]
         for item in meta_data:
             item.load_wiki_name()
             item.load_from_proto()
@@ -84,6 +84,7 @@ def do_market_search(email: str, password: str, char_index: int, virtual_display
 if __name__ == "__main__":
     with open(os.path.join(os.path.dirname(__file__), "config", "config.json"), "r") as c:
         config = json.loads(c.read())
+        api_url += f":{config['apiPort']}"
 
     download_package()
 

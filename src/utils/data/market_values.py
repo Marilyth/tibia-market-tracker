@@ -58,9 +58,9 @@ class ItemMetaData(BaseModel):
 
             for sale_data in proto_item.flags.npcsaledata:
                 if sale_data.buy_price > 0:
-                    self.npc_buy.append(NPCSaleData(sale_data.name, sale_data.buy_price, sale_data.location, sale_data.currency_object_type_id, sale_data.currency_quest_flag_display_name))
+                    self.npc_buy.append(NPCSaleData(name=sale_data.name, price=sale_data.buy_price, location=sale_data.location, currency_object_type_id=sale_data.currency_object_type_id, currency_quest_flag_display_name=sale_data.currency_quest_flag_display_name))
                 if sale_data.sale_price > 0:
-                    self.npc_sell.append(NPCSaleData(sale_data.name, sale_data.sale_price, sale_data.location, sale_data.currency_object_type_id, sale_data.currency_quest_flag_display_name))
+                    self.npc_sell.append(NPCSaleData(name=sale_data.name, price=sale_data.sale_price, location=sale_data.location, currency_object_type_id=sale_data.currency_object_type_id, currency_quest_flag_display_name=sale_data.currency_quest_flag_display_name))
 
             return True
         else:
