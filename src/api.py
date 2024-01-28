@@ -246,7 +246,7 @@ async def get_events(request: Request, start_days_ago: int = 30, end_days_ago: i
 
     return events
 
-@app.get("/item_metadata")
+@app.get("/item_metadata", dependencies=[Depends(bearer_auth)])
 @limiter.limit("1/5seconds;10/minute")
 async def get_item_metadata(request: Request, item_id: int = -1) -> List[ItemMetaData]:
     """Returns the metadata for the given item, or all items if no item id is given.
@@ -258,7 +258,7 @@ async def get_item_metadata(request: Request, item_id: int = -1) -> List[ItemMet
 
     return metadata
 
-@app.get("/world_data")
+@app.get("/world_data", dependencies=[Depends(bearer_auth)])
 async def get_world_data(server: str = None) -> List[WorldData]:
     """Returns the world data for all worlds. I.e. the last time the market was scanned.
     Optionally returns only the data for the given server.
