@@ -128,7 +128,7 @@ def log_request_result(request: Request, result: Response):
         request (fastapi.Request): The request being made.
         result (fastapi.Response): The result of the request.
     """
-    pass#mongo_manager.add_access_log(request.client.host, request.url.path, request.url.query, result.status_code)
+    mongo_manager.add_access_log(request.client.host, request.url.path, request.url.query, result.status_code)
 
 # Middleware.
 @app.middleware("http")
