@@ -344,7 +344,7 @@ if __name__ == "__main__":
     
     domain = config["apiDomain"]
     port = config["apiPort"]
-    mongo_manager.clean_outliers()
+    #mongo_manager.clean_outliers()
     
     if domain:
         uvicorn.run(app, host="0.0.0.0", port=port, ssl_keyfile=f"/etc/letsencrypt/live/{domain}/privkey.pem", ssl_certfile=f"/etc/letsencrypt/live/{domain}/fullchain.pem")
