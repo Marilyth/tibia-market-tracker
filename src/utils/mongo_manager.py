@@ -122,12 +122,12 @@ class MongoManager:
                 current = getattr(value, stat_name)
                 
                 # Ignore -1 values and values smaller than a million.
-                if current == -1 or current < 1000000:
+                if current == -1:
                     continue
                 
                 # Find the value before this one, that is not -1.
                 neighbourhood = []
-                for j in range(i - 1, max(i - neighbour_search_range, 0), -1):
+                for j in range(i - 1, max(i - neighbour_search_range - 5, 0), -1):
                     before = getattr(values[j], stat_name)
                     if before != -1:
                         neighbourhood.append(before)
@@ -144,7 +144,7 @@ class MongoManager:
                 median_value = sorted(neighbourhood)[len(neighbourhood) // 2]
                 
                 if current > median_value * outlier_factor or\
-                    current < median_value / outlier_factor:
+                    (current < median_value / 1000 and current == 1):
                     setattr(value, stat_name, -1)
                     was_filtered = True
         
