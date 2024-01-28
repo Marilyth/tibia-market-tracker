@@ -67,7 +67,7 @@ class ItemPricesCollection:
 
 
 class MongoManager:
-    def __init__(self, connection_string: str, database_name: str = "TibiaMarketTracker_Dev"):
+    def __init__(self, connection_string: str, database_name: str = "TibiaMarketTracker"):
         self.client = pymongo.MongoClient(connection_string)
         self.database = self.client[database_name]
         self.item_prices = self.database["ItemPrices"]
