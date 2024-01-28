@@ -107,7 +107,7 @@ class MongoManager:
         # Remove the npc_buy field from all items in item_prices.
         self.item_prices.update_many({}, {"$unset": {"npc_buy": ""}})
 
-    def filter_outliers(self, values: List[MarketValues], keys: List[str], outlier_factor: float = 5, neighbour_search_range: int = 10) -> bool:
+    def filter_outliers(self, values: List[MarketValues], keys: List[str], outlier_factor: float = 5, neighbour_search_range: int = 25) -> bool:
         """Filter out outliers in the values list (spikes in values that are too high or too low).
 
         Args:
@@ -121,7 +121,8 @@ class MongoManager:
             for stat_name in keys:
                 current = getattr(value, stat_name)
                 
-                if current == -1:
+                # Ignore -1 values and values smaller than a million.
+                if current == -1 or current < 1000000:
                     continue
                 
                 # Find the value before this one, that is not -1.
