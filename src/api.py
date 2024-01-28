@@ -130,47 +130,6 @@ def log_request_result(request: Request, result: Response):
     """
     pass#mongo_manager.add_access_log(request.client.host, request.url.path, request.url.query, result.status_code)
 
-def filter_outliers(values: List[MarketValues], keys: List[str], outlier_factor: float = 5, neighbour_search_range: int = 10):
-    """Filter out outliers in the values list (spikes in values that are too high or too low).
-
-    Args:
-        values (List[Dict[str, float]]): The values to filter.
-        keys (List[str]): The keys to filter.
-        outlier_factor (float, optional): The factor to use to determine if a value is an outlier. Defaults to 5.
-        neighbour_search_range (int, optional): The range to search for neighbours. Defaults to 10.
-    """
-    for i, value in enumerate(values):
-        if i > 0 and i < len(values) - 1:
-            for stat_name in keys:
-                current = getattr(value, stat_name)
-                
-                if current == -1:
-                    continue
-                
-                # Find the value before this one, that is not -1.
-                before = -1
-                for j in range(i - 1, max(i - neighbour_search_range, 0), -1):
-                    before = getattr(values[j], stat_name)
-                    if before != -1:
-                        break
-                    
-                if before == -1:
-                    continue
-                
-                # Find the value after this one, that is not -1.
-                after = -1
-                for j in range(i + 1, min(i + neighbour_search_range, len(values))):
-                    after = getattr(values[j], stat_name)
-                    if after != -1:
-                        break
-                
-                if after == -1:
-                    continue
-                
-                if current > before * outlier_factor and current > after * outlier_factor or\
-                    current < before / outlier_factor and current < after / outlier_factor:
-                    setattr(value, stat_name, -1)
-
 # Middleware.
 @app.middleware("http")
 async def middleware(request: Request, call_next):
@@ -264,9 +223,6 @@ async def get_item_history(request: Request, server: str, item_id: int, start_da
         filters.append(lambda value: value.time <= end_date.timestamp())
 
     values = [value for value in values if all([filter(value) for filter in filters])]
-    
-    # Filter out outliers (spikes in values that are too high or too low).
-    filter_outliers(values, ["buy_offer", "sell_offer", "month_sold", "month_bought", "month_average_sell", "month_average_buy"])
     
     return values
 
@@ -388,6 +344,7 @@ if __name__ == "__main__":
     
     domain = config["apiDomain"]
     port = config["apiPort"]
+    mongo_manager.clean_outliers()
     
     if domain:
         uvicorn.run(app, host="0.0.0.0", port=port, ssl_keyfile=f"/etc/letsencrypt/live/{domain}/privkey.pem", ssl_certfile=f"/etc/letsencrypt/live/{domain}/fullchain.pem")

@@ -107,6 +107,105 @@ class MongoManager:
         # Remove the npc_buy field from all items in item_prices.
         self.item_prices.update_many({}, {"$unset": {"npc_buy": ""}})
 
+    def filter_outliers(self, values: List[MarketValues], keys: List[str], outlier_factor: float = 5, neighbour_search_range: int = 10) -> bool:
+        """Filter out outliers in the values list (spikes in values that are too high or too low).
+
+        Args:
+            values (List[Dict[str, float]]): The values to filter.
+            keys (List[str]): The keys to filter.
+            outlier_factor (float, optional): The factor to use to determine if a value is an outlier. Defaults to 5.
+            neighbour_search_range (int, optional): The range to search for neighbours. Defaults to 10.
+        """
+        was_filtered = False
+        for i, value in enumerate(values):
+            for stat_name in keys:
+                current = getattr(value, stat_name)
+                
+                if current == -1:
+                    continue
+                
+                # Find the value before this one, that is not -1.
+                neighbourhood = []
+                for j in range(i - 1, max(i - neighbour_search_range, 0), -1):
+                    before = getattr(values[j], stat_name)
+                    if before != -1:
+                        neighbourhood.append(before)
+                
+                # Find the value after this one, that is not -1.
+                for j in range(i + 1, min(i + neighbour_search_range, len(values))):
+                    after = getattr(values[j], stat_name)
+                    if after != -1:
+                        neighbourhood.append(after)
+
+                if len(neighbourhood) == 0:
+                    continue
+
+                median_value = sorted(neighbourhood)[len(neighbourhood) // 2]
+                
+                if current > median_value * outlier_factor or\
+                    current < median_value / outlier_factor:
+                    setattr(value, stat_name, -1)
+                    was_filtered = True
+        
+        return was_filtered
+    
+    def clean_wrong_items(self, values: List[MarketValues], item_name: str, sorted_item_names: List[str]):
+        """Cleans out items that, for a time, had the wrong item's values if their name was contained in another item which came alphabetically before it.
+        """
+        was_filtered = False
+        for other_name in sorted_item_names:
+            if item_name == other_name:
+                break
+
+            if item_name in other_name:
+                # Remove all values before the 16th of April 2023.
+                for i in range(len(values) - 1, -1, -1):
+                    if values[i].time <= datetime(2023, 4, 16).timestamp():
+                        values.pop(i)
+                        was_filtered = True
+                
+            if was_filtered:
+                break
+        
+        return was_filtered
+
+    def clean_outliers(self):
+        """Cleans out outliers from the database.
+        """
+        print("Cleaning outliers...")
+
+        metadata = self.get_item_metadata()
+        sorted_names = sorted([item.name for item in metadata])
+        requests: List[pymongo.UpdateOne] = []
+
+        for i, item in enumerate(metadata):
+            print(f"Cleaning outliers for {item.name} ({i + 1}/{len(metadata)})")
+            for server in ["Antica", "Nefera", "Vunira", "Dia"]:
+                try:
+                    values = self.get_item_history(item.id, server)
+
+                    # Filter out outliers (spikes in values that are too high or too low).
+                    was_filtered = self.clean_wrong_items(values, item.name, sorted_names)
+                    was_filtered = self.filter_outliers(values, ["buy_offer", "sell_offer", "month_sold", "month_bought", "month_average_sell", "month_average_buy"]) or was_filtered
+                    
+                    # Update the market values.
+                    if was_filtered:
+                        requests.append(pymongo.UpdateOne({"id": item.id}, {"$set": {f"history.{server}": [ItemPricesCollection.MarketValues_to_mongo_dict(values_item) for values_item in values]}}))
+
+                        # Keep bulk write requests under 100.
+                        if len(requests) >= 100:
+                            self.item_prices.bulk_write(requests)
+                            requests = []
+                except Exception as e:
+                    print(f"Error while cleaning outliers: {e}")
+                    continue
+
+        # Filter out outliers (spikes in values that are too high or too low).
+        if requests:
+            self.item_prices.bulk_write(requests)
+
+        print("Done cleaning outliers.")
+
     def add_api_key(self, api_key: str):
         """Adds the given api key to the database.
 
