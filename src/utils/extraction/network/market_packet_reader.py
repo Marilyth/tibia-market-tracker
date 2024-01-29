@@ -164,8 +164,11 @@ class MarketPacketValues:
         buy_offer = self.buy_offers[0].price if len(self.buy_offers) > 0 else -1
         sell_offer = self.sell_offers[0].price if len(self.sell_offers) > 0 else -1
 
-        month_buy_offer = int(sum([x.average_price for x in self.buy_history]) / len(self.buy_history) if len(self.buy_history) > 0 else -1)
-        month_sell_offer = int(sum([x.average_price for x in self.sell_history]) / len(self.sell_history) if len(self.sell_history) > 0 else -1)
+        active_sell_history = [x for x in self.sell_history if x.traded > 0]
+        active_buy_history = [x for x in self.buy_history if x.traded > 0]
+
+        month_buy_offer = int(sum([x.average_price for x in active_buy_history]) / len(active_buy_history) if len(active_buy_history) > 0 else -1)
+        month_sell_offer = int(sum([x.average_price for x in active_sell_history]) / len(active_sell_history) if len(active_sell_history) > 0 else -1)
         month_highest_buy_offer = max([x.max_price for x in self.buy_history]) if len(self.buy_history) > 0 else -1
         traded_min_sell_offers = [x.min_price for x in self.sell_history if x.min_price > 0]
         month_lowest_sell_offer = min(traded_min_sell_offers if traded_min_sell_offers else [0]) if len(self.sell_history) > 0 else -1
