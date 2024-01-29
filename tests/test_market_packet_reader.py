@@ -45,10 +45,11 @@ class TestDebugger:
         market_values = reader.result.convert_to_marketvalues()
 
         # Assert
-        assert reader.result.id == 3280 # Tibia Coins
+        assert reader.result.id == 3280 # Fire Sword
         assert len(reader.result.buy_history) == 30
         assert len(reader.result.sell_history) == 30
         assert len(reader.result.details) == 23
+        assert market_values.month_average_sell == 4063
 
         # Assert the highest buy offer is smaller than the lowest sell offer
         assert reader.result.buy_offers[0].price < reader.result.sell_offers[0].price
