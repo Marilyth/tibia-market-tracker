@@ -155,6 +155,17 @@ async def middleware(request: Request, call_next):
 
     return response
 
+@app.get("/add_statistic", include_in_schema=False, dependencies=[Depends(bearer_auth)])
+async def add_statistic(request: Request, identifier: str, sub_identifier: str = None, value: str = None):
+    """Adds the given statistic to the database.
+
+    Args:
+        identifier (str): The identifier of the statistic.
+        sub_identifier (str, optional): The sub identifier of the statistic. Defaults to None.
+        value (str, optional): The value of the statistic. Defaults to None.
+    """
+    mongo_manager.add_statistic(request.client.host, identifier, sub_identifier, value)
+
 # Set up API endpoints.
 @app.get("/market_values", dependencies=[Depends(bearer_auth)])
 @limiter.limit("1/5seconds;10/minute")
@@ -198,6 +209,8 @@ async def get_market_values(request: Request, server: str, max_sell_price: int =
 
     values = [value for value in values if all([filter(value) for filter in filters])]
 
+    await add_statistic(request, "market_values", server, ",".join([item_ids, str(max_sell_price), str(min_sell_price), str(max_buy_price), str(min_buy_price), str(max_flippers), str(min_flippers)]))
+
     return values[skip:skip+limit]
 
 @app.get("/item_history", dependencies=[Depends(bearer_auth)])
@@ -224,6 +237,8 @@ async def get_item_history(request: Request, server: str, item_id: int, start_da
 
     values = [value for value in values if all([filter(value) for filter in filters])]
     
+    await add_statistic(request, "item_history", server, item_id)
+
     return values
 
 @app.get("/events", dependencies=[Depends(bearer_auth)])
