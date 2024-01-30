@@ -209,7 +209,7 @@ async def get_market_values(request: Request, server: str, max_sell_price: int =
 
     values = [value for value in values if all([filter(value) for filter in filters])]
 
-    await add_statistic(request, "market_values", server, ",".join([item_ids, str(max_sell_price), str(min_sell_price), str(max_buy_price), str(min_buy_price), str(max_flippers), str(min_flippers)]))
+    await add_statistic(request, "market_values", server, ",".join([str(item_ids), str(max_sell_price), str(min_sell_price), str(max_buy_price), str(min_buy_price), str(max_flippers), str(min_flippers)]))
 
     return values[skip:skip+limit]
 
