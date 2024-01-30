@@ -74,6 +74,7 @@ class MongoManager:
         self.item_meta_data = self.database["ItemMetaData"]
         self.api_keys = self.database["APIKeys"]
         self.access_logs = self.database["AccessLogs"]
+        self.statistics = self.database["Statistics"]
         self.events = self.database["Events"]
 
     def update_schema(self):
@@ -255,6 +256,17 @@ class MongoManager:
             status (int): The status code of the request.
         """
         self.access_logs.insert_one({"ip": ip, "time": datetime.now().isoformat(), "endpoint": endpoint, "parameters": parameters, "status": status})
+
+    def add_statistic(self, ip: str, identifier: str, sub_identifier: str, value: str):
+        """Adds the given statistic log to the database.
+
+        Args:
+            ip (str): The ip of the request.
+            identifier (str): The identifier of the request. E.g. "Sorted"
+            sub_identifier (str): The sub identifier of the request. E.g. "buy_price"
+            value (str): The value of the request. E.g. "1"
+        """
+        self.statistics.insert_one({"ip": ip, "time": datetime.utcnow(), "identifier": identifier, "sub_identifier": sub_identifier, "value": value})
 
     def update_item_metadata(self, items: List[ItemMetaData]):
         """Used to update the item metadata in the database.
