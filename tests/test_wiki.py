@@ -50,3 +50,10 @@ class TestWiki:
         assert event.date.year == today.year
         assert event.date.month == today.month
         assert event.date.day == today.day
+
+    def test_GetItemIds_ReturnsExpected(self):
+        # Act
+        ids = self.wiki.get_item_ids()
+
+        # Assert
+        assert len(ids) > 3100
