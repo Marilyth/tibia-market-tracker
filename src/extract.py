@@ -124,4 +124,4 @@ if __name__ == "__main__":
     os.makedirs("./results", exist_ok=True)
 
     print(f"Using account {username} on slot {slot}.")
-    do_market_search(character.username, character.password, character.slot, config["useVirtualDisplay"], config["showVirtualDisplay"])
+    do_market_search(username, password, slot, config["useVirtualDisplay"], config["showVirtualDisplay"])

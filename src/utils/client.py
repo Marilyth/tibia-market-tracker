@@ -129,6 +129,10 @@ class Client:
         self._update_kick_timer()
         self.tibia_process_id = MemoryReader.get_process_id("client")[-1]
 
+        # Scroll into minimap.
+        self._wait_until_find("images/ZoomMinimap.png", cache=False, click=True, exact=True, coordinate_deviation=2)
+        repeat_like_human(lambda: pyautogui.click(), 5)
+
         tibia_output = self.get_tibia_process_output()
         self.character_name = tibia_output.split("Charakter \"")[-1].split("\"")[0]
         self.character_server = tibia_output.split("Connected to gameserver ")[-1].split("\" \"")[-1].split("\"")[0]
