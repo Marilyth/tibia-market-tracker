@@ -391,3 +391,5 @@ paket-files/
 .idea/
 *.sln.iml
 config.json
+schedule.json
+Tibia/

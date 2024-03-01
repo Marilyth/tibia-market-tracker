@@ -18,3 +18,4 @@ scapy
 xtea
 protobuf
 pydantic
+flask

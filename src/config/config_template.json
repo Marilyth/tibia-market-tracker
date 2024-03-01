@@ -1,6 +1,4 @@
 {
-    "email": "",
-    "password": "",
     "mongodbConnectionString": "",
     "jwtSecret": "",
     "apiDomain": "",

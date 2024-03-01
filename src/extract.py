@@ -1,12 +1,14 @@
 from utils.wiki import Wiki
 import os
 import json
-from utils.json_helper import object_to_json
+from utils.json_helper import object_to_json, json_to_object
 from utils.data.market_values import ItemMetaData
+from utils.schedule import Schedule
 import sys
 import traceback
 from install_tibia import install_tibia, download_package
 import requests
+import datetime
 
 dry_run: bool = False
 api_url: str = "https://api.tibiamarket.top"
@@ -85,16 +87,41 @@ if __name__ == "__main__":
     with open(os.path.join(os.path.dirname(__file__), "config", "config.json"), "r") as c:
         config = json.loads(c.read())
         api_url += f":{config['apiPort']}"
+    
+    username = None
+    password = None
+    slot = None
+
+    if len(sys.argv) == 1:
+        schedule: Schedule = None
+        with open(os.path.join(os.path.dirname(__file__), "config", "schedule.json"), "r") as s:
+            schedule = Schedule(json.loads(s.read()))
+
+        # Get current hour of day.
+        hour = datetime.datetime.now().hour
+
+        # Pick the character for the current hour.
+        character = schedule.pick_character(hour)
+        if character is None:
+            print(f"No character found for hour {hour}.")
+            sys.exit(0)
+        
+        # Write updated schedule back to file.
+        with open(os.path.join(os.path.dirname(__file__), "config", "schedule.json"), "w") as s:
+            s.write(object_to_json(schedule.hours, indent=4))
+        
+        username = character["username"]
+        password = character["password"]
+        slot = character["slot"]
+    else:
+        username = sys.argv[1]
+        password = sys.argv[2]
+        slot = int(sys.argv[3])
 
     download_package()
-
-    char_index = 0
-
-    # If character index is provided, use that instead of the default.
-    if len(sys.argv) > 1:
-        char_index = int(sys.argv[1])
 
     # Ensure that the results location exists.
     os.makedirs("./results", exist_ok=True)
 
-    do_market_search(config["email"], config["password"], char_index, config["useVirtualDisplay"], config["showVirtualDisplay"])
+    print(f"Using account {username} on slot {slot}.")
+    do_market_search(character.username, character.password, character.slot, config["useVirtualDisplay"], config["showVirtualDisplay"])
