@@ -92,13 +92,16 @@ if __name__ == "__main__":
     password = None
     slot = None
 
-    if len(sys.argv) == 1:
+    if len(sys.argv) != 4:
         schedule: Schedule = None
         with open(os.path.join(os.path.dirname(__file__), "config", "schedule.json"), "r") as s:
             schedule = Schedule(json.loads(s.read()))
 
         # Get current hour of day.
-        hour = datetime.datetime.now().hour
+        if len(sys.argv) == 2:
+            hour = int(sys.argv[1])
+        else:
+            hour = datetime.datetime.now().hour
 
         # Pick the character for the current hour.
         character = schedule.pick_character(hour)
