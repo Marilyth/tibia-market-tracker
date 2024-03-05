@@ -49,7 +49,7 @@ class NetworkExtractor(Extractor):
         items: List[MarketPacketValues] = []
         market_value_items: List[MarketValues] = []
 
-        for category in tqdm(market_categories[:18] + market_categories[-1:], desc=f"Category"):
+        for category in tqdm(market_categories[:1], desc=f"Category"):
             try:
                 items.extend(self.crawl_market(category.index))
             except Exception as e:
@@ -60,7 +60,11 @@ class NetworkExtractor(Extractor):
 
         # Convert items to MarketValues objects.
         for item in items:
-            market_values = item.convert_to_marketvalues()
+            market_values, historical_values = item.convert_to_marketvalues()
+
+            for historical_value in historical_values[::-1]:
+                market_value_items.append(historical_value)
+
             market_value_items.append(market_values)
             #print(f"Converted to market_value_item: {object_to_json(market_values)}")
 
