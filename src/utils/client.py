@@ -181,11 +181,25 @@ class Client:
         found_depots = len(list(pyautogui.locateAllOnScreen("images/DepotTile.png")))
         self._add_to_log(f"Found {found_depots} depots.")
 
-        for i in range(len(list(pyautogui.locateAllOnScreen("images/DepotTile.png")))):
-            print(f"Trying depot {i}...")
-            depot_position = pyautogui.center(list(pyautogui.locateAllOnScreen("images/DepotTile.png"))[i])
+        for i in range(found_depots):
+            move_mouse_like_human(20, 20)
+            depots = list(pyautogui.locateAllOnScreen("images/DepotTile.png"))
+            depot_index = i
+
+            # If we are now obscuring the depot, try the next one.
+            if len(depots) < found_depots:
+                depot_index -= 1
+            
+            depot_index = min(depot_index, len(depots) - 1)
+            print(f"Trying depot {i} ({depot_index})...")
+
+            # Order by x and then y coordinate, so we click the top left depot first.
+            depots = sorted(depots, key=lambda x: (x[0], x[1]))
+
+            depot_position = pyautogui.center(depots[depot_index])
             move_mouse_like_human(depot_position[0], depot_position[1], 0) # Move to the center of the depot tile.
             pyautogui.leftClick()
+
             if try_open_market():
                 return True
 
