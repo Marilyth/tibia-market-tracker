@@ -1,5 +1,5 @@
 import struct
-from typing import List
+from typing import List, Tuple
 from utils.data.market_values import ItemMetaData, MarketValues
 from time import time
 
@@ -155,7 +155,7 @@ class MarketPacketValues:
         self.buy_offers: List[OfferPacketValue] = []
         self.sell_offers: List[OfferPacketValue] = []
 
-    def convert_to_marketvalues(self) -> MarketValues:
+    def convert_to_marketvalues(self) -> Tuple[MarketValues, List[MarketValues]]:
         """Converts the MarketPacketValues object to a MarketValues object to reduce required storage.
 
         Returns:
@@ -239,7 +239,20 @@ class MarketPacketValues:
         active_sell_offers = len([x for x in self.sell_offers if time() - x.timestamp < 86400])
         active_buy_offers = len([x for x in self.buy_offers if time() - x.timestamp < 86400])
 
-        return MarketValues(id=self.id, time=time(), buy_offer=buy_offer, sell_offer=sell_offer, month_average_sell=month_sell_offer, month_average_buy=month_buy_offer, month_sold=month_sold, month_bought=month_bought, active_traders=active_buy_offers + active_sell_offers, month_highest_sell=month_highest_sell_offer, month_lowest_buy=month_lowest_buy_offer, month_lowest_sell=month_lowest_sell_offer, month_highest_buy=month_highest_buy_offer, buy_offers=buy_offers, sell_offers=sell_offers, day_average_sell=day_sell_offer, day_average_buy=day_buy_offer, day_sold=day_sold, day_bought=day_bought, day_highest_sell=day_highest_sell_offer, day_lowest_sell=day_lowest_sell_offer, day_highest_buy=day_highest_buy_offer, day_lowest_buy=day_lowest_buy_offer, total_immediate_profit=total_immediate_profit, total_immediate_profit_info=npc_trade_steps_info)
+        # Create market values for all of the previous days as well.
+        historical_values = []
+        for i, history in enumerate(zip(self.buy_history, self.sell_history)):
+            if i == 0:
+                continue
+
+            timestamp = time() - (i * 86400)
+            historical_values.append(MarketValues(id=self.id, time=timestamp, 
+                                                  day_average_buy=int(history[0].average_price), day_average_sell=int(history[1].average_price),
+                                                  day_sold=history[1].traded, day_bought=history[0].traded, 
+                                                  day_highest_sell=history[1].max_price, day_lowest_sell=history[1].min_price,
+                                                  day_highest_buy=history[0].max_price, day_lowest_buy=history[0].min_price))
+
+        return MarketValues(id=self.id, time=time(), buy_offer=buy_offer, sell_offer=sell_offer, month_average_sell=month_sell_offer, month_average_buy=month_buy_offer, month_sold=month_sold, month_bought=month_bought, active_traders=active_buy_offers + active_sell_offers, month_highest_sell=month_highest_sell_offer, month_lowest_buy=month_lowest_buy_offer, month_lowest_sell=month_lowest_sell_offer, month_highest_buy=month_highest_buy_offer, buy_offers=buy_offers, sell_offers=sell_offers, day_average_sell=day_sell_offer, day_average_buy=day_buy_offer, day_sold=day_sold, day_bought=day_bought, day_highest_sell=day_highest_sell_offer, day_lowest_sell=day_lowest_sell_offer, day_highest_buy=day_highest_buy_offer, day_lowest_buy=day_lowest_buy_offer, total_immediate_profit=total_immediate_profit, total_immediate_profit_info=npc_trade_steps_info), historical_values
 
 
 class HistoryPacketValue:

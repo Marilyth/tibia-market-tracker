@@ -10,7 +10,7 @@ class TestDebugger:
 
         # Act
         reader.read_packet()
-        market_values = reader.result.convert_to_marketvalues()
+        market_values, history = reader.result.convert_to_marketvalues()
 
         # Assert
         assert market_values.day_lowest_buy == 0
@@ -23,7 +23,7 @@ class TestDebugger:
 
         # Act
         reader.read_packet()
-        market_values = reader.result.convert_to_marketvalues()
+        market_values, history = reader.result.convert_to_marketvalues()
 
         # Assert
         assert reader.result.id == 22118 # Tibia Coins
@@ -42,7 +42,7 @@ class TestDebugger:
 
         # Act
         reader.read_packet()
-        market_values = reader.result.convert_to_marketvalues()
+        market_values, history = reader.result.convert_to_marketvalues()
 
         # Assert
         assert reader.result.id == 3280 # Fire Sword

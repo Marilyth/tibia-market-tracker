@@ -62,6 +62,21 @@ def do_market_search(email: str, password: str, char_index: int, virtual_display
         print(f"Market values: {len(market_values)}")
 
         if not dry_run:
+            # Get the last update time of the server. Add  as authorization header.
+            world_data = requests.get(f"{api_url}/world_data?server={client.character_server}", headers={"Authorization": f"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ3ZWJzaXRlIiwiaWF0IjoxNzA2Mzc2MTM1LCJleHAiOjI0ODM5NzYxMzV9.MrRgQJyNb5rlNmdsD3oyzG3ZugVeeeF8uFNElfWUOyI"}).json()
+            last_update = datetime.datetime.fromisoformat("1970-01-01T00:00:00")
+
+            if world_data:
+                last_update = datetime.datetime.fromisoformat(world_data[0]["last_update"])
+                last_update = last_update.replace(hour=0, minute=0, second=0, microsecond=0) + datetime.timedelta(days=1)
+
+            last_timestamp = last_update.timestamp()
+
+            # Filter out market_values that are older than the last update time.
+            market_values = [value for value in market_values if value.timestamp > last_timestamp]
+
+            print(f"Filtered market values: {len(market_values)}")
+
             print("Updating market values...")
             requests.post(f"{api_url}/add_market_values?secret={config['jwtSecret']}", json=object_to_json({"server": client.character_server, "data": market_values}), 
                           headers={"Content-Type": "application/json", "Content-Encoding": "gzip"})
