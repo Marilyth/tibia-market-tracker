@@ -73,7 +73,7 @@ def do_market_search(email: str, password: str, char_index: int, virtual_display
             last_timestamp = last_update.timestamp()
 
             # Filter out market_values that are older than the last update time.
-            market_values = [value for value in market_values if value.timestamp > last_timestamp]
+            market_values = [value for value in market_values if value.time > last_timestamp]
 
             print(f"Filtered market values: {len(market_values)}")
 

@@ -311,7 +311,10 @@ class MongoManager:
 
                 requests.append(pymongo.InsertOne(collection.to_mongo_dict()))
 
-        self.item_prices.bulk_write(requests)
+        # Keep bulk write requests under 10000.
+        while requests:
+            self.item_prices.bulk_write(requests[:10000])
+            requests = requests[10000:]
 
     def get_item_history(self, id: int, server: str) -> List[MarketValues]:
         """Gets the history of the item on the given server.
