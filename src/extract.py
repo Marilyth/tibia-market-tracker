@@ -78,8 +78,12 @@ def do_market_search(email: str, password: str, char_index: int, virtual_display
             print(f"Filtered market values: {len(market_values)}")
 
             print("Updating market values...")
-            requests.post(f"{api_url}/add_market_values?secret={config['jwtSecret']}", json=object_to_json({"server": client.character_server, "data": market_values}), 
-                          headers={"Content-Type": "application/json", "Content-Encoding": "gzip"})
+            while market_values:
+                batch = market_values[:4000]
+                market_values = market_values[4000:]
+
+                requests.post(f"{api_url}/add_market_values?secret={config['jwtSecret']}", json=object_to_json({"server": client.character_server, "data": batch}), 
+                            headers={"Content-Type": "application/json", "Content-Encoding": "gzip"})
 
             print("Updating meta data...")
             update_metadata()
