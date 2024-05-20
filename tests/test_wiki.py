@@ -40,7 +40,19 @@ class TestWiki:
         assert len(items) > 3600 and len(items) < 30000
         assert any([item.name == "fire sword" for item in items.values()])
         assert not any([item.name == "crystal bed" for item in items.values()])
-
+        
+    def test_GenerateGifForItem_WhenGivenValidItem_DoesntThrow(self):
+        # Act
+        self.wiki.generate_gif_for_item(22118)
+        
+    def test_GenerateGifForAllItems_WhenCalled_DoesntThrow(self):
+        # Arrange.
+        items = self.wiki.get_marketable_proto_items()
+        
+        # Act.
+        for item in items.values():
+            self.wiki.generate_gif_for_item(item.id)
+    
     def test_GetEventData_ReturnsExpected(self):
         # Act
         event = self.wiki.get_event_data()

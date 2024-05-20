@@ -4,8 +4,10 @@ import requests
 import re
 import sys
 import os
+from PIL import Image, ImageSequence
 import json
 from pydantic import BaseModel
+import lzma
 
 # Add the proto directory to the path so that we can import from it.
 sys.path.append(os.path.join(os.path.dirname(__file__), "data", "proto"))
@@ -24,13 +26,27 @@ class EventData(BaseModel):
 
 
 proto_items = {}
+sprite_id_to_location = {}
 id_to_pretty_name = {}
 pretty_name_to_id = {}
 
 class Wiki:
     def __init__(self):
         pass
+    
+    @staticmethod
+    def _get_assets_folder() -> str:
+        """Returns the path to the assets folder.
 
+        Returns:
+            str: The path to the assets folder.
+        """
+        # If on linux:
+        if os.name == "posix":
+            return os.path.expanduser("/root/.local/share/CipSoft GmbH/Tibia/packages/Tibia/assets")
+        else:
+            return os.path.expanduser("~\\AppData\\Local\\Tibia\\packages\\Tibia\\assets")
+    
     @staticmethod
     def get_all_marketable_items() -> List[str]:
         """
@@ -131,7 +147,7 @@ class Wiki:
             Dict[int, appearances_pb2.Appearance]: A dictionary mapping item ids to Appearance objects.
         """
         if not proto_items:
-            assets_folder = os.path.expanduser("/root/.local/share/CipSoft GmbH/Tibia/packages/Tibia/assets")
+            assets_folder = Wiki._get_assets_folder()
             appearances_dat_file_name = [file_name for file_name in os.listdir(assets_folder) if file_name.startswith("appearances-") and file_name.endswith(".dat")][0]
 
             appearances = appearances_pb2.Appearances()
@@ -142,6 +158,117 @@ class Wiki:
                     proto_items[item.id] = item
 
         return proto_items
+    
+    @staticmethod
+    def get_sprite_for_id(sprite_id: int) -> Image:
+        """Loads the sprite for the given sprite id.
+
+        Returns:
+            Image: The sprite image.
+        """
+        # Load the location map if it's not already loaded.
+        if not sprite_id_to_location:
+            assets_folder = Wiki._get_assets_folder()
+            
+            Wiki.extract_lzma_sprites()
+            
+            with open(f"{assets_folder}/catalog-content.json", "r") as f:
+                catalog = json.loads(f.read())
+                
+            for item in catalog:
+                if item["type"] == "sprite":
+                    for i in range(item["firstspriteid"], item["lastspriteid"] + 1):
+                        sprite_id_to_location[i] = (os.path.join(assets_folder, item["file"][:-5].replace(".bmp", ".png")), i - item["firstspriteid"])
+        
+        # Load the sprite from file.
+        sprite_size = 32
+        sprites_per_row = 12
+        
+        with Image.open(sprite_id_to_location[sprite_id][0]) as img:
+            sprite_index = sprite_id_to_location[sprite_id][1]
+            
+            # Calculate the x, y position of the sprite in the grid.
+            x = (sprite_index % sprites_per_row) * sprite_size
+            y = (sprite_index // sprites_per_row) * sprite_size
+            
+            # Crop the sprite from the grid.
+            return img.crop((x, y, x + sprite_size, y + sprite_size))
+    
+    @staticmethod
+    def get_sprites_for_item(item_id: int) -> Image:
+        """
+        Returns the sprites for the given item id.
+        
+        Returns:
+            List[Image]: A list of sprite images.
+        """
+        item_information = Wiki.get_marketable_proto_items()[item_id]
+        sprite_infos = item_information.frame_group[0].sprite_info
+        
+        sprites = []
+        for sprite_id in sprite_infos.sprite_id:
+            sprites.append(Wiki.get_sprite_for_id(sprite_id))
+            
+        return sprites
+    
+    @staticmethod
+    def generate_gif_for_item(item_id: int):
+        """Generates a gif for the given item id.
+
+        Args:
+            item_id (int): The item id.
+        """
+        sprites = Wiki.get_sprites_for_item(item_id)
+        
+        # If the sprites folder doesn't exist, create it.
+        if not os.path.exists("sprites"):
+            os.makedirs("sprites")
+        
+        if len(sprites) == 1:
+            sprites[0].save(f"sprites/{item_id}.gif", transparency=0)
+        else:
+            sprites[0].save(f"sprites/{item_id}.gif", save_all=True, append_images=sprites[1:], duration=100, loop=0, transparency=0)
+    
+    @staticmethod
+    def extract_lzma_sprites():
+        """Decompresses all lzma files in the assets folder.
+
+        Returns:
+            Dict[int, appearances_pb2.Appearance]: A dictionary mapping item ids to Appearance objects.
+        """
+        assets_folder = Wiki._get_assets_folder()
+       
+        # Decrompress lzma files.
+        for file_name in os.listdir(assets_folder):
+            if file_name.endswith(".lzma"):
+                decompressed_file_name = file_name[:-5].replace(".bmp", ".png")
+                
+                # Don't do anything if the decompressed file already exists, and is newer than the lzma file.
+                if os.path.exists(f"{assets_folder}/{decompressed_file_name}") and \
+                    os.path.getmtime(f"{assets_folder}/{decompressed_file_name}") > os.path.getmtime(f"{assets_folder}/{file_name}"):
+                    continue
+                
+                with open(f"{assets_folder}/{file_name}", "rb") as f:
+                    # Skip the first 32 bytes.
+                    data = bytearray(f.read())[32:]
+                    
+                    # Set the 6th to 12th byte to 255 to fix the header.
+                    for i in range(5, 13):
+                        data[i] = 255
+                    
+                    decompressed = lzma.decompress(data)
+                    
+                    # Write the decompressed data to a new file.
+                    with open(f"{assets_folder}/{file_name[:-5]}", "wb") as out:
+                        out.write(decompressed)
+                    
+                    if file_name.endswith(".bmp.lzma"):
+                        # Convert the bmp to png.
+                        with Image.open(f"{assets_folder}/{file_name[:-5]}") as img:
+                            img.save(f"{assets_folder}/{decompressed_file_name}")
+                        
+                        # Delete the bmp file.
+                        os.remove(f"{assets_folder}/{file_name[:-5]}")
 
     @staticmethod
     def get_event_data() -> EventData:
