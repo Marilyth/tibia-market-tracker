@@ -209,7 +209,7 @@ class Wiki:
         
         sprites = []
         for i, sprite_id in enumerate(sprite_infos.sprite_id):
-            sprites.append((Wiki.get_sprite_for_id(sprite_id), frame_durations[i].duration_min if len(frame_durations) > i else 100))
+            sprites.append((Wiki.get_sprite_for_id(sprite_id), frame_durations[i].duration_min if len(frame_durations) > i else 1000))
             
         if sprite_infos.animation.loop_type == shared_pb2.ANIMATION_LOOP_TYPE.ANIMATION_LOOP_TYPE_PINGPONG:
             # Append the middle frames again, in reverse order.
@@ -231,12 +231,12 @@ class Wiki:
             os.makedirs("sprites")
         
         if len(sprites) == 1:
-            sprites[0][0].save(f"sprites/{item_id}.gif", transparency=0)
+            sprites[0][0].save(f"sprites/{item_id}.gif")
         else:
             other_frames = [sprite[0] for sprite in sprites[1:]]
             durations = [sprite[1] for sprite in sprites]
             sprites[0][0].save(f"sprites/{item_id}.gif", save_all=True, append_images=other_frames,
-                               duration=durations, loop=0, transparency=0)
+                               duration=durations, loop=0, disposal=2)
     
     @staticmethod
     def extract_lzma_sprites():
