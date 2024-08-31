@@ -236,9 +236,9 @@ class PacketAnalyser:
 
         #self.log(f"{raw_data}\n")
 
-        # First 2 bytes are the size of the packet load (minus the size bytes) in little endian. I.e. 0c00 is 12 bytes.
-        packet_size = int.from_bytes(raw_data[:2], byteorder=sys.byteorder, signed=False)
-        actual_size = len(raw_data[2:])
+        # First 2 bytes are the size of the packet load in multiples of 8 bytes (minus the header) in little endian. I.e. 0c00 is 12 bytes.
+        packet_size = int.from_bytes(raw_data[:2], byteorder=sys.byteorder, signed=False) * 8
+        actual_size = len(raw_data[6:])
 
         # The next 2 bytes, are the sequence number, and the next 2 bytes are the compression flag.
         sequence_number = int.from_bytes(raw_data[2:4], byteorder=sys.byteorder, signed=False)
@@ -251,15 +251,15 @@ class PacketAnalyser:
             # Append the raw_data to the last incomplete packet.
             incomplete_packet = [packet for packet in self.incomplete_packets if packet[1] == sender][-1]
             raw_data = incomplete_packet[0] + raw_data
-            actual_size = len(raw_data[2:])
-            packet_size = int.from_bytes(raw_data[:2], byteorder=sys.byteorder, signed=False)
+            actual_size = len(raw_data[6:])
+            packet_size = int.from_bytes(raw_data[:2], byteorder=sys.byteorder, signed=False) * 8
             sequence_number = int.from_bytes(raw_data[2:4], byteorder=sys.byteorder, signed=False)
             compression_flag = int.from_bytes(raw_data[4:6], byteorder=sys.byteorder, signed=False)
             is_compressed = compression_flag == 0xC000
             is_valid = is_compressed or compression_flag == 0x0000
             self.incomplete_packets.remove(incomplete_packet)
 
-        if packet_size > len(raw_data[2:]) and from_server and is_compressed:
+        if packet_size > actual_size and from_server and is_compressed:
             # Packet is not complete yet. Wait for the next packet.
             self.incomplete_packets.append((raw_data, sender))
             return
@@ -273,17 +273,11 @@ class PacketAnalyser:
         # If size is bigger than the actual size, there is another packet appended to this one.
         next_data = None
         if packet_size < actual_size:
-            next_data = raw_data[2 + packet_size:]
-            raw_data = raw_data[:packet_size + 2]
+            next_data = raw_data[6 + packet_size:]
+            raw_data = raw_data[:packet_size + 6]
         
         decrypted_data = self.decrypt(raw_data[6:6 + packet_size])
-
-        # Read encrypted_packet_length.
-        decrypted_packet_length = int.from_bytes(decrypted_data[:2], byteorder=sys.byteorder, signed=False)
-
-        # Assert that the decryption was successful.
-        #assert decrypted_packet_length <= len(decrypted_data[2:])
-        payload = decrypted_data[:decrypted_packet_length + 2]
+        payload = decrypted_data
 
         if not is_valid:
             if not from_server:
@@ -291,13 +285,12 @@ class PacketAnalyser:
                 return
             else:
                 raise Exception(f"Invalid compression flag: {compression_flag}")
-                return
         
         if is_compressed:
-            decrypted_data = self.decompress_bytes(payload[2:], sender)
+            decrypted_data = self.decompress_bytes(payload[1:], sender)
             payload = decrypted_data
 
-        command = payload[2] if payload else -1
+        command = payload[1] if payload else -1
         command_name = self.command_type_to_name(command, client_commands if not from_server else server_commands)
 
         return payload, command_name, next_data
