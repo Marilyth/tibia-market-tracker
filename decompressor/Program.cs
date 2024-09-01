@@ -18,32 +18,8 @@ while(true){
         }
 
         // input is a hex string, convert it to a byte array.
-        var bytes = input.Split(' ').Select(x => Convert.ToByte(x, 16)).ToArray();
-
-        // Create a memory stream to write the decompressed data to.
-        var decompressedBytes = new byte[65536];
-
-        // Decompress the data.
-        zStream.next_in = bytes;
-        zStream.next_in_index = 0;
-        zStream.next_out = decompressedBytes;
-        zStream.next_out_index = 0;
-        zStream.avail_in = bytes.Length;
-        zStream.avail_out = decompressedBytes.Length;
-
-        var ret = zStream.inflate(zlibConst.Z_SYNC_FLUSH);
-
-        if (ret != zlibConst.Z_OK)
-        {
-            throw new Exception($"zlib inflate failed: {ret}, input: {input}");
-        }
-
-        // Length of the decompressed data.
-        ushort decompressedLength = (ushort)zStream.next_out_index;
-
-        // Convert the decompressed data to a hex string.
-        var decompressedHex = BitConverter.ToString(decompressedBytes.Take(decompressedLength).ToArray()).Replace("-", " ");
-        decompressedHex = $"{BitConverter.ToString(BitConverter.GetBytes(decompressedLength)).Replace("-", " ")} {decompressedHex}";
+        var bytes = InputToBytes(input);
+        var decompressedHex = DecompressBytes(bytes);
 
         // Write the decompressed data to the console.
         Console.WriteLine(decompressedHex);
@@ -56,4 +32,50 @@ while(true){
 
         break;
     }
+}
+
+/// <summary>
+/// Converts the raw input string to a byte array.
+/// </summary>
+/// <param name="byteInput">The raw input string.</param>
+byte[] InputToBytes(string byteInput)
+{
+    // Convert the input to a byte array.
+    var bytes = byteInput.Split(' ').Select(x => Convert.ToByte(x, 16)).ToArray();
+
+    return bytes;
+}
+
+/// <summary>
+/// Decompresses the byte array using zlib, then returns the decompressed data as a hex string.
+/// </summary>
+/// <param name="bytes">The byte array to convert.</param>
+string DecompressBytes(byte[] bytes)
+{
+    // Create a memory stream to write the decompressed data to.
+    var decompressedBytes = new byte[65536];
+
+    // Decompress the data.
+    zStream.next_in = bytes;
+    zStream.next_in_index = 0;
+    zStream.next_out = decompressedBytes;
+    zStream.next_out_index = 0;
+    zStream.avail_in = bytes.Length;
+    zStream.avail_out = decompressedBytes.Length;
+
+    var ret = zStream.inflate(zlibConst.Z_SYNC_FLUSH);
+
+    if (ret != zlibConst.Z_OK)
+    {
+        throw new Exception($"zlib inflate failed: {ret}");
+    }
+
+    // Length of the decompressed data.
+    ushort decompressedLength = (ushort)zStream.next_out_index;
+
+    // Convert the decompressed data to a hex string.
+    var decompressedHex = BitConverter.ToString(decompressedBytes.Take(decompressedLength).ToArray()).Replace("-", " ");
+    decompressedHex = $"{BitConverter.ToString(BitConverter.GetBytes(decompressedLength)).Replace("-", " ")} {decompressedHex}";
+
+    return decompressedHex;
 }
