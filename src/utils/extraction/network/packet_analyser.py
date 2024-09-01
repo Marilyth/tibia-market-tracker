@@ -289,7 +289,10 @@ class PacketAnalyser:
         if is_compressed:
             # Because the payload is now a multiple of 8 bytes, a few bytes are superfluous sometimes.
             truncate_bytes = int.from_bytes(payload[:1], byteorder=sys.byteorder, signed=False)
-            decrypted_data = self.decompress_bytes(payload[1:-truncate_bytes], sender)
+            if truncate_bytes > 0:
+                payload = payload[:-truncate_bytes]
+
+            decrypted_data = self.decompress_bytes(payload[1:], sender)
             decompressed_data_length = int.from_bytes(decrypted_data[:2], byteorder=sys.byteorder, signed=False)
             payload = payload[:1] + decrypted_data[2:]
 
