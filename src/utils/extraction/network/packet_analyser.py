@@ -287,8 +287,11 @@ class PacketAnalyser:
                 raise Exception(f"Invalid compression flag: {compression_flag}")
         
         if is_compressed:
-            decrypted_data = self.decompress_bytes(payload[1:], sender)
-            payload = decrypted_data
+            # Because the payload is now a multiple of 8 bytes, a few bytes are superfluous sometimes.
+            truncate_bytes = int.from_bytes(payload[:1], byteorder=sys.byteorder, signed=False)
+            decrypted_data = self.decompress_bytes(payload[1:-truncate_bytes], sender)
+            decompressed_data_length = int.from_bytes(decrypted_data[:2], byteorder=sys.byteorder, signed=False)
+            payload = payload[:1] + decrypted_data[2:]
 
         command = payload[1] if payload else -1
         command_name = self.command_type_to_name(command, client_commands if not from_server else server_commands)
