@@ -19,13 +19,15 @@ class MemoryReader:
                 self.process_id = p_id
             else:
                 self.process_id = Process.get_pid_by_name(p_name)
-            
+
             self.process: Process = Process(self.process_id)
         else:
             self.process = process
         self.addresses = []
         self.buffer = None
-    
+
+        self.current_type = None
+
     @staticmethod
     def get_process_id(process_name: str) -> List[int]:
         """Gets the process ids of the process with the given name.
@@ -42,9 +44,9 @@ class MemoryReader:
                 pids.append(proc.pid)
 
         return pids
-
+    
     @staticmethod
-    def _value_to_ctype(value: Union[int, str, float]):
+    def _value_to_ctype(value: Union[int, str, float, bytearray]):
         """Converts the value to its ctype counterpart for searching in the memory.
 
         Args:
@@ -55,14 +57,22 @@ class MemoryReader:
         """
         if type(value) == str:
             b = bytearray()
-            b.extend(value.encode("utf-8"))
+            b.extend(value.encode("ascii"))
+            # Print the bytearray as a string of hex values.
+            print(" ".join("{:02x}".format(x) for x in b))
+
             return (ctypes.c_char * len(b)).from_buffer(b)
+        elif type(value) == bytearray:
+            return (ctypes.c_char * len(value)).from_buffer(value)
         elif type(value) == int:
-            return ctypes.c_int(value)
+            if abs(value) <= 2147483647:
+                return ctypes.c_long(value)
+            else:
+                return ctypes.c_long(value)
         elif type(value) == float:
             return ctypes.c_float(value)
-    
-    def filter_value(self, value: Union[int, str, float], buffer = None) -> List[int]:
+
+    def filter_value(self, value: Union[int, str, float, bytearray], buffer = None) -> List[int]:
         """Search for the specified value in the currently filtered memory.
 
         Args:
@@ -77,14 +87,16 @@ class MemoryReader:
             self.buffer = buffer
         else:
             self.buffer = MemoryReader._value_to_ctype(value)
-        
+
         if self.addresses:
             self.addresses = self.process.search_addresses(self.addresses, self.buffer)
         else:
-            self.addresses = self.process.search_all_memory(self.buffer)
-        
+            self.addresses = self.process.search_all_memory(self.buffer, False)
+
+        self.current_type = type(value)
+
         return self.addresses[:]
-            
+
     def reset_filter(self):
         """Resets the addresses which are used to search values. Essentially starts searching anew.
         """
@@ -101,44 +113,73 @@ class MemoryReader:
             List[Union[int, str, float]]: A list with the address values.
         """
         values = []
-        
+
         for address in self.addresses:
             starting_address = address
-            
+
             # Allow reading bigger strings than the initial value.
-            if type(self.buffer).__name__.startswith("c_char_Array"):
+            if self.current_type == str:
                 if full_string:
                     raw_value = (ctypes.c_byte * 1024)()
-                    
+
                     # Continue string to the left until null byte.
                     while True:
                         self.process.read_memory(starting_address - 1024, raw_value)
-                        
+
                         terminal_position = -1
                         try:
                             terminal_position = bytes(raw_value).rindex(0)
                         except Exception:
                             pass
-                        
+
                         if terminal_position > -1:
                             starting_address -= 1024 - terminal_position - 1
                             break
                         else:
                             starting_address -= 1024
-                            
+
                 b = bytearray(address - starting_address + 2048)
                 self.buffer = (ctypes.c_char * (address - starting_address + 2048)).from_buffer(b)
-                        
+
             self.process.read_memory(starting_address, self.buffer)
-            values.append(self.buffer.value)
-        
+
+            if self.current_type == bytearray:
+                values.append("".join("{:02x}".format(ord(x)) for x in self.buffer))
+            else:
+                values.append(self.buffer.value)
+
         return values
     
+    def write_values(self, value: Union[int, str, float, bytearray]) -> None:
+        """Writes the value to the addresses in the memory.
+
+        Args:
+            value (Union[int, str, float]): The value to write.
+        """
+        for address in self.addresses:
+            self.process.write_memory(address, MemoryReader._value_to_ctype(value))
+
+    def get_context(self, address: int, context_length: int = 15) -> Dict[int, ctypes.c_byte]:
+        """Returns the context of the address in the memory.
+
+        Args:
+            address (int): The address to get the context for.
+            context_length (int, optional): The length of the context to return. Defaults to 15.
+
+        Returns:
+            str: The context of the address.
+        """
+        context = {}
+
+        for i in range(address - context_length, address + context_length + 1):
+            context[i] = self.process.read_memory(i, ctypes.c_ubyte())
+
+        return context
+
     def write_values(self, value: Union[int, str, float]) -> Dict[int, Union[int, str, float]]:
         """Writes the value to all currently saved addresses.
         """
         value = MemoryReader._value_to_ctype(value)
-        
+
         for address in self.addresses:
             self.process.write_memory(address, value)
-            

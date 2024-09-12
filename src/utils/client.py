@@ -249,7 +249,7 @@ class Client:
                 self._add_to_log(f"Looking for {image}...")
                 move_mouse_like_human(20, 20)
                 if not exact:
-                    position = pyautogui.locateCenterOnScreen(image, grayscale=True, confidence=0.9)
+                    position = pyautogui.locateCenterOnScreen(image, grayscale=True, confidence=0.8)
                 else:
                     position = pyautogui.locateCenterOnScreen(image)
                 if position:
