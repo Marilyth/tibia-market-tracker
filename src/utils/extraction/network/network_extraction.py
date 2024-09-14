@@ -35,6 +35,7 @@ class NetworkExtractor(Extractor):
         self.packet_sniffer.sniff(self.tcp_reassembler.add_to_queue)
         self.client.start_game()
         self.client.login_to_game()
+        
         self.xtea_key = XteaDebugger(self.client.tibia_process_id).find_key()
         self.packet_analyser.set_key(self.xtea_key)
         if not self.client.open_market():
