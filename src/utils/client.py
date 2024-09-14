@@ -106,7 +106,9 @@ class Client:
         """
         Logs into the provided account, and selects the provided character.
         """
-        password_position = self._wait_until_find("images/PasswordField.png", click=False, cache=False, coordinate_deviation=2)
+        # In case the client crashed, cancel the error report dialog.
+        self._wait_until_find("images/Cancel.png", timeout=10, click=True, cache=False, coordinate_deviation=2)
+        self._wait_until_find("images/PasswordField.png", click=False, cache=False, coordinate_deviation=2)
         pyautogui.typewrite(self.email, 0.1)
         pyautogui.press("tab")
         wait_like_human(0.2)
