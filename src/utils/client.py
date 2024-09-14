@@ -107,7 +107,7 @@ class Client:
         Logs into the provided account, and selects the provided character.
         """
         # In case the client crashed, cancel the error report dialog.
-        self._wait_until_find("images/Cancel.png", timeout=10, click=True, cache=False, coordinate_deviation=2)
+        self._wait_until_find("images/Cancel.png", timeout=5, click=True, cache=False, coordinate_deviation=2)
         self._wait_until_find("images/PasswordField.png", click=False, cache=False, coordinate_deviation=2)
         pyautogui.typewrite(self.email, 0.1)
         pyautogui.press("tab")
@@ -145,8 +145,19 @@ class Client:
         """
         Closes Tibia unsafely. Probably better to log out before.
         """
-        pyautogui.hotkey("alt", "f4")
-        self._wait_until_find("images/Exit.png", click=True, cache=False, timeout=5)
+        pyautogui.press("escape")
+        wait_like_human(0.2)
+        pyautogui.press("escape")
+        wait_like_human(0.2)
+
+        self._wait_until_find("images/LeaveButton.png", click=True, cache=False, timeout=5)
+        self._wait_until_find("images/YesButton.png", click=True, cache=False, timeout=5)
+        
+        # Can't exit while characters are displayed...
+        wait_like_human(2)
+        pyautogui.press("escape")
+
+        self._wait_until_find("images/LeaveButton.png", click=True, cache=False, timeout=5)
 
     def open_market(self):
         """
