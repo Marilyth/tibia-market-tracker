@@ -190,7 +190,7 @@ class MarketPacketValues:
         # Calculate NPC profit.
         meta_data = ItemMetaData(id=self.id)
         meta_data.load_from_proto()
-        weight = float(self.details[14].split(" oz")[0]) if self.details[14] else 0
+        weight = float(self.details[14].split(" ")[0]) if self.details[14] in self.details[14] else 0
         gold_sell_data = [sell_data for sell_data in meta_data.npc_sell if sell_data.is_gold()]
         gold_buy_data = [buy_data for buy_data in meta_data.npc_buy if buy_data.is_gold()]
         sorted_sell_data = sorted(gold_sell_data, key=lambda x: x.price)
