@@ -9,9 +9,10 @@ from datetime import datetime
 
 
 class ItemPricesCollection:
-    def __init__(self, id: int):
+    def __init__(self, id: int, server: str):
         self.id = id
-        self.history = {}
+        self.server = server
+        self.history = []
 
     @staticmethod
     def MarketValues_to_mongo_dict(market_values: MarketValues) -> dict:
@@ -25,6 +26,12 @@ class ItemPricesCollection:
         """
         value_dict = market_values.__dict__
         value_dict.pop("id")
+        
+        # Remove all fields that have "empty" values.
+        # They will be inferred when the data is loaded using the is_full_data flag.
+        for key in list(value_dict.keys()):
+            if value_dict[key] == 0 or value_dict[key] == -1 or value_dict[key] == "":
+                value_dict.pop(key)
 
         return value_dict
     
@@ -58,16 +65,13 @@ class ItemPricesCollection:
         Returns:
             dict: A dictionary containing the name and history of the ItemPricesCollection.
         """
-        history = {}
+        history = [ItemPricesCollection.MarketValues_to_mongo_dict(market_value) for market_value in self.history]
 
-        for server in self.history:
-            history[server] = [ItemPricesCollection.MarketValues_to_mongo_dict(market_value) for market_value in self.history[server]]
-
-        return {"id": self.id, "history": history}
+        return {"id": self.id, "server": self.server, "history": history}
 
 
 class MongoManager:
-    def __init__(self, connection_string: str, database_name: str = "TibiaMarketTracker"):
+    def __init__(self, connection_string: str, database_name: str = "TibiaMarketTracker_Dev"):
         self.client = pymongo.MongoClient(connection_string)
         self.database = self.client[database_name]
         self.item_prices = self.database["ItemPrices"]
@@ -108,105 +112,42 @@ class MongoManager:
         # Remove the npc_buy field from all items in item_prices.
         self.item_prices.update_many({}, {"$unset": {"npc_buy": ""}})
 
-    def filter_outliers(self, values: List[MarketValues], keys: List[str], outlier_factor: float = 5, neighbour_search_range: int = 25) -> bool:
-        """Filter out outliers in the values list (spikes in values that are too high or too low).
-
-        Args:
-            values (List[Dict[str, float]]): The values to filter.
-            keys (List[str]): The keys to filter.
-            outlier_factor (float, optional): The factor to use to determine if a value is an outlier. Defaults to 5.
-            neighbour_search_range (int, optional): The range to search for neighbours. Defaults to 10.
+    def clean_data(self):
+        """Iterates over all items and servers and modifies the data.
         """
-        was_filtered = False
-        for i, value in enumerate(values):
-            for stat_name in keys:
-                current = getattr(value, stat_name)
-                
-                # Ignore -1 values and values smaller than a million.
-                if current == -1:
-                    continue
-                
-                # Find the value before this one, that is not -1.
-                neighbourhood = []
-                for j in range(i - 1, max(i - neighbour_search_range - 5, 0), -1):
-                    before = getattr(values[j], stat_name)
-                    if before != -1:
-                        neighbourhood.append(before)
-                
-                # Find the value after this one, that is not -1.
-                for j in range(i + 1, min(i + neighbour_search_range, len(values))):
-                    after = getattr(values[j], stat_name)
-                    if after != -1:
-                        neighbourhood.append(after)
-
-                if len(neighbourhood) == 0:
-                    continue
-
-                median_value = sorted(neighbourhood)[len(neighbourhood) // 2]
-                
-                if current > median_value * outlier_factor or\
-                    (current < median_value / 1000 and current == 1):
-                    setattr(value, stat_name, -1)
-                    was_filtered = True
-        
-        return was_filtered
-    
-    def clean_wrong_items(self, values: List[MarketValues], item_name: str, sorted_item_names: List[str]):
-        """Cleans out items that, for a time, had the wrong item's values if their name was contained in another item which came alphabetically before it.
-        """
-        was_filtered = False
-        for other_name in sorted_item_names:
-            if item_name == other_name:
-                break
-
-            if item_name in other_name:
-                # Remove all values before the 16th of April 2023.
-                for i in range(len(values) - 1, -1, -1):
-                    if values[i].time <= datetime(2023, 4, 16).timestamp():
-                        values.pop(i)
-                        was_filtered = True
-                
-            if was_filtered:
-                break
-        
-        return was_filtered
-
-    def clean_outliers(self):
-        """Cleans out outliers from the database.
-        """
-        print("Cleaning outliers...")
+        print("Cleaning...")
 
         metadata = self.get_item_metadata()
-        sorted_names = sorted([item.name for item in metadata])
-        requests: List[pymongo.UpdateOne] = []
+        servers = [value.name for value in self.get_world_data_old()]
 
-        for i, item in enumerate(metadata):
-            print(f"Cleaning outliers for {item.name} ({i + 1}/{len(metadata)})")
-            for server in ["Antica", "Nefera", "Vunira", "Dia"]:
+        for server in servers:
+            values = []
+            for i, item in enumerate(metadata[1000:]):
+                print(f"Cleaning for {item.name} ({i + 1}/{len(metadata)})")
                 try:
-                    values = self.get_item_history(item.id, server)
-
-                    # Filter out outliers (spikes in values that are too high or too low).
-                    was_filtered = self.clean_wrong_items(values, item.name, sorted_names)
-                    was_filtered = self.filter_outliers(values, ["buy_offer", "sell_offer", "month_sold", "month_bought", "month_average_sell", "month_average_buy"]) or was_filtered
+                    # Check if the item already exists in the database. Skip if it does.
+                    existing_item = self.item_prices.find_one({"id": item.id, "server": server}, {"id": 1})
                     
-                    # Update the market values.
-                    if was_filtered:
-                        requests.append(pymongo.UpdateOne({"id": item.id}, {"$set": {f"history.{server}": [ItemPricesCollection.MarketValues_to_mongo_dict(values_item) for values_item in values]}}))
-
-                        # Keep bulk write requests under 100.
-                        if len(requests) >= 100:
-                            self.item_prices.bulk_write(requests)
-                            requests = []
+                    if existing_item:
+                        continue
+                        
+                    # Get existing item history.
+                    values += self.get_item_history_old(item.id, server)
+                    
+                    # Create a new item for the server´s history, instead of having a list of servers per item.
+                    if len(values) > 100000:
+                        self.add_market_values(server, values)
+                        values = []
                 except Exception as e:
-                    print(f"Error while cleaning outliers: {e}")
+                    print(f"Error while cleaning: {e}")
                     continue
+            if values:
+                self.add_market_values(server, values)
+        
+        # Drop all items that have no "server" field.
+        #self.item_prices.delete_many({"server": {"$exists": False}})
 
-        # Filter out outliers (spikes in values that are too high or too low).
-        if requests:
-            self.item_prices.bulk_write(requests)
-
-        print("Done cleaning outliers.")
+        print("Done cleaning.")
 
     def add_api_key(self, api_key: str):
         """Adds the given api key to the database.
@@ -294,20 +235,31 @@ class MongoManager:
             market_values (MarketValues): The market values to add.
         """
         requests: List[pymongo.UpdateOne] = []
-
+        item_cache = {}
+        item_group = {}
+        
         for values_item in market_values:
-            item_id = values_item.id
+            if values_item.id not in item_group:
+                item_group[values_item.id] = []
+            item_group[values_item.id].append(values_item)
 
-            # Check if the item already exists in the database. Load the name.
-            item = self.item_prices.find_one({"id": item_id}, {"id": 1})
+        for item_id in item_group:
+            values_items = item_group[item_id]
 
+            # Check if the item already exists in the database or as an insert operation.
+            if item_id in item_cache:
+                item = item_cache[item_id]
+            else:
+                item = self.item_prices.find_one({"id": item_id, "server": server}, {"id": 1})
+                item_cache[item_id] = item if item else 1
+        
             if item:
-                # Add the market values to the history[server] list.
-                requests.append(pymongo.UpdateOne({"id": item_id}, {"$push": {f"history.{server}": ItemPricesCollection.MarketValues_to_mongo_dict(values_item) } } ))
+                # Append the market values to the history list.
+                requests.append(pymongo.UpdateOne({"id": item_id, "server": server}, {"$push": {"history": {"$each": [ItemPricesCollection.MarketValues_to_mongo_dict(value) for value in values_items]}}}))
             else:
                 # Add the item to the database.
-                collection = ItemPricesCollection(item_id)
-                collection.history[server] = [values_item]
+                collection = ItemPricesCollection(item_id, server)
+                collection.history = values_items
 
                 requests.append(pymongo.InsertOne(collection.to_mongo_dict()))
 
@@ -327,6 +279,25 @@ class MongoManager:
             List[MarketValues]: The history of the item on the given server.
         """
         # Load only the requested server's history.
+        item = self.item_prices.find_one({"id": id, "server": server}, {"history": 1})
+
+        if item:
+            items = item["history"]
+            return [MarketValues(id=id, **item) for item in items if item]
+        else:
+            return []
+
+    def get_item_history_old(self, id: int, server: str) -> List[MarketValues]:
+        """Gets the history of the item on the given server.
+
+        Args:
+            id (int): The id of the item to get the history for.
+            server (str): The server to get the history for.
+
+        Returns:
+            List[MarketValues]: The history of the item on the given server.
+        """
+        # Load only the requested server's history.
         item = self.item_prices.find_one({"id": id}, {"history": {server: 1}})
 
         if item:
@@ -334,8 +305,36 @@ class MongoManager:
             return [MarketValues(id=id, **item) for item in items if item]
         else:
             return []
-        
+    
     def get_latest_market_values(self, server: str) -> List[MarketValues]:
+        """Gets the market values of the items which match the given criteria.
+
+        Args:
+            server (str): The server of the item.
+        
+        Returns:
+            List[dict]: The market values of the items which match the given criteria.
+        """
+        query = {"server": server}
+
+        # Only retrieve the last entry of the history's history. Don't include the rest of the history.
+        projection = {"history": {"$slice": -1}, "id": 1}
+
+        items = self.item_prices.find(query, projection)
+
+        if items:
+            items = list(items)
+            items = [(item, item["history"][0]) for item in items if len(item["history"]) > 0]
+            
+            # Put the values of the item into the latest history entry for convenience.
+            for values, item in items:
+                item["id"] = values["id"]
+
+            return [MarketValues(**item) for id, item in items]
+        else:
+            return []
+    
+    def get_latest_market_values_old(self, server: str) -> List[MarketValues]:
         """Gets the market values of the items which match the given criteria.
 
         Args:
@@ -393,6 +392,19 @@ class MongoManager:
         return meta_datas
 
     def get_world_data(self) -> List[WorldData]:
+        """Gets the latest item update time for each server for the item 22118 (tibia coin).
+
+        Returns:
+            dict: The world data from the database.
+        """
+        query = {"id": 22118, "server": {"$exists": True}}
+        projection = {"server": 1, "history": {"$slice": -1}}
+        
+        items = self.item_prices.find(query, projection)
+
+        return [WorldData(name=item["server"], last_update=datetime.utcfromtimestamp(item["history"][0]["time"])) for item in items]
+
+    def get_world_data_old(self) -> List[WorldData]:
         """Gets the latest item update time for each server for the item 22118 (tibia coin).
 
         Returns:
