@@ -161,31 +161,31 @@ class MarketPacketValues:
         Returns:
             MarketValues: The MarketValues object.
         """
-        buy_offer = self.buy_offers[0].price if len(self.buy_offers) > 0 else -1
-        sell_offer = self.sell_offers[0].price if len(self.sell_offers) > 0 else -1
+        buy_offer = self.buy_offers[0].price if len(self.buy_offers) > 0 else 0
+        sell_offer = self.sell_offers[0].price if len(self.sell_offers) > 0 else 0
 
         active_sell_history = [x for x in self.sell_history if x.traded > 0]
         active_buy_history = [x for x in self.buy_history if x.traded > 0]
 
-        month_buy_offer = int(sum([x.average_price for x in active_buy_history]) / len(active_buy_history) if len(active_buy_history) > 0 else -1)
-        month_sell_offer = int(sum([x.average_price for x in active_sell_history]) / len(active_sell_history) if len(active_sell_history) > 0 else -1)
-        month_highest_buy_offer = max([x.max_price for x in self.buy_history]) if len(self.buy_history) > 0 else -1
+        month_buy_offer = int(sum([x.average_price for x in active_buy_history]) / len(active_buy_history) if len(active_buy_history) > 0 else 0)
+        month_sell_offer = int(sum([x.average_price for x in active_sell_history]) / len(active_sell_history) if len(active_sell_history) > 0 else 0)
+        month_highest_buy_offer = max([x.max_price for x in self.buy_history]) if len(self.buy_history) > 0 else 0
         traded_min_sell_offers = [x.min_price for x in self.sell_history if x.min_price > 0]
-        month_lowest_sell_offer = min(traded_min_sell_offers if traded_min_sell_offers else [0]) if len(self.sell_history) > 0 else -1
-        month_highest_sell_offer = max([x.max_price for x in self.sell_history]) if len(self.sell_history) > 0 else -1
+        month_lowest_sell_offer = min(traded_min_sell_offers if traded_min_sell_offers else [0]) if len(self.sell_history) > 0 else 0
+        month_highest_sell_offer = max([x.max_price for x in self.sell_history]) if len(self.sell_history) > 0 else 0
         traded_min_buy_offers = [x.min_price for x in self.buy_history if x.min_price > 0]
-        month_lowest_buy_offer = min(traded_min_buy_offers if traded_min_buy_offers else [0]) if len(self.buy_history) > 0 else -1
-        month_bought = sum([x.traded for x in self.buy_history]) if len(self.buy_history) > 0 else -1
-        month_sold = sum([x.traded for x in self.sell_history]) if len(self.sell_history) > 0 else -1
+        month_lowest_buy_offer = min(traded_min_buy_offers if traded_min_buy_offers else [0]) if len(self.buy_history) > 0 else 0
+        month_bought = sum([x.traded for x in self.buy_history]) if len(self.buy_history) > 0 else 0
+        month_sold = sum([x.traded for x in self.sell_history]) if len(self.sell_history) > 0 else 0
 
-        day_buy_offer = int(self.buy_history[0].average_price if len(self.buy_history) > 0 else -1)
-        day_sell_offer = int(self.sell_history[0].average_price if len(self.sell_history) > 0 else -1)
-        day_highest_buy_offer = self.buy_history[0].max_price if len(self.buy_history) > 0 else -1
-        day_lowest_sell_offer = self.sell_history[0].min_price if len(self.sell_history) > 0 else -1
-        day_highest_sell_offer = self.sell_history[0].max_price if len(self.sell_history) > 0 else -1
-        day_lowest_buy_offer = self.buy_history[0].min_price if len(self.buy_history) > 0 else -1
-        day_bought = self.buy_history[0].traded if len(self.buy_history) > 0 else -1
-        day_sold = self.sell_history[0].traded if len(self.sell_history) > 0 else -1
+        day_buy_offer = int(self.buy_history[0].average_price if len(self.buy_history) > 0 else 0)
+        day_sell_offer = int(self.sell_history[0].average_price if len(self.sell_history) > 0 else 0)
+        day_highest_buy_offer = self.buy_history[0].max_price if len(self.buy_history) > 0 else 0
+        day_lowest_sell_offer = self.sell_history[0].min_price if len(self.sell_history) > 0 else 0
+        day_highest_sell_offer = self.sell_history[0].max_price if len(self.sell_history) > 0 else 0
+        day_lowest_buy_offer = self.buy_history[0].min_price if len(self.buy_history) > 0 else 0
+        day_bought = self.buy_history[0].traded if len(self.buy_history) > 0 else 0
+        day_sold = self.sell_history[0].traded if len(self.sell_history) > 0 else 0
 
         # Calculate NPC profit.
         meta_data = ItemMetaData(id=self.id)

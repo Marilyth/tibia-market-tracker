@@ -72,6 +72,7 @@ class MarketValues(BaseModel):
     """
     id: int
     time: float
+    is_full_data: bool = False
     buy_offer: int = -1
     sell_offer: int = -1
     month_average_sell: int = -1
@@ -97,9 +98,21 @@ class MarketValues(BaseModel):
     total_immediate_profit_info: str = ""
 
 
-    def __post_init__(self):
+    def model_post_init(self, __context):
         self.buy_offer: int = max(self.buy_offer, self.month_lowest_buy) if self.month_bought > 0 and self.month_lowest_buy > -1 else self.buy_offer
         self.sell_offer: int = min(self.sell_offer, self.month_highest_sell) if self.month_sold > 0 and self.month_highest_sell > -1 else self.sell_offer
+        self.is_full_data = self.is_full_data or self.active_traders != -1
+        
+        # If time is before 1705210000, the data can't be full.
+        if self.time < 1705210000:
+            self.is_full_data = False
+        
+        # Set all -1 values to 0 if full data is available
+        if self.is_full_data:
+            for field in self.model_fields:
+                if getattr(self, field) == -1:
+                    setattr(self, field, 0)
+            
 
     def get_metadata(self, load_wiki_name: bool = True) -> ItemMetaData:
         """Returns the metadata of the item.
