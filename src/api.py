@@ -385,7 +385,7 @@ if __name__ == "__main__":
     log_config["formatters"]["access"]["fmt"] = "%(asctime)s - %(levelname)s - %(message)s"
     log_config["formatters"]["default"]["fmt"] = "%(asctime)s - %(levelname)s - %(message)s"
     
-    domain = None#config["apiDomain"]
+    domain = config["apiDomain"]
     port = config["apiPort"]
     #mongo_manager.clean_outliers()
     
