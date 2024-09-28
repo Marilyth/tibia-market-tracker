@@ -281,6 +281,8 @@ class MongoManager:
         for board in market_boards:
             # Check if the item already exists in the database.
             item = self.market_boards.find_one({"id": board.id, "server": server}, {"id": 1})
+            board.buyers = [buyer.__dict__ for buyer in board.buyers if buyer]
+            board.sellers = [seller.__dict__ for seller in board.sellers if seller]
             board_dict = board.__dict__
             
             # Add the server to the board.
