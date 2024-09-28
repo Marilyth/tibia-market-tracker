@@ -56,7 +56,7 @@ def do_market_search(email: str, password: str, char_index: int, virtual_display
         extractor: Extractor = NetworkExtractor(client)
         extractor.setup()
 
-        market_values = extractor.extract_market_values()
+        market_values, market_boards = extractor.extract_market_values()
         client.exit_tibia()
 
         print(f"Market values: {len(market_values)}")
@@ -76,7 +76,13 @@ def do_market_search(email: str, password: str, char_index: int, virtual_display
             market_values = [value for value in market_values if value.time > last_timestamp]
 
             print(f"Filtered market values: {len(market_values)}")
+            
+            print("Updating meta data...")
+            update_metadata()
 
+            print("Updating events...")
+            update_events()
+                
             print("Updating market values...")
             while market_values:
                 batch = market_values[:4000]
@@ -84,12 +90,14 @@ def do_market_search(email: str, password: str, char_index: int, virtual_display
 
                 requests.post(f"{api_url}/add_market_values?secret={config['jwtSecret']}", json=object_to_json({"server": client.character_server, "data": batch}), 
                             headers={"Content-Type": "application/json", "Content-Encoding": "gzip"})
+                
+            print("Updating market boards...")
+            while market_boards:
+                batch = market_boards[:4000]
+                market_boards = market_boards[4000:]
 
-            print("Updating meta data...")
-            update_metadata()
-
-            print("Updating events...")
-            update_events()
+                requests.post(f"{api_url}/update_market_boards?secret={config['jwtSecret']}", json=object_to_json({"server": client.character_server, "data": batch}), 
+                            headers={"Content-Type": "application/json", "Content-Encoding": "gzip"})
 
     if virtual_display:
         from pyvirtualdisplay import Display

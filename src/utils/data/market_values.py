@@ -67,6 +67,25 @@ class ItemMetaData(BaseModel):
             return False
 
 
+class MarketBoardTraderData(BaseModel):
+    """A data class containing information about a seller in the market board.
+    """
+    name: str
+    amount: int
+    price: int
+    time: float
+
+
+class MarketBoard(BaseModel):
+    """A data class containing information about the market board of an item.
+    The sellers, buyers, amounts, prices and time are stored in this class.
+    """
+    id: int
+    sellers: List[MarketBoardTraderData]
+    buyers: List[MarketBoardTraderData]
+    update_time: float
+
+
 class MarketValues(BaseModel):
     """A data class containing information about the market values of an item.
     """

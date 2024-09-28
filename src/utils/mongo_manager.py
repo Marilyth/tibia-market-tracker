@@ -1,5 +1,5 @@
 import pymongo
-from utils.data.market_values import MarketValues, NPCSaleData, ItemMetaData
+from utils.data.market_values import MarketValues, NPCSaleData, ItemMetaData, MarketBoard, MarketBoardTraderData
 from utils.wiki import EventData, Wiki
 from utils.data.world_data import WorldData
 from typing import List
@@ -80,6 +80,7 @@ class MongoManager:
         self.access_logs = self.database["AccessLogs"]
         self.statistics = self.database["Statistics"]
         self.events = self.database["Events"]
+        self.market_boards = self.database["MarketBoards"]
 
     def update_schema(self):
         # Remove all items from item_prices which have no id.
@@ -267,7 +268,53 @@ class MongoManager:
         while requests:
             self.item_prices.bulk_write(requests[:10000])
             requests = requests[10000:]
+            
+    def update_market_boards(self, server: str, market_boards: List[MarketBoard]):
+        """Updates the market boards for the given items.
 
+        Args:
+            server (str): The server to update the market boards for.
+            market_boards (List[MarketBoard]): The market boards to update.
+        """
+        requests: List[pymongo.UpdateOne] = []
+        
+        for board in market_boards:
+            # Check if the item already exists in the database.
+            item = self.market_boards.find_one({"id": board.id, "server": server}, {"id": 1})
+            board_dict = board.__dict__
+            
+            # Add the server to the board.
+            board_dict["server"] = server
+            
+            if item:
+                # Update the item in the database.
+                requests.append(pymongo.UpdateOne({"id": board.id, "server": server}, {"$set": board_dict}))
+            else:
+                # Add the item to the database.
+                requests.append(pymongo.InsertOne(board_dict))
+        
+        # Keep bulk write requests under 10000.
+        while requests:
+            self.market_boards.bulk_write(requests[:10000])
+            requests = requests[10000:]
+
+    def get_market_board(self, id: int, server: str) -> MarketBoard:
+        """Gets the market board of the item on the given server.
+
+        Args:
+            id (int): The id of the item to get the market board for.
+            server (str): The server to get the market board for.
+
+        Returns:
+            MarketBoard: The market board of the item on the given server.
+        """
+        item = self.market_boards.find_one({"id": id, "server": server})
+
+        if item:
+            return MarketBoard(**item)
+        else:
+            return MarketBoard(id=id, sellers=[], buyers=[], update_time=datetime.utcnow())
+    
     def get_item_history(self, id: int, server: str) -> List[MarketValues]:
         """Gets the history of the item on the given server.
 
@@ -283,25 +330,6 @@ class MongoManager:
 
         if item:
             items = item["history"]
-            return [MarketValues(id=id, **item) for item in items if item]
-        else:
-            return []
-
-    def get_item_history_old(self, id: int, server: str) -> List[MarketValues]:
-        """Gets the history of the item on the given server.
-
-        Args:
-            id (int): The id of the item to get the history for.
-            server (str): The server to get the history for.
-
-        Returns:
-            List[MarketValues]: The history of the item on the given server.
-        """
-        # Load only the requested server's history.
-        item = self.item_prices.find_one({"id": id}, {"history": {server: 1}})
-
-        if item:
-            items = item["history"][server]
             return [MarketValues(id=id, **item) for item in items if item]
         else:
             return []
@@ -325,34 +353,6 @@ class MongoManager:
         if items:
             items = list(items)
             items = [(item, item["history"][0]) for item in items if len(item["history"]) > 0]
-            
-            # Put the values of the item into the latest history entry for convenience.
-            for values, item in items:
-                item["id"] = values["id"]
-
-            return [MarketValues(**item) for id, item in items]
-        else:
-            return []
-    
-    def get_latest_market_values_old(self, server: str) -> List[MarketValues]:
-        """Gets the market values of the items which match the given criteria.
-
-        Args:
-            server (str): The server of the item.
-        
-        Returns:
-            List[dict]: The market values of the items which match the given criteria.
-        """
-        query = {f"history.{server}": {"$exists": True}}
-
-        # Only retrieve the last entry of the history[server]'s history. Don't include the rest of the history, and don't include other servers.
-        projection = {"history": {server: {"$slice": -1}}, "id": 1}
-
-        items = self.item_prices.find(query, projection)
-
-        if items:
-            items = list(items)
-            items = [(item, item["history"][server][0]) for item in items if len(item["history"][server]) > 0]
             
             # Put the values of the item into the latest history entry for convenience.
             for values, item in items:
@@ -403,22 +403,3 @@ class MongoManager:
         items = self.item_prices.find(query, projection)
 
         return [WorldData(name=item["server"], last_update=datetime.utcfromtimestamp(item["history"][0]["time"])) for item in items]
-
-    def get_world_data_old(self) -> List[WorldData]:
-        """Gets the latest item update time for each server for the item 22118 (tibia coin).
-
-        Returns:
-            dict: The world data from the database.
-        """
-        query = {"id": 22118}
-
-        pipeline = [
-            {"$match": query},
-            {"$project": {"history": {"$objectToArray": "$history"}}},
-            # Only take the last entry of each element in the history list, but keep the server name.
-            {"$project": {"history": {"$map": {"input": "$history", "as": "history", "in": {"k": "$$history.k", "v": {"$slice": ["$$history.v", -1]}}}}}},
-        ]
-
-        item = list(self.item_prices.aggregate(pipeline))[0]
-
-        return [WorldData(name=kvp["k"], last_update=datetime.utcfromtimestamp(kvp["v"][0]["time"])) for kvp in item["history"]]
