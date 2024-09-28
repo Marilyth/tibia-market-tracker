@@ -297,7 +297,7 @@ async def get_market_board(request: Request, server: str, item_id: int) -> Marke
     - **server** (str): The (case sensitive) server of the item.
     - **item_id** (int): The id of the item.
     """
-    values = mongo_manager.get_market_board(server, item_id)
+    values = mongo_manager.get_market_board(item_id, server)
     
     await add_statistic(request, "market_board", server, item_id)
     
