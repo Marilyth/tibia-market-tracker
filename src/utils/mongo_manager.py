@@ -315,7 +315,7 @@ class MongoManager:
         if item:
             return MarketBoard(**item)
         else:
-            return MarketBoard(id=id, sellers=[], buyers=[], update_time=datetime.utcnow())
+            return MarketBoard(id=id, sellers=[], buyers=[], update_time=0)
     
     def get_item_history(self, id: int, server: str) -> List[MarketValues]:
         """Gets the history of the item on the given server.
