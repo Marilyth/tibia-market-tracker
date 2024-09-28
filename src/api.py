@@ -1,4 +1,4 @@
-from utils.data.market_values import MarketValues, ItemMetaData
+from utils.data.market_values import MarketValues, ItemMetaData, MarketBoard, MarketBoardTraderData
 from utils.wiki import EventData
 from utils.mongo_manager import MongoManager
 from utils.json_helper import json_to_object
@@ -288,6 +288,21 @@ async def get_world_data(server: str = None) -> List[WorldData]:
 
     return world_data
 
+@app.get("/market_board", dependencies=[Depends(bearer_auth)])
+@limiter.limit("1/5seconds;10/minute")
+async def get_market_board(request: Request, server: str, item_id: int) -> MarketBoard:
+    """Returns the market board for the given item.
+
+    Args:
+    - **server** (str): The (case sensitive) server of the item.
+    - **item_id** (int): The id of the item.
+    """
+    values = mongo_manager.get_market_board(server, item_id)
+    
+    await add_statistic(request, "market_board", server, item_id)
+    
+    return values
+
 @app.get("/generate_token", include_in_schema=False)
 async def generate_token(username: str, secret: str, days: int = 90) -> str:
     """Generates a token for the given username, if the secret is correct.
@@ -351,6 +366,19 @@ async def update_item_metadata(request: Request, secret: str, metadata: Annotate
     # Convert the metadata to an object.
     metadata = json_to_object(metadata)
     mongo_manager.update_item_metadata(metadata)
+
+@app.post("/update_market_boards", include_in_schema=False)
+async def update_market_boards(request: Request, secret: str, boards: Annotated[str, Body()]):
+    """Adds the given market boards to the database.
+
+    Args:
+        boards (str): The market boards to add in JSON format.
+    """
+    check_secret(secret)
+
+    # Convert the boards to an object.
+    boards = json_to_object(boards)
+    mongo_manager.update_market_boards(boards.server, boards.data)
 
 if __name__ == "__main__":
     log_config = uvicorn.config.LOGGING_CONFIG

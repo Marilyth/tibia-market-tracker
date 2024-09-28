@@ -1,5 +1,5 @@
 from utils.client import Client
-from utils.data.market_values import MarketValues
+from utils.data.market_values import MarketValues, MarketBoard, MarketBoardTraderData
 from utils.extraction.memory.memory_extraction import MemoryExtractor
 from utils.extraction.network.packet_sniffer import PacketSniffer
 from utils.extraction.network.packet_analyser import PacketAnalyser
@@ -46,9 +46,10 @@ class NetworkExtractor(Extractor):
         while manual_session:
             time.sleep(1)
 
-    def extract_market_values(self) -> List[MarketValues]:
+    def extract_market_values(self) -> Tuple[List[MarketValues], List[MarketBoard]]:
         items: List[MarketPacketValues] = []
         market_value_items: List[MarketValues] = []
+        market_boards: List[MarketBoard] = []
 
         for category in tqdm(market_categories[:19] + market_categories[-1:], desc=f"Category"):
             try:
@@ -62,6 +63,9 @@ class NetworkExtractor(Extractor):
         # Convert items to MarketValues objects.
         for item in items:
             market_values, historical_values = item.convert_to_marketvalues()
+            sellers = [MarketBoardTraderData(name=seller.name, amount=seller.amount, price=seller.price, time=seller.time) for seller in item.sellers].sort(key=lambda x: x.price, reverse=True)
+            buyers = [MarketBoardTraderData(name=buyer.name, amount=buyer.amount, price=buyer.price, time=buyer.time) for buyer in item.buyers].sort(key=lambda x: x.price, reverse=True)
+            market_boards.append(MarketBoard(id=item.id, sellers=sellers, buyers=buyers, update_time=time.time()))
 
             for historical_value in historical_values[::-1]:
                 market_value_items.append(historical_value)
@@ -69,7 +73,7 @@ class NetworkExtractor(Extractor):
             market_value_items.append(market_values)
             #print(f"Converted to market_value_item: {object_to_json(market_values)}")
 
-        return market_value_items
+        return market_value_items, market_boards
 
     def crawl_market(self, category_index: int, starting_index: int = 0) -> List[MarketValues]:
         """
