@@ -63,9 +63,9 @@ class NetworkExtractor(Extractor):
         # Convert items to MarketValues objects.
         for item in items:
             market_values, historical_values = item.convert_to_marketvalues()
-            sellers = [MarketBoardTraderData(name=seller.name, amount=seller.amount, price=seller.price, time=seller.time) for seller in item.sellers].sort(key=lambda x: x.price, reverse=True)
-            buyers = [MarketBoardTraderData(name=buyer.name, amount=buyer.amount, price=buyer.price, time=buyer.time) for buyer in item.buyers].sort(key=lambda x: x.price, reverse=True)
-            market_boards.append(MarketBoard(id=item.id, sellers=sellers, buyers=buyers, update_time=time.time()))
+            market_sellers = sorted([MarketBoardTraderData(name=seller.name, amount=seller.amount, price=seller.price, time=seller.timestamp) for seller in item.sell_offers], key=lambda x: x.price, reverse=True)
+            market_buyers = sorted([MarketBoardTraderData(name=buyer.name, amount=buyer.amount, price=buyer.price, time=buyer.timestamp) for buyer in item.buy_offers], key=lambda x: x.price, reverse=True)
+            market_boards.append(MarketBoard(id=item.id, sellers=market_sellers, buyers=market_buyers, update_time=time.time()))
 
             for historical_value in historical_values[::-1]:
                 market_value_items.append(historical_value)
