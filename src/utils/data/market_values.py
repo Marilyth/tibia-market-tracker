@@ -118,8 +118,11 @@ class MarketValues(BaseModel):
 
 
     def model_post_init(self, __context):
-        self.buy_offer: int = max(self.buy_offer, self.month_lowest_buy) if self.month_bought > 0 and self.month_lowest_buy > -1 else self.buy_offer
-        self.sell_offer: int = min(self.sell_offer, self.month_highest_sell) if self.month_sold > 0 and self.month_highest_sell > -1 else self.sell_offer
+        # Capping the buy and sell offers to the month highest and lowest values.
+        # Not used anymore.
+        #self.buy_offer: int = max(self.buy_offer, self.month_lowest_buy) if self.month_bought > 0 and self.month_lowest_buy > -1 else self.buy_offer
+        #self.sell_offer: int = min(self.sell_offer, self.month_highest_sell) if self.month_sold > 0 and self.month_highest_sell > -1 else self.sell_offer
+        
         self.is_full_data = self.is_full_data or self.active_traders != -1
         
         is_before_historical_data = self.time < 1705210000
