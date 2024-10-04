@@ -93,14 +93,14 @@ async def get_fullscan_async(server: str):
     try:
         await fullscan_lock.acquire()
 
-        if server not in full_scans or (time.time() - full_scans[server][0]) >= 3600:
+        if server not in full_scans:
             values = mongo_manager.get_latest_market_values(server)
 
             if not values:
                 return None, []
 
             values = sorted(values, key=lambda x: (x.sell_offers + x.buy_offers), reverse=True)
-            full_scans[server] = (time.time(), values)
+            full_scans[server] = values
     except Exception as e:
         print(f"Error while reading fullscan: {e}")
     finally:
@@ -213,6 +213,52 @@ async def get_market_values(request: Request, server: str, max_sell_price: int =
 
     return values[skip:skip+limit]
 
+@app.get("/batch_market_values", dependencies=[Depends(bearer_auth)])
+@limiter.limit("1/5seconds;10/minute")
+async def get_batch_market_values(request: Request, servers: str, max_sell_price: int = None, min_buy_price: int = None, max_buy_price: int = None,
+                            min_sell_price: int = None, max_flippers: int = None, min_flippers: int = None, skip: int = 0, limit: int = 100,
+                            item_ids: str = None) -> List[List[MarketValues]]:
+    """Returns the market values of the items which match the given criteria.
+
+    Args:
+    - **servers** (str): The (case sensitive) comma-seperated servers of the item.
+    - **item_ids** (List[int]): A comma seperated list of ids of the items. If not provided, all items are returned.
+    - **max_sell_price** (int): The maximum sell price of the item.
+    - **min_buy_price** (int): The minimum buy price of the item.
+    - **max_buy_price** (int): The maximum buy price of the item.
+    - **min_sell_price** (int): The minimum sell price of the item.
+    - **max_flippers** (int): The maximum number of flippers of the item.
+    - **min_flippers** (int): The minimum number of flippers of the item.
+    - **skip** (int): The number of items to skip. Defaults to 0.
+    - **limit** (int): The maximum number of items to return. Defaults to 100.
+    """
+    filters = []
+
+    if not item_ids:
+        if max_sell_price:
+            filters.append(lambda value: value.sell_offer <= max_sell_price)
+        if min_sell_price:
+            filters.append(lambda value: value.sell_offer >= min_sell_price)
+        if min_buy_price:
+            filters.append(lambda value: value.buy_offer >= min_buy_price)
+        if max_buy_price:
+            filters.append(lambda value: value.buy_offer <= max_buy_price)
+        if max_flippers:
+            filters.append(lambda value: value.active_traders <= max_flippers)
+        if min_flippers:
+            filters.append(lambda value: value.active_traders >= min_flippers)
+    else:
+        item_ids = [int(id) for id in item_ids.split(",")]
+        filters.append(lambda value: value.id in item_ids)
+        
+    values = []
+    for server in servers.split(","):
+        values.append([value for value in await get_fullscan_async(server.strip()) if all([filter(value) for filter in filters])][skip:skip+limit])
+
+    await add_statistic(request, "market_values", servers, ",".join([str(item_ids), str(max_sell_price), str(min_sell_price), str(max_buy_price), str(min_buy_price), str(max_flippers), str(min_flippers)]))
+
+    return values
+
 @app.get("/item_history", dependencies=[Depends(bearer_auth)])
 @limiter.limit("1/5seconds;10/minute")
 async def get_item_history(request: Request, server: str, item_id: int, start_days_ago: int = 30, end_days_ago: int = -1) -> List[MarketValues]:
@@ -238,6 +284,34 @@ async def get_item_history(request: Request, server: str, item_id: int, start_da
     values = [value for value in values if all([filter(value) for filter in filters])]
     
     await add_statistic(request, "item_history", server, item_id)
+
+    return values
+
+@app.get("/batch_item_history", dependencies=[Depends(bearer_auth)])
+@limiter.limit("1/5seconds;10/minute")
+async def get_batch_item_history(request: Request, servers: str, item_id: int, start_days_ago: int = 30, end_days_ago: int = -1) -> List[List[MarketValues]]:
+    """Returns the history of the given item.
+
+    Args:
+    - **servers** (str): The (case sensitive) comma-seperated servers of the item.
+    - **item_id** (int): The id of the item.
+    - **start_days_ago** (int, optional): The number of days ago to start the history from. Defaults to 30.
+    - **end_days_ago** (int, optional): The number of days ago to end the history at. Defaults to -1 (all).
+    """
+    filters = []
+
+    if start_days_ago > -1:
+        start_date = datetime.now() - timedelta(days=start_days_ago)
+        filters.append(lambda value: value.time >= start_date.timestamp())
+    if end_days_ago > -1:
+        end_date = datetime.now() - timedelta(days=end_days_ago)
+        filters.append(lambda value: value.time <= end_date.timestamp())
+        
+    values = []
+    for server in servers.split(","):
+        values.append([value for value in mongo_manager.get_item_history(item_id, server.strip()) if all([filter(value) for filter in filters])])
+    
+    await add_statistic(request, "item_history", servers, item_id)
 
     return values
 
@@ -274,17 +348,18 @@ async def get_item_metadata(request: Request, item_id: int = -1) -> List[ItemMet
     return metadata
 
 @app.get("/world_data", dependencies=[Depends(bearer_auth)])
-async def get_world_data(server: str = None) -> List[WorldData]:
+async def get_world_data(servers: str = None) -> List[WorldData]:
     """Returns the world data for all worlds. I.e. the last time the market was scanned.
     Optionally returns only the data for the given server.
 
     Args:
-    - **server** (str, optional): The (case sensitive) server to get the world data for. Defaults to None (all).
+    - **servers** (str, optional): The (case sensitive) comma-seperated servers to get the world data for. Defaults to None (all).
     """
     world_data = get_cached_world_data()
+    servers_list = [server.strip() for server in servers.split(",")] if servers else None
 
-    if server:
-        world_data = [world for world in world_data if world.name == server]
+    if servers_list:
+        world_data = [world for world in world_data if world.name in servers_list]
 
     return world_data
 
@@ -300,6 +375,23 @@ async def get_market_board(request: Request, server: str, item_id: int) -> Marke
     values = mongo_manager.get_market_board(item_id, server)
     
     await add_statistic(request, "market_board", server, item_id)
+    
+    return values
+
+@app.get("/batch_market_board", dependencies=[Depends(bearer_auth)])
+@limiter.limit("1/5seconds;10/minute")
+async def get_batch_market_board(request: Request, servers: str, item_id: int) -> List[MarketBoard]:
+    """Returns the market board for the given item.
+
+    Args:
+    - **servers** (str): The (case sensitive) comma-seperated servers of the item.
+    - **item_id** (int): The id of the item.
+    """
+    values = []
+    for server in servers.split(","):
+        values.append(mongo_manager.get_market_board(item_id, server.strip()))
+    
+    await add_statistic(request, "market_board", str(servers), item_id)
     
     return values
 
