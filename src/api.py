@@ -186,7 +186,7 @@ async def get_market_values(request: Request, server: str, max_sell_price: int =
     - **skip** (int): The number of items to skip. Defaults to 0.
     - **limit** (int): The maximum number of items to return. Defaults to 100.
     """
-    last_checked, values = await get_fullscan_async(server)
+    values = await get_fullscan_async(server)
 
     filters = []
 
@@ -213,7 +213,7 @@ async def get_market_values(request: Request, server: str, max_sell_price: int =
 
     return values[skip:skip+limit]
 
-@app.get("/batch_market_values", dependencies=[Depends(bearer_auth)])
+@app.get("/batch_market_values", include_in_schema=False, dependencies=[Depends(bearer_auth)])
 @limiter.limit("1/5seconds;10/minute")
 async def get_batch_market_values(request: Request, servers: str, max_sell_price: int = None, min_buy_price: int = None, max_buy_price: int = None,
                             min_sell_price: int = None, max_flippers: int = None, min_flippers: int = None, skip: int = 0, limit: int = 100,
@@ -287,7 +287,7 @@ async def get_item_history(request: Request, server: str, item_id: int, start_da
 
     return values
 
-@app.get("/batch_item_history", dependencies=[Depends(bearer_auth)])
+@app.get("/batch_item_history", include_in_schema=False, dependencies=[Depends(bearer_auth)])
 @limiter.limit("1/5seconds;10/minute")
 async def get_batch_item_history(request: Request, servers: str, item_id: int, start_days_ago: int = 30, end_days_ago: int = -1) -> List[List[MarketValues]]:
     """Returns the history of the given item.
@@ -378,7 +378,7 @@ async def get_market_board(request: Request, server: str, item_id: int) -> Marke
     
     return values
 
-@app.get("/batch_market_board", dependencies=[Depends(bearer_auth)])
+@app.get("/batch_market_board", include_in_schema=False, dependencies=[Depends(bearer_auth)])
 @limiter.limit("1/5seconds;10/minute")
 async def get_batch_market_board(request: Request, servers: str, item_id: int) -> List[MarketBoard]:
     """Returns the market board for the given item.
