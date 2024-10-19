@@ -20,7 +20,7 @@ from utils.data.world_data import WorldData
 from datetime import datetime, timedelta
 
 # Set up the API.
-limiter = Limiter(key_func=get_remote_address, default_limits=["1/2seconds"])
+limiter = Limiter(key_func=get_remote_address, default_limits=["1/2seconds"], headers_enabled=True)
 bearer_scheme = HTTPBearer()
 app = FastAPI()
 app.state.limiter = limiter
@@ -156,7 +156,7 @@ async def middleware(request: Request, call_next):
     return response
 
 @app.get("/add_statistic", include_in_schema=False, dependencies=[Depends(bearer_auth)])
-async def add_statistic(request: Request, identifier: str, sub_identifier: str = None, value: str = None):
+async def add_statistic(request: Request, response: Response, identifier: str, sub_identifier: str = None, value: str = None):
     """Adds the given statistic to the database.
 
     Args:
@@ -169,7 +169,7 @@ async def add_statistic(request: Request, identifier: str, sub_identifier: str =
 # Set up API endpoints.
 @app.get("/market_values", dependencies=[Depends(bearer_auth)])
 @limiter.limit("1/5seconds;10/minute")
-async def get_market_values(request: Request, server: str, max_sell_price: int = None, min_buy_price: int = None, max_buy_price: int = None,
+async def get_market_values(request: Request, response: Response, server: str, max_sell_price: int = None, min_buy_price: int = None, max_buy_price: int = None,
                             min_sell_price: int = None, max_flippers: int = None, min_flippers: int = None, skip: int = 0, limit: int = 100,
                             item_ids: str = None) -> List[MarketValues]:
     """Returns the market values of the items which match the given criteria.
@@ -215,7 +215,7 @@ async def get_market_values(request: Request, server: str, max_sell_price: int =
 
 @app.get("/batch_market_values", include_in_schema=False, dependencies=[Depends(bearer_auth)])
 @limiter.limit("1/5seconds;10/minute")
-async def get_batch_market_values(request: Request, servers: str, max_sell_price: int = None, min_buy_price: int = None, max_buy_price: int = None,
+async def get_batch_market_values(request: Request, response: Response, servers: str, max_sell_price: int = None, min_buy_price: int = None, max_buy_price: int = None,
                             min_sell_price: int = None, max_flippers: int = None, min_flippers: int = None, skip: int = 0, limit: int = 100,
                             item_ids: str = None) -> List[List[MarketValues]]:
     """Returns the market values of the items which match the given criteria.
@@ -261,7 +261,7 @@ async def get_batch_market_values(request: Request, servers: str, max_sell_price
 
 @app.get("/item_history", dependencies=[Depends(bearer_auth)])
 @limiter.limit("1/5seconds;10/minute")
-async def get_item_history(request: Request, server: str, item_id: int, start_days_ago: int = 30, end_days_ago: int = -1) -> List[MarketValues]:
+async def get_item_history(request: Request, response: Response, server: str, item_id: int, start_days_ago: int = 30, end_days_ago: int = -1) -> List[MarketValues]:
     """Returns the history of the given item.
 
     Args:
@@ -289,7 +289,7 @@ async def get_item_history(request: Request, server: str, item_id: int, start_da
 
 @app.get("/batch_item_history", include_in_schema=False, dependencies=[Depends(bearer_auth)])
 @limiter.limit("1/5seconds;10/minute")
-async def get_batch_item_history(request: Request, servers: str, item_id: int, start_days_ago: int = 30, end_days_ago: int = -1) -> List[List[MarketValues]]:
+async def get_batch_item_history(request: Request, response: Response, servers: str, item_id: int, start_days_ago: int = 30, end_days_ago: int = -1) -> List[List[MarketValues]]:
     """Returns the history of the given item.
 
     Args:
@@ -317,7 +317,7 @@ async def get_batch_item_history(request: Request, servers: str, item_id: int, s
 
 @app.get("/events", dependencies=[Depends(bearer_auth)])
 @limiter.limit("1/5seconds;10/minute")
-async def get_events(request: Request, start_days_ago: int = 30, end_days_ago: int = -1) -> List[EventData]:
+async def get_events(request: Request, response: Response, start_days_ago: int = 30, end_days_ago: int = -1) -> List[EventData]:
     """Returns all tracked tibia events so far.
 
     Args:
@@ -337,7 +337,7 @@ async def get_events(request: Request, start_days_ago: int = 30, end_days_ago: i
 
 @app.get("/item_metadata", dependencies=[Depends(bearer_auth)])
 @limiter.limit("1/5seconds;10/minute")
-async def get_item_metadata(request: Request, item_id: int = -1) -> List[ItemMetaData]:
+async def get_item_metadata(request: Request, response: Response, item_id: int = -1) -> List[ItemMetaData]:
     """Returns the metadata for the given item, or all items if no item id is given.
 
     Args:
@@ -365,7 +365,7 @@ async def get_world_data(servers: str = None) -> List[WorldData]:
 
 @app.get("/market_board", dependencies=[Depends(bearer_auth)])
 @limiter.limit("1/5seconds;10/minute")
-async def get_market_board(request: Request, server: str, item_id: int) -> MarketBoard:
+async def get_market_board(request: Request, response: Response, server: str, item_id: int) -> MarketBoard:
     """Returns the market board for the given item.
 
     Args:
@@ -380,7 +380,7 @@ async def get_market_board(request: Request, server: str, item_id: int) -> Marke
 
 @app.get("/batch_market_board", include_in_schema=False, dependencies=[Depends(bearer_auth)])
 @limiter.limit("1/5seconds;10/minute")
-async def get_batch_market_board(request: Request, servers: str, item_id: int) -> List[MarketBoard]:
+async def get_batch_market_board(request: Request, response: Response, servers: str, item_id: int) -> List[MarketBoard]:
     """Returns the market board for the given item.
 
     Args:
