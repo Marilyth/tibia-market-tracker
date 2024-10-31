@@ -18,6 +18,8 @@ import time
 from utils.jwt_helper import JWTHelper
 from utils.data.world_data import WorldData
 from datetime import datetime, timedelta
+from contextvars import ContextVar
+
 
 # Set up the API.
 limiter = Limiter(key_func=get_remote_address, default_limits=["1/2seconds"], headers_enabled=True)
@@ -48,6 +50,8 @@ world_data: List[WorldData] = None
 jwt_helper = JWTHelper(config["jwtSecret"])
 mongo_manager: MongoManager = MongoManager(config["mongodbConnectionString"])
 
+request_var: ContextVar[str] = ContextVar("request_user", default=None)
+
 # Helpers.
 def check_secret(secret: str):
     """Checks if the given secret is valid.
@@ -63,6 +67,20 @@ def check_secret(secret: str):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid secret."
         )
+
+def get_ratelimit() -> str:
+    """Gets the ratelimit for the given request.
+
+    Returns:
+        str: The ratelimit for the given request.
+    """
+    request = request_var.get()
+    username, _ = jwt_helper.verify_token(request.headers["Authorization"].split(" ")[1], verify_expired=False)
+
+    if username == "discord-bot":
+        return "200/5seconds"
+
+    return "1/5seconds;10/minute"
 
 def bearer_auth(credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     """Checks if the given credentials are valid.
@@ -146,7 +164,9 @@ async def middleware(request: Request, call_next):
     start_time = time.time()
 
     # Actual request.
+    token = request_var.set(request)
     response = await call_next(request)
+    request_var.reset(token)
 
     # After.
     log_request_result(request, response)
@@ -168,7 +188,7 @@ async def add_statistic(request: Request, response: Response, identifier: str, s
 
 # Set up API endpoints.
 @app.get("/market_values", dependencies=[Depends(bearer_auth)])
-@limiter.limit("1/5seconds;10/minute")
+@limiter.limit(get_ratelimit)
 async def get_market_values(request: Request, response: Response, server: str, max_sell_price: int = None, min_buy_price: int = None, max_buy_price: int = None,
                             min_sell_price: int = None, max_flippers: int = None, min_flippers: int = None, skip: int = 0, limit: int = 100,
                             item_ids: str = None) -> List[MarketValues]:
@@ -214,7 +234,7 @@ async def get_market_values(request: Request, response: Response, server: str, m
     return values[skip:skip+limit]
 
 @app.get("/batch_market_values", include_in_schema=False, dependencies=[Depends(bearer_auth)])
-@limiter.limit("1/5seconds;10/minute")
+@limiter.limit(get_ratelimit)
 async def get_batch_market_values(request: Request, response: Response, servers: str, max_sell_price: int = None, min_buy_price: int = None, max_buy_price: int = None,
                             min_sell_price: int = None, max_flippers: int = None, min_flippers: int = None, skip: int = 0, limit: int = 100,
                             item_ids: str = None) -> List[List[MarketValues]]:
@@ -260,7 +280,7 @@ async def get_batch_market_values(request: Request, response: Response, servers:
     return values
 
 @app.get("/item_history", dependencies=[Depends(bearer_auth)])
-@limiter.limit("1/5seconds;10/minute")
+@limiter.limit(get_ratelimit)
 async def get_item_history(request: Request, response: Response, server: str, item_id: int, start_days_ago: int = 30, end_days_ago: int = -1) -> List[MarketValues]:
     """Returns the history of the given item.
 
@@ -288,7 +308,7 @@ async def get_item_history(request: Request, response: Response, server: str, it
     return values
 
 @app.get("/batch_item_history", include_in_schema=False, dependencies=[Depends(bearer_auth)])
-@limiter.limit("1/5seconds;10/minute")
+@limiter.limit(get_ratelimit)
 async def get_batch_item_history(request: Request, response: Response, servers: str, item_id: int, start_days_ago: int = 30, end_days_ago: int = -1) -> List[List[MarketValues]]:
     """Returns the history of the given item.
 
@@ -316,7 +336,7 @@ async def get_batch_item_history(request: Request, response: Response, servers: 
     return values
 
 @app.get("/events", dependencies=[Depends(bearer_auth)])
-@limiter.limit("1/5seconds;10/minute")
+@limiter.limit(get_ratelimit)
 async def get_events(request: Request, response: Response, start_days_ago: int = 30, end_days_ago: int = -1) -> List[EventData]:
     """Returns all tracked tibia events so far.
 
@@ -336,7 +356,7 @@ async def get_events(request: Request, response: Response, start_days_ago: int =
     return events
 
 @app.get("/item_metadata", dependencies=[Depends(bearer_auth)])
-@limiter.limit("1/5seconds;10/minute")
+@limiter.limit(get_ratelimit)
 async def get_item_metadata(request: Request, response: Response, item_id: int = -1) -> List[ItemMetaData]:
     """Returns the metadata for the given item, or all items if no item id is given.
 
@@ -364,7 +384,7 @@ async def get_world_data(servers: str = None) -> List[WorldData]:
     return world_data
 
 @app.get("/market_board", dependencies=[Depends(bearer_auth)])
-@limiter.limit("1/5seconds;10/minute")
+@limiter.limit(get_ratelimit)
 async def get_market_board(request: Request, response: Response, server: str, item_id: int) -> MarketBoard:
     """Returns the market board for the given item.
 
@@ -373,13 +393,13 @@ async def get_market_board(request: Request, response: Response, server: str, it
     - **item_id** (int): The id of the item.
     """
     values = mongo_manager.get_market_board(item_id, server)
-    
+
     await add_statistic(request, "market_board", server, item_id)
-    
+
     return values
 
 @app.get("/batch_market_board", include_in_schema=False, dependencies=[Depends(bearer_auth)])
-@limiter.limit("1/5seconds;10/minute")
+@limiter.limit(get_ratelimit)
 async def get_batch_market_board(request: Request, response: Response, servers: str, item_id: int) -> List[MarketBoard]:
     """Returns the market board for the given item.
 
@@ -390,9 +410,9 @@ async def get_batch_market_board(request: Request, response: Response, servers: 
     values = []
     for server in servers.split(","):
         values.append(mongo_manager.get_market_board(item_id, server.strip()))
-    
+
     await add_statistic(request, "market_board", str(servers), item_id)
-    
+
     return values
 
 @app.get("/generate_token", include_in_schema=False)
