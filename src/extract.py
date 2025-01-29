@@ -16,14 +16,22 @@ dry_run: bool = False
 api_url: str = "https://api.tibiamarket.top"
 config: dict = None
 
-def is_tibia_running() -> bool:
+def is_tibia_running(kill: bool = True) -> bool:
     """
     Returns if Tibia is running.
+
+    :param kill: If True, kills the Tibia process if it was started over 90 minutes ago.
     """
     for proc in psutil.process_iter():
         try:
             if proc.name() == "client":
-                return True
+                if kill:
+                    process_runtime = time.time() - proc.create_time()
+                    if process_runtime > 90 * 60:
+                        proc.kill()
+                        return False
+                else:
+                    return True
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             pass
 
