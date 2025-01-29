@@ -9,10 +9,24 @@ import traceback
 from install_tibia import install_tibia, download_package
 import requests
 import datetime
+import psutil
+import time
 
 dry_run: bool = False
 api_url: str = "https://api.tibiamarket.top"
 config: dict = None
+
+def is_tibia_running() -> bool:
+    """
+    Returns if Tibia is running.
+    """
+    for proc in psutil.process_iter():
+        try:
+            if "Tibia" in proc.name():
+                return True
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            pass
+    return False
 
 def update_events():
     """
@@ -98,6 +112,10 @@ def do_market_search(email: str, password: str, char_index: int, virtual_display
 
                 requests.post(f"{api_url}/update_market_boards?secret={config['jwtSecret']}", json=object_to_json({"server": client.character_server, "data": batch}), 
                             headers={"Content-Type": "application/json", "Content-Encoding": "gzip"})
+
+    while is_tibia_running():
+        print("Tibia is running. Waiting for it to close.")
+        time.sleep(60)
 
     if virtual_display:
         from pyvirtualdisplay import Display
