@@ -22,10 +22,11 @@ def is_tibia_running() -> bool:
     """
     for proc in psutil.process_iter():
         try:
-            if "Tibia" in proc.name():
+            if proc.name() == "client":
                 return True
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             pass
+
     return False
 
 def update_events():
