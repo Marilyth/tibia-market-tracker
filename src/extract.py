@@ -1,16 +1,16 @@
-from utils.wiki import Wiki
 import os
+import time
+import sys
+import traceback
+import datetime
 import json
+import requests
+import psutil
+from install_tibia import install_tibia, download_package
+from utils.wiki import Wiki
 from utils.json_helper import object_to_json, json_to_object
 from utils.data.market_values import ItemMetaData
 from utils.schedule import Schedule
-import sys
-import traceback
-from install_tibia import install_tibia, download_package
-import requests
-import datetime
-import psutil
-import time
 
 dry_run: bool = False
 api_url: str = "https://api.tibiamarket.top"
@@ -22,13 +22,25 @@ def is_tibia_running(kill: bool = True) -> bool:
 
     :param kill: If True, kills the Tibia process if it was started over 90 minutes ago.
     """
+    tracker_processes = []
+
     for proc in psutil.process_iter():
         try:
-            if proc.name() == "client":
+            proc_call_string = " ".join(proc.cmdline())
+
+            if "python" in proc_call_string and __file__ in proc_call_string:
+                tracker_processes.append(proc)
+
+            if "Tibia" in proc_call_string:
                 if kill:
                     process_runtime = time.time() - proc.create_time()
                     if process_runtime > 90 * 60:
                         proc.kill()
+
+                        # Kill the tracker processes as well.
+                        for tracker in tracker_processes:
+                            tracker.kill()
+
                         return False
                 else:
                     return True
