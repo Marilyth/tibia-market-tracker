@@ -42,8 +42,8 @@ def is_tibia_running(kill: bool = True) -> bool:
                             tracker.kill()
 
                         return False
-                else:
-                    return True
+
+                return True
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             pass
 
@@ -137,7 +137,7 @@ def do_market_search(email: str, password: str, char_index: int, virtual_display
     while is_tibia_running():
         print("Tibia is running. Waiting for it to close.")
         time.sleep(60)
-
+    exit(0)
     if virtual_display:
         from pyvirtualdisplay import Display
         with Display(visible=virtual_display_visible, size=(1600, 900)):
