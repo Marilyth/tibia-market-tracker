@@ -22,6 +22,7 @@ def is_tibia_running(kill: bool = True) -> bool:
 
     :param kill: If True, kills the Tibia process if it was started over 90 minutes ago.
     """
+    xephyr_processes = []
     tracker_processes = []
 
     for proc in psutil.process_iter():
@@ -30,6 +31,9 @@ def is_tibia_running(kill: bool = True) -> bool:
 
             if "python" in proc_call_string and __file__ in proc_call_string:
                 tracker_processes.append(proc)
+
+            if "Xephyr" in proc_call_string:
+                xephyr_processes.append(proc)
 
             if "Tibia" in proc_call_string:
                 if kill:
@@ -40,6 +44,9 @@ def is_tibia_running(kill: bool = True) -> bool:
                         # Kill the tracker processes as well.
                         for tracker in tracker_processes:
                             tracker.kill()
+
+                        for xephyr in xephyr_processes:
+                            xephyr.kill()
 
                         return False
 
