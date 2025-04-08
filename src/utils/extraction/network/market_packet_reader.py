@@ -46,7 +46,7 @@ class MarketPacketReader:
         self.result.details = []
         
         # Go through each category. The amount can change every update.
-        for i in range(23):
+        for i in range(25):
             category_length = struct.unpack("H", self._read_bytes(2))[0]
             category_string = struct.unpack(f"{category_length}s", self._read_bytes(category_length))[0].decode("utf-8")
             self.result.details.append(category_string)
