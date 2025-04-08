@@ -193,7 +193,7 @@ class PacketAnalyser:
 
         # zlib does not work with Tibia packets, so use the zlib.net C# library.
         if not sender in self.decompressor:
-            decompressor_location = os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "decompressor", "bin", "Debug", "net7.0", "decompressor.dll")
+            decompressor_location = os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "decompressor", "bin", "Debug", "net8.0", "decompressor.dll")
             self.decompressor[sender] = subprocess.Popen(["dotnet", decompressor_location, data_str], stderr=subprocess.PIPE, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
             os.set_blocking(self.decompressor[sender].stdout.fileno(), False)
             os.set_blocking(self.decompressor[sender].stderr.fileno(), False)
