@@ -35,7 +35,8 @@ market_categories = [
     MarketCategory(20, "Weapons: Axes"),
     MarketCategory(21, "Weapons: Clubs"),
     MarketCategory(22, "Weapons: Distance"),
-    MarketCategory(23, "Weapons: Swords"),
-    MarketCategory(24, "Weapons: Wands"),
-    MarketCategory(25, "Weapons: All"),
+    MarketCategory(23, "Weapons: Fist"),
+    MarketCategory(24, "Weapons: Swords"),
+    MarketCategory(25, "Weapons: Wands"),
+    MarketCategory(26, "Weapons: All"),
 ]
