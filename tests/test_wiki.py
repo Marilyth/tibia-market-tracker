@@ -1,6 +1,6 @@
 import pytest
 from datetime import datetime
-from utils.tibia_wiki import EventData, Wiki
+from utils.wiki import EventData, Wiki
 
 
 class TestWiki:
@@ -31,18 +31,41 @@ class TestWiki:
 
         # Assert
         assert len(items) > 3100
-
-    def test_GetEvents_WhenCalled_ReturnsAtLeast20Days(self):
+    
+    def test_GetMarketableProtoItems_ReturnsExpected(self):
         # Act
-        events = self.wiki.get_events()
+        items = self.wiki.get_marketable_proto_items()
 
         # Assert
-        assert len(events) > 20
-
-    def test_GetEvents_WhenCalledWithAfterDate_ReturnsDaysAfterDate(self):
+        assert len(items) > 3600 and len(items) < 30000
+        assert any([item.name == "fire sword" for item in items.values()])
+        assert not any([item.name == "crystal bed" for item in items.values()])
+        
+    def test_GenerateGifForItem_WhenGivenValidItem_DoesntThrow(self):
         # Act
-        events = self.wiki.get_events()
-        after_events = self.wiki.get_events(events[-2].date)
+        self.wiki.generate_gif_for_item(22118)
+        
+    def test_GenerateGifForAllItems_WhenCalled_DoesntThrow(self):
+        # Arrange.
+        items = self.wiki.get_marketable_proto_items()
+        
+        # Act.
+        for item in items.values():
+            self.wiki.generate_gif_for_item(item.id)
+    
+    def test_GetEventData_ReturnsExpected(self):
+        # Act
+        event = self.wiki.get_event_data()
+        today = datetime.today()
 
         # Assert
-        assert len(after_events) == 1
+        assert event.date.year == today.year
+        assert event.date.month == today.month
+        assert event.date.day == today.day
+
+    def test_GetItemIds_ReturnsExpected(self):
+        # Act
+        ids = self.wiki.get_item_ids()
+
+        # Assert
+        assert len(ids) > 3100

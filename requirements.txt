@@ -16,3 +16,6 @@ psutil
 PyJWT
 scapy
 xtea
+protobuf
+pydantic
+flask

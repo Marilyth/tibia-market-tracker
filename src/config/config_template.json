@@ -1,0 +1,8 @@
+{
+    "mongodbConnectionString": "",
+    "jwtSecret": "",
+    "apiDomain": "",
+    "apiPort": 8001,
+    "useVirtualDisplay": false,
+    "showVirtualDisplay": false
+}

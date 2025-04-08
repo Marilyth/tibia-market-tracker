@@ -11,7 +11,7 @@ WORKDIR /app/src
 RUN apt-get update && \ 
     apt-get install -y python3-dev python3-pip python3-tk\
     libpython3-dev tesseract-ocr tesseract-ocr-deu scrot libqt5gui5 \
-    xvfb xserver-xephyr tigervnc-standalone-server x11-utils gnumeric &&\
+    xvfb xserver-xephyr tigervnc-standalone-server x11-utils libxcb-cursor0 gnumeric &&\
     pip3 install -r /app/requirements.txt &&\
     apt-get clean
 

@@ -3,6 +3,7 @@ uvicorn
 slowapi
 pymongo
 tqdm
-jwt
 PyJWT
 requests
+protobuf
+pydantic

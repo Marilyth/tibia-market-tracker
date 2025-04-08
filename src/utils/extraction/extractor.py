@@ -1,5 +1,5 @@
 from utils.client import Client
-from utils.market_values import MarketValues
+from utils.data.market_values import MarketValues
 from abc import ABCMeta, abstractmethod
 from typing import *
 

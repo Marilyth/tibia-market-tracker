@@ -1,7 +1,8 @@
 from utils.client import Client
 import utils.extraction.ocr.ocr as screenshot
-from utils.market_values import MarketValues
+from utils.data.market_values import MarketValues
 from utils.extraction.extractor import Extractor
+from utils.human_movement import wait_like_human, repeat_like_human
 from typing import *
 import pyautogui
 import time
@@ -28,17 +29,11 @@ class OCRExtractor(Extractor):
         Literally searches for the given item in the market, takes screenshots and uses OCR to read the values.
         """
         try:
-            self.client.open_market()
-
             pyautogui.hotkey("ctrl", "z")
-            pyautogui.typewrite(name)
+            pyautogui.typewrite(name, 0.1)
             
             item_position = 1
-            
-            for i in range(item_position):
-                pyautogui.press("down")
-                 # Give Tibia some time to load new values.
-                time.sleep(0.45)
+            repeat_like_human(lambda: pyautogui.press("down"), item_position, 0.5)
             
             def parse_value(value: str) -> int:
                 if value.isnumeric():
@@ -98,7 +93,7 @@ class OCRExtractor(Extractor):
                 buy_offer, sell_offer, approx_offers = scan_offers()
                 self.client.market_tab = "offers"
 
-            values = MarketValues(name, time.time(), sell_offer, buy_offer, average_sell_offer, average_buy_offer, sell_amount, buy_amount, highest_sell_offer, lowest_buy_offer, approx_offers, -1, -1, lowest_sell_offer, highest_buy_offer, id if id else None)
+            values = MarketValues(time.time(), sell_offer, buy_offer, average_sell_offer, average_buy_offer, sell_amount, buy_amount, highest_sell_offer, lowest_buy_offer, approx_offers, -1, -1, lowest_sell_offer, highest_buy_offer, id if id else None)
             
             return values
         except pyautogui.FailSafeException as e:
@@ -107,4 +102,4 @@ class OCRExtractor(Extractor):
             self.client._add_to_log(f"Market search failed for {name}: {e}")
             traceback.print_exc()
 
-            return MarketValues(name, time.time(), -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1)
+            return MarketValues(time.time(), -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1)

@@ -1,16 +1,24 @@
 import pyautogui
 import subprocess
 import time
+from random import uniform
 from typing import *
 import os
 from utils.extraction.memory.memory_reader import MemoryReader
 import shutil
+from utils.human_movement import move_mouse_like_human, wait_like_human, repeat_like_human
 
 
 class Client:
-    def __init__(self, executable_location: str, email: str, password: str):
+    def __init__(self, executable_location: str, email: str, password: str, char_index: int):
         '''
         The Tibia client, and all required functionality.
+
+        Args:
+            executable_location (str): The location of the Tibia executable.
+            email (str): The email of the account to log in with.
+            password (str): The password of the account to log in with.
+            char_index (int): The 0-based index of the character to log in with.
         '''
         pyautogui.PAUSE = 0.1
         self.tibia_data_location = os.path.join(os.path.expanduser("~"), ".local", "share", "CipSoft GmbH", "Tibia")
@@ -18,6 +26,7 @@ class Client:
         self.tibia_executable_location = executable_location
         self.email = email
         self.password = password
+        self.char_index = char_index
 
         self.tibia: subprocess.Popen = None
         self.tibia_process_id = None
@@ -72,8 +81,11 @@ class Client:
         """
         Checks if the update or install button exists, and if so, installs or updates and starts Tibia.
         """
-        if self._wait_until_find("images/Install.png", click=True, timeout=5, cache=False)[0] == -1:
-            self._wait_until_find("images/Update.png", click=True, timeout=10, cache=False)
+        # Don't click on the play button yet. We first need to replace the config file after the update.
+        if self._wait_until_find("images/PlayButton.png", click=False, cache=False, timeout=5)[0] == -1:
+            # No playbutton exists, so Tibia must be updated or running first.
+            if self._wait_until_find("images/Update.png", click=True, timeout=5, cache=False)[0] == -1:
+                self._wait_until_find("images/Install.png", click=True, timeout=5, cache=False)
 
         # Create ~/.local/share/CipSoft Gmbh/Tibia/packages/config if it doesn't exist.
         os.makedirs(self.tibia_settings_location, exist_ok=True)
@@ -83,7 +95,7 @@ class Client:
 
         # Wait until update is done, and click play button.
         self._wait_until_find("images/PlayButton.png", click=True, cache=False, timeout=600)
-        time.sleep(5)
+        wait_like_human(5)
 
     def _update_kick_timer(self):
         """Updates the timer for the next required wiggle. I.e. the time until the character would get kicked for being afk.
@@ -94,23 +106,22 @@ class Client:
         """
         Logs into the provided account, and selects the provided character.
         """
-        password_position = self._wait_until_find("images/PasswordField.png", click=True, cache=False)
-        pyautogui.typewrite(self.password)
-
-        self._add_to_log("Finding email field")
-        email_position = self._wait_until_find("images/EmailField.png", click=True, cache=False)
-        pyautogui.typewrite(self.email)
+        # In case the client crashed, cancel the error report dialog.
+        self._wait_until_find("images/Cancel.png", timeout=5, click=True, cache=False, coordinate_deviation=2)
+        self._wait_until_find("images/PasswordField.png", click=False, cache=False, coordinate_deviation=2)
+        pyautogui.typewrite(self.email, 0.1)
+        pyautogui.press("tab")
+        wait_like_human(0.2)
+        pyautogui.typewrite(self.password, 0.1)
+        wait_like_human(0.2)
 
         pyautogui.press("enter")
 
         # Go ingame.
         self._wait_until_find("images/CharacterSlot.png", click=True, cache=False)
-        bot_character_index = 0
 
         # If desired, select another character than the first one.
-        for i in range(bot_character_index):
-            pyautogui.press("down")
-            time.sleep(0.1)
+        repeat_like_human(lambda: pyautogui.press("down"), self.char_index)
 
         pyautogui.press("enter")
         
@@ -119,6 +130,10 @@ class Client:
         self._add_to_log("Ingame.")
         self._update_kick_timer()
         self.tibia_process_id = MemoryReader.get_process_id("client")[-1]
+
+        # Scroll into minimap.
+        self._wait_until_find("images/ZoomMinimap.png", cache=False, click=True, exact=True, coordinate_deviation=2)
+        repeat_like_human(lambda: pyautogui.click(), 5)
 
         tibia_output = self.get_tibia_process_output()
         self.character_name = tibia_output.split("Charakter \"")[-1].split("\"")[0]
@@ -130,8 +145,19 @@ class Client:
         """
         Closes Tibia unsafely. Probably better to log out before.
         """
-        pyautogui.hotkey("alt", "f4")
-        self._wait_until_find("images/Exit.png", click=True, cache=False, timeout=5)
+        pyautogui.press("escape")
+        wait_like_human(0.2)
+        pyautogui.press("escape")
+        wait_like_human(0.2)
+
+        self._wait_until_find("images/LeaveButton.png", click=True, cache=False, timeout=5)
+        self._wait_until_find("images/YesButton.png", click=True, cache=False, timeout=5)
+        
+        # Can't exit while characters are displayed...
+        wait_like_human(2)
+        pyautogui.press("escape")
+
+        self._wait_until_find("images/LeaveButton.png", click=True, cache=False, timeout=5)
 
     def open_market(self):
         """
@@ -147,7 +173,8 @@ class Client:
                     self._add_to_log("Opening depot")
 
                     # Needs to be adjusted if the resolution is not 1600x900 fullscreen!
-                    pyautogui.leftClick(645, 320)
+                    move_mouse_like_human(645, 345)
+                    pyautogui.leftClick()
 
                     # Tried to open depot, check if it worked.
                     if self._wait_until_find("images/Market.png", click=True, cache=False, timeout=5)[0] == -1:
@@ -167,10 +194,25 @@ class Client:
         found_depots = len(list(pyautogui.locateAllOnScreen("images/DepotTile.png")))
         self._add_to_log(f"Found {found_depots} depots.")
 
-        for i in range(len(list(pyautogui.locateAllOnScreen("images/DepotTile.png")))):
-            print(f"Trying depot {i}...")
-            depot_position = list(pyautogui.locateAllOnScreen("images/DepotTile.png"))[i]
-            pyautogui.leftClick(depot_position)
+        for i in range(found_depots):
+            move_mouse_like_human(20, 20)
+            depots = list(pyautogui.locateAllOnScreen("images/DepotTile.png"))
+            depot_index = i
+
+            # If we are now obscuring the depot, try the next one.
+            if len(depots) < found_depots:
+                depot_index -= 1
+            
+            depot_index = min(depot_index, len(depots) - 1)
+            print(f"Trying depot {i} ({depot_index})...")
+
+            # Order by x and then y coordinate, so we click the top left depot first.
+            depots = sorted(depots, key=lambda x: (x[0], x[1]))
+
+            depot_position = pyautogui.center(depots[depot_index])
+            move_mouse_like_human(depot_position[0], depot_position[1], 0) # Move to the center of the depot tile.
+            pyautogui.leftClick()
+
             if try_open_market():
                 return True
 
@@ -185,9 +227,9 @@ class Client:
         self._add_to_log("Closing market...")
         pyautogui.PAUSE = 0.1
         pyautogui.press("escape")
-        time.sleep(0.1)
+        wait_like_human(0.2)
         pyautogui.press("escape")
-        time.sleep(0.1)
+        wait_like_human(0.2)
         self.clear_cache()
 
     def clear_cache(self):
@@ -203,13 +245,13 @@ class Client:
         """
         self._add_to_log("Wiggling character...")
         pyautogui.hotkey("ctrl", "right")
-        time.sleep(0.5)
+        wait_like_human(0.5)
         pyautogui.hotkey("ctrl", "left")
-        time.sleep(0.5)
+        wait_like_human(0.5)
         self.market_tab = "offers"
         self._update_kick_timer()
 
-    def _wait_until_find(self, image: str, timeout: int = 60, click: bool = False, cache: bool = True, exact: bool = False, throw_on_timeout: bool = False) -> Tuple[int, int]:
+    def _wait_until_find(self, image: str, timeout: int = 60, click: bool = False, cache: bool = True, exact: bool = False, throw_on_timeout: bool = False, coordinate_deviation: int = 5) -> Tuple[int, int]:
         start_time = time.time()
 
         while time.time() - start_time < timeout:
@@ -218,7 +260,7 @@ class Client:
                 position = self.position_cache[image]
             else:
                 self._add_to_log(f"Looking for {image}...")
-                pyautogui.moveTo(20, 20)
+                move_mouse_like_human(20, 20)
                 if not exact:
                     position = pyautogui.locateCenterOnScreen(image, grayscale=True, confidence=0.9)
                 else:
@@ -230,11 +272,12 @@ class Client:
                 self._add_to_log(f"Found {image} at {position}.")
                 if click:
                     self._add_to_log(f"Clicking {image}...")
-                    pyautogui.leftClick(position)
+                    move_mouse_like_human(position[0], position[1], coordinate_deviation)
+                    pyautogui.leftClick()
                     
                 return position
 
-            time.sleep(0.2)
+            wait_like_human(0.3)
         
         self._add_to_log(f"Finding {image} failed.")
         if throw_on_timeout:

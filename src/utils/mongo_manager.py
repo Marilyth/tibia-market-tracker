@@ -1,6 +1,7 @@
 import pymongo
-from utils.market_values import MarketValues
-from utils.wiki import EventData
+from utils.data.market_values import MarketValues, NPCSaleData, ItemMetaData, MarketBoard, MarketBoardTraderData
+from utils.wiki import EventData, Wiki
+from utils.data.world_data import WorldData
 from typing import List
 import os
 from tqdm import tqdm
@@ -8,10 +9,10 @@ from datetime import datetime
 
 
 class ItemPricesCollection:
-    def __init__(self, name: str, id: int):
-        self.name = name
+    def __init__(self, id: int, server: str):
         self.id = id
-        self.history = {}
+        self.server = server
+        self.history = []
 
     @staticmethod
     def MarketValues_to_mongo_dict(market_values: MarketValues) -> dict:
@@ -24,10 +25,39 @@ class ItemPricesCollection:
             dict: A dictionary containing the name and history of the MarketValues object.
         """
         value_dict = market_values.__dict__
-        value_dict.pop("name")
         value_dict.pop("id")
+        
+        # Remove all fields that have "empty" values.
+        # They will be inferred when the data is loaded using the is_full_data flag.
+        for key in list(value_dict.keys()):
+            if value_dict[key] == 0 or value_dict[key] == -1 or value_dict[key] == "":
+                value_dict.pop(key)
 
         return value_dict
+    
+    @staticmethod
+    def NPCSaleData_to_mongo_dict(npc_sale_data: NPCSaleData) -> dict:
+        """Converts a NPCSaleData object to a dictionary for storage in MongoDB.
+
+        Args:
+            npc_sale_data (NPCSaleData): The NPCSaleData object to convert.
+
+        Returns:
+            dict: A dictionary containing the name, price and location of the NPCSaleData object.
+        """
+        return npc_sale_data.__dict__
+    
+    @staticmethod
+    def NPCSaleData_to_mongo_dict(npc_sale_data: NPCSaleData) -> dict:
+        """Converts a NPCSaleData object to a dictionary for storage in MongoDB.
+
+        Args:
+            npc_sale_data (NPCSaleData): The NPCSaleData object to convert.
+
+        Returns:
+            dict: A dictionary containing the name, price and location of the NPCSaleData object.
+        """
+        return npc_sale_data.__dict__
     
     def to_mongo_dict(self) -> dict:
         """Converts the ItemPricesCollection to a dictionary for storage in MongoDB.
@@ -35,80 +65,90 @@ class ItemPricesCollection:
         Returns:
             dict: A dictionary containing the name and history of the ItemPricesCollection.
         """
-        history = {}
+        history = [ItemPricesCollection.MarketValues_to_mongo_dict(market_value) for market_value in self.history]
 
-        for server in self.history:
-            history[server] = [ItemPricesCollection.MarketValues_to_mongo_dict(market_value) for market_value in self.history[server]]
-
-        return {"name": self.name, "id": self.id, "history": history}
+        return {"id": self.id, "server": self.server, "history": history}
 
 
 class MongoManager:
-    def __init__(self, connection_string: str, database_name: str = "TibiaMarketTracker"):
+    def __init__(self, connection_string: str, database_name: str = "TibiaMarketTracker_Dev"):
         self.client = pymongo.MongoClient(connection_string)
         self.database = self.client[database_name]
         self.item_prices = self.database["ItemPrices"]
+        self.item_meta_data = self.database["ItemMetaData"]
         self.api_keys = self.database["APIKeys"]
         self.access_logs = self.database["AccessLogs"]
+        self.statistics = self.database["Statistics"]
         self.events = self.database["Events"]
+        self.market_boards = self.database["MarketBoards"]
 
-    def _add_events_from_file_system(self):
-        """Adds the events from the file system to the database.
+    def update_schema(self):
+        # Remove all items from item_prices which have no id.
+        self.item_prices.delete_many({"id": {"$exists": False}})
+
+        item_ids = [item["id"] for item in self.item_prices.find({}, {"id": 1})]
+        to_delete = [id for id in item_ids if not id in Wiki.get_marketable_proto_items()]
+
+        # Remove all items from item_prices whose id is not in the wiki.
+        self.item_prices.delete_many({"id": {"$in": to_delete}})
+
+        # Remove the name field from all items in item_prices.
+        self.item_prices.update_many({}, {"$unset": {"name": ""}})
+
+        # Remove the pretty_name field from all items in item_prices.
+        self.item_prices.update_many({}, {"$unset": {"pretty_name": ""}})
+
+        # Remove the category field from all items in item_prices.
+        self.item_prices.update_many({}, {"$unset": {"category": ""}})
+
+        # Remove the is_upgradeable field from all items in item_prices.
+        self.item_prices.update_many({}, {"$unset": {"is_upgradeable": ""}})
+
+        # Remove the internal_name field from all items in item_prices.
+        self.item_prices.update_many({}, {"$unset": {"internal_name": ""}})
+
+        # Remove the npc_sell field from all items in item_prices.
+        self.item_prices.update_many({}, {"$unset": {"npc_sell": ""}})
+
+        # Remove the npc_buy field from all items in item_prices.
+        self.item_prices.update_many({}, {"$unset": {"npc_buy": ""}})
+
+    def clean_data(self):
+        """Iterates over all items and servers and modifies the data.
         """
-        path = "./src/results/events.csv"
+        print("Cleaning...")
 
-        with open(path, "r") as f:
-            for line in f.read().split("\n"):
-                if line == "":
-                    continue
-                
-                date, events = line.split(",", 1)
-                events = events.split(",")
+        metadata = self.get_item_metadata()
+        servers = [value.name for value in self.get_world_data_old()]
 
-                self.add_event(date, events)
-
-    def _add_from_file_system(self):
-        """Adds the market values from the file system to the database.
-        """
-        path = "./src/results"
-
-        for server in os.listdir(path):
-            # if server is not a folder, skip it.
-            if not os.path.isdir(os.path.join(path, server)):
-                continue
-            
-            item_values = {}
-
-            for file in os.listdir(os.path.join(path, server, "histories")):
-                # Add histories.
-                with open(os.path.join(path, server, "histories", file), "r") as f:
-                    item_name = file[:-4]
-                    item_values[item_name] = ItemPricesCollection(item_name, -1)
-                    item_values[item_name].history[server] = []
-
-                    # Skip first line, because it is gibberish often.
-                    for line in f.read().split("\n")[1:]:
-                        if line == "":
-                            continue
-                        market_values = MarketValues.from_history_string(line)
-                        market_values.name = item_name
-                        item_values[item_name].history[server].append(market_values)
-                
-            # Add fullscan.
-            with open(os.path.join(path, server, "fullscan.csv"), "r") as f:
-                for line in f.read().split("\n"):
-                    if line == "":
-                        continue
+        for server in servers:
+            values = []
+            for i, item in enumerate(metadata[1000:]):
+                print(f"Cleaning for {item.name} ({i + 1}/{len(metadata)})")
+                try:
+                    # Check if the item already exists in the database. Skip if it does.
+                    existing_item = self.item_prices.find_one({"id": item.id, "server": server}, {"id": 1})
                     
-                    # Ignore header.
-                    if not line.startswith("Name,"):
-                        market_values = MarketValues.from_string(line)
-                        last_history = item_values[market_values.name].history[server].pop(-1)
-                        market_values.time = last_history.time
-                        item_values[market_values.name].history[server].append(market_values)
+                    if existing_item:
+                        continue
+                        
+                    # Get existing item history.
+                    values += self.get_item_history_old(item.id, server)
+                    
+                    # Create a new item for the server´s history, instead of having a list of servers per item.
+                    if len(values) > 100000:
+                        self.add_market_values(server, values)
+                        values = []
+                except Exception as e:
+                    print(f"Error while cleaning: {e}")
+                    continue
+            if values:
+                self.add_market_values(server, values)
+        
+        # Drop all items that have no "server" field.
+        #self.item_prices.delete_many({"server": {"$exists": False}})
 
-            for item in tqdm(item_values, desc=f"Adding items to database"):
-                self.item_prices.insert_one(item_values[item].to_mongo_dict())
+        print("Done cleaning.")
 
     def add_api_key(self, api_key: str):
         """Adds the given api key to the database.
@@ -159,56 +199,144 @@ class MongoManager:
         """
         self.access_logs.insert_one({"ip": ip, "time": datetime.now().isoformat(), "endpoint": endpoint, "parameters": parameters, "status": status})
 
-    def add_market_value(self, server: str, market_values: MarketValues):
+    def add_statistic(self, ip: str, identifier: str, sub_identifier: str, value: str):
+        """Adds the given statistic log to the database.
+
+        Args:
+            ip (str): The ip of the request.
+            identifier (str): The identifier of the request. E.g. "Sorted"
+            sub_identifier (str): The sub identifier of the request. E.g. "buy_price"
+            value (str): The value of the request. E.g. "1"
+        """
+        self.statistics.insert_one({"ip": ip, "time": datetime.utcnow(), "identifier": identifier, "sub_identifier": sub_identifier, "value": value})
+
+    def update_item_metadata(self, items: List[ItemMetaData]):
+        """Used to update the item metadata in the database.
+        """
+        requests: List[pymongo.UpdateOne] = []
+
+        for item in items:
+            item_id = item.id
+
+            item_dict = item.__dict__
+
+            # Replace npc_sell and npc_buy with the mongo dict version.
+            item_dict["npc_sell"] = [ItemPricesCollection.NPCSaleData_to_mongo_dict(data) for data in item.npc_sell]
+            item_dict["npc_buy"] = [ItemPricesCollection.NPCSaleData_to_mongo_dict(data) for data in item.npc_buy]
+            
+            # Add or update the fields.
+            requests.append(pymongo.UpdateOne({"id": item_id}, {"$set": item_dict}, upsert=True))
+            
+        self.item_meta_data.bulk_write(requests)
+
+    def add_market_values(self, server: str, market_values: List[MarketValues]):
         """Adds the market values to the database.
 
         Args:
             market_values (MarketValues): The market values to add.
         """
-        # If a list of market values is given, add each one individually.
-        if isinstance(market_values, list):
-            for market_value in market_values:
-                self.add_market_value(server, market_value)
-            return
+        requests: List[pymongo.UpdateOne] = []
+        item_cache = {}
+        item_group = {}
+        
+        for values_item in market_values:
+            if values_item.id not in item_group:
+                item_group[values_item.id] = []
+            item_group[values_item.id].append(values_item)
 
-        item_name = market_values.name.lower()
-        item_id = market_values.id
+        for item_id in item_group:
+            values_items = item_group[item_id]
 
-        # Check if the item already exists in the database. Load the name and collection NAMES only, not their values.
-        item = self.item_prices.find_one({"name": item_name}, {"name": 1, "history": 1})
+            # Check if the item already exists in the database or as an insert operation.
+            if item_id in item_cache:
+                item = item_cache[item_id]
+            else:
+                item = self.item_prices.find_one({"id": item_id, "server": server}, {"id": 1})
+                item_cache[item_id] = item if item else 1
+        
+            if item:
+                # Append the market values to the history list.
+                requests.append(pymongo.UpdateOne({"id": item_id, "server": server}, {"$push": {"history": {"$each": [ItemPricesCollection.MarketValues_to_mongo_dict(value) for value in values_items]}}}))
+            else:
+                # Add the item to the database.
+                collection = ItemPricesCollection(item_id, server)
+                collection.history = values_items
+
+                requests.append(pymongo.InsertOne(collection.to_mongo_dict()))
+
+        # Keep bulk write requests under 10000.
+        while requests:
+            self.item_prices.bulk_write(requests[:10000])
+            requests = requests[10000:]
+            
+    def update_market_boards(self, server: str, market_boards: List[MarketBoard]):
+        """Updates the market boards for the given items.
+
+        Args:
+            server (str): The server to update the market boards for.
+            market_boards (List[MarketBoard]): The market boards to update.
+        """
+        requests: List[pymongo.UpdateOne] = []
+        
+        for board in market_boards:
+            # Check if the item already exists in the database.
+            item = self.market_boards.find_one({"id": board.id, "server": server}, {"id": 1})
+            board.buyers = [buyer.__dict__ for buyer in board.buyers if buyer]
+            board.sellers = [seller.__dict__ for seller in board.sellers if seller]
+            board_dict = board.__dict__
+            
+            # Add the server to the board.
+            board_dict["server"] = server
+            
+            if item:
+                # Update the item in the database.
+                requests.append(pymongo.UpdateOne({"id": board.id, "server": server}, {"$set": board_dict}))
+            else:
+                # Add the item to the database.
+                requests.append(pymongo.InsertOne(board_dict))
+        
+        # Keep bulk write requests under 10000.
+        while requests:
+            self.market_boards.bulk_write(requests[:10000])
+            requests = requests[10000:]
+
+    def get_market_board(self, id: int, server: str) -> MarketBoard:
+        """Gets the market board of the item on the given server.
+
+        Args:
+            id (int): The id of the item to get the market board for.
+            server (str): The server to get the market board for.
+
+        Returns:
+            MarketBoard: The market board of the item on the given server.
+        """
+        item = self.market_boards.find_one({"id": id, "server": server})
 
         if item:
-            # Add the market values to the history[server] list.
-            self.item_prices.update_one({"name": item_name}, {"$push": {f"history.{server}": ItemPricesCollection.MarketValues_to_mongo_dict(market_values) } } )
-            
-            # Also update the item id if it doesn't exist yet.
-            if "id" not in item or item["id"] == -1:
-                self.item_prices.update_one({"name": item_name}, {"$set": {"id": item_id} } )
+            return MarketBoard(**item)
         else:
-            # Add the item to the database.
-            collection = ItemPricesCollection(item_name, item_id)
-            collection.history[server] = [market_values]
-            self.item_prices.insert_one(collection.to_mongo_dict())
-
-    def get_item_history(self, item: str, server: str) -> List[dict]:
+            return MarketBoard(id=id, sellers=[], buyers=[], update_time=0)
+    
+    def get_item_history(self, id: int, server: str) -> List[MarketValues]:
         """Gets the history of the item on the given server.
 
         Args:
-            item (str): The item to get the history for.
+            id (int): The id of the item to get the history for.
             server (str): The server to get the history for.
 
         Returns:
             List[MarketValues]: The history of the item on the given server.
         """
         # Load only the requested server's history.
-        item = self.item_prices.find_one({"name": item.lower()}, {"history": {server: 1}})
+        item = self.item_prices.find_one({"id": id, "server": server}, {"history": 1})
 
         if item:
-            return item["history"][server]
+            items = item["history"]
+            return [MarketValues(id=id, **item) for item in items if item]
         else:
             return []
-        
-    def get_latest_market_values(self, server: str) -> List[dict]:
+    
+    def get_latest_market_values(self, server: str) -> List[MarketValues]:
         """Gets the market values of the items which match the given criteria.
 
         Args:
@@ -217,27 +345,63 @@ class MongoManager:
         Returns:
             List[dict]: The market values of the items which match the given criteria.
         """
-        query = {f"history.{server}": {"$exists": True}}
+        query = {"server": server}
 
-        # Only retrieve the last entry of the history[server]'s history. Don't include the rest of the history, and don't include other servers.
-        projection = {"name": 1, "history": {server: {"$slice": -1}}}
+        # Only retrieve the last entry of the history's history. Don't include the rest of the history.
+        projection = {"history": {"$slice": -1}, "id": 1}
 
         items = self.item_prices.find(query, projection)
 
         if items:
             items = list(items)
-            items = [(item["name"], item["history"][server][0]) for item in items if len(item["history"][server]) > 0]
-            for name, item in items:
-                item["name"] = name
+            items = [(item, item["history"][0]) for item in items if len(item["history"]) > 0]
+            
+            # Put the values of the item into the latest history entry for convenience.
+            for values, item in items:
+                item["id"] = values["id"]
 
-            return [item for name, item in items]
+            return [MarketValues(**item) for id, item in items]
         else:
             return []
         
-    def get_events(self) -> List[dict]:
+    def get_events(self) -> List[EventData]:
         """Gets all events from the database.
 
         Returns:
             List[EventData]: The events from the database.
         """
-        return list(self.events.find({}, {"_id": 0}))
+        events = list(self.events.find({}, {"_id": 0}))
+        events = [EventData(events=event["events"], date=datetime.strptime(event["date"], "%Y.%m.%d")) for event in events]
+
+        return events
+    
+    def get_item_metadata(self, item_id: int = -1) -> List[ItemMetaData]:
+        """Gets the item metadata from the database.
+
+        Args:
+            item_id (int): The id of the item to get the metadata for. If -1, returns all items.
+
+        Returns:
+            dict: The item metadata from the database.
+        """
+        if item_id == -1:
+            meta_datas = list(self.item_meta_data.find({}, {"_id": 0}))
+        else:
+            meta_datas = [self.item_meta_data.find_one({"id": item_id}, {"_id": 0})]
+        
+        meta_datas = [ItemMetaData(**meta_data) for meta_data in meta_datas if meta_data]
+
+        return meta_datas
+
+    def get_world_data(self) -> List[WorldData]:
+        """Gets the latest item update time for each server for the item 22118 (tibia coin).
+
+        Returns:
+            dict: The world data from the database.
+        """
+        query = {"id": 22118, "server": {"$exists": True}}
+        projection = {"server": 1, "history": {"$slice": -1}}
+        
+        items = self.item_prices.find(query, projection)
+
+        return [WorldData(name=item["server"], last_update=datetime.utcfromtimestamp(item["history"][0]["time"])) for item in items]
