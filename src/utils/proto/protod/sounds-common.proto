@@ -203,6 +203,7 @@ enum ESoundEffectType {
  SOUND_EFFECT_TYPE_SpellSummonPaladinFamiliar = 1195;
  SOUND_EFFECT_TYPE_SpellSummonSorcererFamiliar = 1196;
  SOUND_EFFECT_TYPE_SpellSummonDruidFamiliar = 1197;
+ SOUND_EFFECT_TYPE_SpellSummonMonkFamiliar = 1198;
  SOUND_EFFECT_TYPE_SpellChivalrousChallenge = 1237;
  SOUND_EFFECT_TYPE_SpellDivineDazzle = 1238;
  SOUND_EFFECT_TYPE_SpellFairWoundCleansing = 1239;
