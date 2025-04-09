@@ -4,6 +4,7 @@ from utils.wiki import EventData, Wiki
 
 
 class TestWiki:
+    @pytest.fixture(autouse=True)
     def setup(self):
         self.wiki = Wiki()
 
