@@ -19,3 +19,4 @@ xtea
 protobuf
 pydantic
 flask
+lxml

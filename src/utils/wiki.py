@@ -1,13 +1,15 @@
-from datetime import datetime
-from typing import Dict, List, Tuple
-import requests
 import re
 import sys
 import os
-from PIL import Image, ImageSequence
+from datetime import datetime
+from typing import Dict, List, Tuple
+import requests
+from PIL import Image
 import json
 from pydantic import BaseModel
 import lzma
+from lxml import etree
+from utils.data.loot_statistics import LootStatistics, Loot
 
 # Add the proto directory to the path so that we can import from it.
 sys.path.append(os.path.join(os.path.dirname(__file__), "data", "proto"))
@@ -44,10 +46,57 @@ class Wiki:
         """
         # If on linux:
         if os.name == "posix":
-            return os.path.expanduser("/root/.local/share/CipSoft GmbH/Tibia/packages/Tibia/assets")
+            return os.path.expanduser("~/.local/share/CipSoft GmbH/Tibia/packages/Tibia/assets")
         else:
             return os.path.expanduser("~\\AppData\\Local\\Tibia\\packages\\Tibia\\assets")
-    
+
+    @staticmethod
+    def get_loot_statistics(monster_name: str) -> List[LootStatistics]:
+        """Fetches the loot statistics for a given monster from the tibia fandom wiki.
+
+        Args:
+            monster_name (str): The name of the monster.
+
+        Returns:
+            Dict[str, int]: A dictionary mapping item names to their drop rates.
+        """
+        url = f"https://tibia.fandom.com/api.php?action=parse&page=Loot_Statistics:{monster_name}&format=json"
+        response = requests.get(url).json()
+        html = response["parse"]["text"]["*"]
+        
+        statistics: List[LootStatistics] = []
+        
+        # Parse the html using lxml.
+        tree = etree.HTML(html)
+        
+        # Find the tables with the loot statistics.
+        tables = tree.xpath("//table[contains(@class, 'loot_list')]")
+        for table in tables:
+            loot: List[Loot] = []
+            
+            caption = etree.tostring(table.xpath(".//caption")[0], method="text", encoding="unicode")
+            kills = re.findall(r"([\d,]+) kills", caption)
+            
+            if len(kills) > 0:
+                kills = int(kills[0].replace(",", ""))
+            else:
+                continue
+            
+            rows = table.xpath(".//tr")[1:]
+            headers = [etree.tostring(header, method="text", encoding="unicode").strip() for header in table.xpath(".//th")]
+            total_amount_index = [i for i, header in enumerate(headers) if "amount" in header.lower()][-1]
+            name_index = headers.index("Item")
+            
+            for row in rows:
+                columns = row.xpath(".//td")
+                
+                item_name = etree.tostring(columns[name_index], method="text", encoding="unicode").strip()
+                loot.append(Loot(item_id=-1, amount_looted=int(columns[total_amount_index].text.strip())))
+            
+            statistics.append(LootStatistics(monster_id=-1, item_id=-1, loot=loot, kills=kills))
+
+        return statistics
+
     @staticmethod
     def get_all_marketable_items() -> List[str]:
         """
@@ -286,7 +335,7 @@ class Wiki:
         Returns:
             EventData: Today's EventData object.
         """
-        event_schedule_json = os.path.expanduser("/root/.local/share/CipSoft GmbH/Tibia/packages/Tibia/cache/eventschedule.json")
+        event_schedule_json = os.path.expanduser("~/.local/share/CipSoft GmbH/Tibia/packages/Tibia/cache/eventschedule.json")
 
         if not os.path.exists(event_schedule_json):
             raise Exception("Failed to find event schedule json file. Make sure to log in to the game at least once.")
