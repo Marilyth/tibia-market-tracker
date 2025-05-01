@@ -37,6 +37,7 @@
                 "PYTHONPATH": "${workspaceFolder}/src:${workspaceFolder}/tests"
             },
             "args": [
+                "-s",
                 "${file}"
             ],
             "console": "integratedTerminal",
@@ -51,11 +52,11 @@
                 "PYTHONPATH": "${workspaceFolder}/src:${workspaceFolder}/tests"
             },
             "args": [
+                "-s",
                 "-k",
                 "${input:TestMethod}"
             ],
-            "console": "integratedTerminal",
-            "sudo": true
+            "console": "integratedTerminal"
         }
     ],
     "inputs": [

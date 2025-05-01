@@ -394,3 +394,4 @@ config.json
 schedule.json
 Tibia/
 !src/utils/proto/protoc/bin/
+sprites/

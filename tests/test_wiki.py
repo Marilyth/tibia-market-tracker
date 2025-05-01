@@ -44,7 +44,7 @@ class TestWiki:
 
     def test_GenerateGifForItem_WhenGivenValidItem_DoesntThrow(self):
         # Act
-        self.wiki.generate_gif_for_item(22118)
+        self.wiki.generate_gif_for_item_id(22118)
   
     def test_GenerateGifForAllItems_WhenCalled_DoesntThrow(self):
         # Arrange.
@@ -52,7 +52,7 @@ class TestWiki:
 
         # Act.
         for item in items.values():
-            self.wiki.generate_gif_for_item(item.id)
+            self.wiki.generate_gif_for_item_id(item.id)
 
     def test_GetLootStatistics_ReturnsExpected(self):
         # Act
@@ -60,6 +60,21 @@ class TestWiki:
 
         # Assert
         assert len(loot_stats) > 0
+    
+    def test_GetMonsters_ReturnsExpected(self):
+        # Act
+        monsters = self.wiki.get_monsters()
+
+        # Assert
+        assert len(monsters) > 700
+    
+    def test_GenerateGifForAllMonsters_WhenCalled_DoesntThrow(self):
+        # Arrange.
+        monsters = self.wiki.get_monsters()
+
+        # Act.
+        for monster in monsters.values():
+            self.wiki.generate_gif_for_monster_id(monster["1"])
     
     def test_GetEventData_ReturnsExpected(self):
         # Act

@@ -3,7 +3,8 @@ from google.protobuf.internal import containers as _containers
 from google.protobuf.internal import enum_type_wrapper as _enum_type_wrapper
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
-from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Mapping, Optional as _Optional, Union as _Union
+from collections.abc import Iterable as _Iterable, Mapping as _Mapping
+from typing import ClassVar as _ClassVar, Optional as _Optional, Union as _Union
 
 DESCRIPTOR: _descriptor.FileDescriptor
 
@@ -39,20 +40,16 @@ class SpritePhase(_message.Message):
     def __init__(self, duration_min: _Optional[int] = ..., duration_max: _Optional[int] = ...) -> None: ...
 
 class SpriteAnimation(_message.Message):
-    __slots__ = ("default_start_phase", "synchronized", "random_start_phase", "loop_type", "loop_count", "sprite_phase")
-    DEFAULT_START_PHASE_FIELD_NUMBER: _ClassVar[int]
+    __slots__ = ("synchronized", "loop_type", "loop_count", "sprite_phase")
     SYNCHRONIZED_FIELD_NUMBER: _ClassVar[int]
-    RANDOM_START_PHASE_FIELD_NUMBER: _ClassVar[int]
     LOOP_TYPE_FIELD_NUMBER: _ClassVar[int]
     LOOP_COUNT_FIELD_NUMBER: _ClassVar[int]
     SPRITE_PHASE_FIELD_NUMBER: _ClassVar[int]
-    default_start_phase: int
     synchronized: bool
-    random_start_phase: bool
     loop_type: _shared_pb2.ANIMATION_LOOP_TYPE
     loop_count: int
     sprite_phase: _containers.RepeatedCompositeFieldContainer[SpritePhase]
-    def __init__(self, default_start_phase: _Optional[int] = ..., synchronized: bool = ..., random_start_phase: bool = ..., loop_type: _Optional[_Union[_shared_pb2.ANIMATION_LOOP_TYPE, str]] = ..., loop_count: _Optional[int] = ..., sprite_phase: _Optional[_Iterable[_Union[SpritePhase, _Mapping]]] = ...) -> None: ...
+    def __init__(self, synchronized: bool = ..., loop_type: _Optional[_Union[_shared_pb2.ANIMATION_LOOP_TYPE, str]] = ..., loop_count: _Optional[int] = ..., sprite_phase: _Optional[_Iterable[_Union[SpritePhase, _Mapping]]] = ...) -> None: ...
 
 class Box(_message.Message):
     __slots__ = ("x", "y", "width", "height")
@@ -113,7 +110,7 @@ class Appearance(_message.Message):
     def __init__(self, id: _Optional[int] = ..., frame_group: _Optional[_Iterable[_Union[FrameGroup, _Mapping]]] = ..., flags: _Optional[_Union[AppearanceFlags, _Mapping]] = ..., name: _Optional[str] = ..., description: _Optional[str] = ...) -> None: ...
 
 class AppearanceFlags(_message.Message):
-    __slots__ = ("bank", "clip", "bottom", "top", "container", "cumulative", "usable", "forceuse", "multiuse", "write", "write_once", "liquidpool", "unpass", "unmove", "unsight", "avoid", "no_movement_animation", "take", "liquidcontainer", "hang", "hook", "rotate", "light", "dont_hide", "translucent", "shift", "height", "lying_object", "animate_always", "automap", "lenshelp", "fullbank", "ignore_look", "clothes", "default_action", "market", "wrap", "unwrap", "topeffect", "npcsaledata", "changedtoexpire", "corpse", "player_corpse", "cyclopediaitem", "ammo", "show_off_socket", "reportable", "upgradeclassification", "reverse_addons_east", "reverse_addons_west", "reverse_addons_south", "reverse_addons_north", "wearout", "clockexpire", "expire", "expirestop", "deco_item_kit")
+    __slots__ = ("bank", "clip", "bottom", "top", "container", "cumulative", "usable", "forceuse", "multiuse", "write", "write_once", "liquidpool", "unpass", "unmove", "unsight", "avoid", "no_movement_animation", "take", "liquidcontainer", "hang", "hook", "rotate", "light", "dont_hide", "translucent", "shift", "height", "lying_object", "animate_always", "automap", "lenshelp", "fullbank", "ignore_look", "clothes", "default_action", "market", "wrap", "unwrap", "topeffect", "npcsaledata", "changedtoexpire", "corpse", "player_corpse", "cyclopediaitem", "ammo", "show_off_socket", "reportable", "upgradeclassification", "reverse_addons_east", "reverse_addons_west", "reverse_addons_south", "reverse_addons_north", "wearout", "clockexpire", "expire", "expirestop", "deco_item_kit", "skillwheel_gem", "dual_wielding")
     BANK_FIELD_NUMBER: _ClassVar[int]
     CLIP_FIELD_NUMBER: _ClassVar[int]
     BOTTOM_FIELD_NUMBER: _ClassVar[int]
@@ -171,6 +168,8 @@ class AppearanceFlags(_message.Message):
     EXPIRE_FIELD_NUMBER: _ClassVar[int]
     EXPIRESTOP_FIELD_NUMBER: _ClassVar[int]
     DECO_ITEM_KIT_FIELD_NUMBER: _ClassVar[int]
+    SKILLWHEEL_GEM_FIELD_NUMBER: _ClassVar[int]
+    DUAL_WIELDING_FIELD_NUMBER: _ClassVar[int]
     bank: AppearanceFlagBank
     clip: bool
     bottom: bool
@@ -228,7 +227,9 @@ class AppearanceFlags(_message.Message):
     expire: bool
     expirestop: bool
     deco_item_kit: bool
-    def __init__(self, bank: _Optional[_Union[AppearanceFlagBank, _Mapping]] = ..., clip: bool = ..., bottom: bool = ..., top: bool = ..., container: bool = ..., cumulative: bool = ..., usable: bool = ..., forceuse: bool = ..., multiuse: bool = ..., write: _Optional[_Union[AppearanceFlagWrite, _Mapping]] = ..., write_once: _Optional[_Union[AppearanceFlagWriteOnce, _Mapping]] = ..., liquidpool: bool = ..., unpass: bool = ..., unmove: bool = ..., unsight: bool = ..., avoid: bool = ..., no_movement_animation: bool = ..., take: bool = ..., liquidcontainer: bool = ..., hang: bool = ..., hook: _Optional[_Union[AppearanceFlagHook, _Mapping]] = ..., rotate: bool = ..., light: _Optional[_Union[AppearanceFlagLight, _Mapping]] = ..., dont_hide: bool = ..., translucent: bool = ..., shift: _Optional[_Union[AppearanceFlagShift, _Mapping]] = ..., height: _Optional[_Union[AppearanceFlagHeight, _Mapping]] = ..., lying_object: bool = ..., animate_always: bool = ..., automap: _Optional[_Union[AppearanceFlagAutomap, _Mapping]] = ..., lenshelp: _Optional[_Union[AppearanceFlagLenshelp, _Mapping]] = ..., fullbank: bool = ..., ignore_look: bool = ..., clothes: _Optional[_Union[AppearanceFlagClothes, _Mapping]] = ..., default_action: _Optional[_Union[AppearanceFlagDefaultAction, _Mapping]] = ..., market: _Optional[_Union[AppearanceFlagMarket, _Mapping]] = ..., wrap: bool = ..., unwrap: bool = ..., topeffect: bool = ..., npcsaledata: _Optional[_Iterable[_Union[AppearanceFlagNPC, _Mapping]]] = ..., changedtoexpire: _Optional[_Union[AppearanceFlagChangedToExpire, _Mapping]] = ..., corpse: bool = ..., player_corpse: bool = ..., cyclopediaitem: _Optional[_Union[AppearanceFlagCyclopedia, _Mapping]] = ..., ammo: bool = ..., show_off_socket: bool = ..., reportable: bool = ..., upgradeclassification: _Optional[_Union[AppearanceFlagUpgradeClassification, _Mapping]] = ..., reverse_addons_east: bool = ..., reverse_addons_west: bool = ..., reverse_addons_south: bool = ..., reverse_addons_north: bool = ..., wearout: bool = ..., clockexpire: bool = ..., expire: bool = ..., expirestop: bool = ..., deco_item_kit: bool = ...) -> None: ...
+    skillwheel_gem: AppearanceFlagSkillWheelGem
+    dual_wielding: bool
+    def __init__(self, bank: _Optional[_Union[AppearanceFlagBank, _Mapping]] = ..., clip: bool = ..., bottom: bool = ..., top: bool = ..., container: bool = ..., cumulative: bool = ..., usable: bool = ..., forceuse: bool = ..., multiuse: bool = ..., write: _Optional[_Union[AppearanceFlagWrite, _Mapping]] = ..., write_once: _Optional[_Union[AppearanceFlagWriteOnce, _Mapping]] = ..., liquidpool: bool = ..., unpass: bool = ..., unmove: bool = ..., unsight: bool = ..., avoid: bool = ..., no_movement_animation: bool = ..., take: bool = ..., liquidcontainer: bool = ..., hang: bool = ..., hook: _Optional[_Union[AppearanceFlagHook, _Mapping]] = ..., rotate: bool = ..., light: _Optional[_Union[AppearanceFlagLight, _Mapping]] = ..., dont_hide: bool = ..., translucent: bool = ..., shift: _Optional[_Union[AppearanceFlagShift, _Mapping]] = ..., height: _Optional[_Union[AppearanceFlagHeight, _Mapping]] = ..., lying_object: bool = ..., animate_always: bool = ..., automap: _Optional[_Union[AppearanceFlagAutomap, _Mapping]] = ..., lenshelp: _Optional[_Union[AppearanceFlagLenshelp, _Mapping]] = ..., fullbank: bool = ..., ignore_look: bool = ..., clothes: _Optional[_Union[AppearanceFlagClothes, _Mapping]] = ..., default_action: _Optional[_Union[AppearanceFlagDefaultAction, _Mapping]] = ..., market: _Optional[_Union[AppearanceFlagMarket, _Mapping]] = ..., wrap: bool = ..., unwrap: bool = ..., topeffect: bool = ..., npcsaledata: _Optional[_Iterable[_Union[AppearanceFlagNPC, _Mapping]]] = ..., changedtoexpire: _Optional[_Union[AppearanceFlagChangedToExpire, _Mapping]] = ..., corpse: bool = ..., player_corpse: bool = ..., cyclopediaitem: _Optional[_Union[AppearanceFlagCyclopedia, _Mapping]] = ..., ammo: bool = ..., show_off_socket: bool = ..., reportable: bool = ..., upgradeclassification: _Optional[_Union[AppearanceFlagUpgradeClassification, _Mapping]] = ..., reverse_addons_east: bool = ..., reverse_addons_west: bool = ..., reverse_addons_south: bool = ..., reverse_addons_north: bool = ..., wearout: bool = ..., clockexpire: bool = ..., expire: bool = ..., expirestop: bool = ..., deco_item_kit: bool = ..., skillwheel_gem: _Optional[_Union[AppearanceFlagSkillWheelGem, _Mapping]] = ..., dual_wielding: bool = ...) -> None: ...
 
 class AppearanceFlagBank(_message.Message):
     __slots__ = ("waypoints",)
@@ -347,6 +348,14 @@ class AppearanceFlagUpgradeClassification(_message.Message):
     UPGRADE_CLASSIFICATION_FIELD_NUMBER: _ClassVar[int]
     upgrade_classification: int
     def __init__(self, upgrade_classification: _Optional[int] = ...) -> None: ...
+
+class AppearanceFlagSkillWheelGem(_message.Message):
+    __slots__ = ("gem_quality_id", "vocation_id")
+    GEM_QUALITY_ID_FIELD_NUMBER: _ClassVar[int]
+    VOCATION_ID_FIELD_NUMBER: _ClassVar[int]
+    gem_quality_id: int
+    vocation_id: int
+    def __init__(self, gem_quality_id: _Optional[int] = ..., vocation_id: _Optional[int] = ...) -> None: ...
 
 class SpecialMeaningAppearanceIds(_message.Message):
     __slots__ = ("gold_coin_id", "platinum_coin_id", "crystal_coin_id", "tibia_coin_id", "stamped_letter_id", "supply_stash_id", "standard_reward_chest_id")

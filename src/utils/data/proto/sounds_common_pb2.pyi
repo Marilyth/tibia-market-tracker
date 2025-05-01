@@ -2,7 +2,8 @@ from google.protobuf.internal import containers as _containers
 from google.protobuf.internal import enum_type_wrapper as _enum_type_wrapper
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
-from typing import ClassVar as _ClassVar, Iterable as _Iterable, Optional as _Optional
+from collections.abc import Iterable as _Iterable
+from typing import ClassVar as _ClassVar, Optional as _Optional
 
 DESCRIPTOR: _descriptor.FileDescriptor
 
@@ -209,6 +210,7 @@ class ESoundEffectType(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     SOUND_EFFECT_TYPE_SpellSummonPaladinFamiliar: _ClassVar[ESoundEffectType]
     SOUND_EFFECT_TYPE_SpellSummonSorcererFamiliar: _ClassVar[ESoundEffectType]
     SOUND_EFFECT_TYPE_SpellSummonDruidFamiliar: _ClassVar[ESoundEffectType]
+    SOUND_EFFECT_TYPE_SpellSummonMonkFamiliar: _ClassVar[ESoundEffectType]
     SOUND_EFFECT_TYPE_SpellChivalrousChallenge: _ClassVar[ESoundEffectType]
     SOUND_EFFECT_TYPE_SpellDivineDazzle: _ClassVar[ESoundEffectType]
     SOUND_EFFECT_TYPE_SpellFairWoundCleansing: _ClassVar[ESoundEffectType]
@@ -568,6 +570,7 @@ SOUND_EFFECT_TYPE_SpellSummonKnightFamiliar: ESoundEffectType
 SOUND_EFFECT_TYPE_SpellSummonPaladinFamiliar: ESoundEffectType
 SOUND_EFFECT_TYPE_SpellSummonSorcererFamiliar: ESoundEffectType
 SOUND_EFFECT_TYPE_SpellSummonDruidFamiliar: ESoundEffectType
+SOUND_EFFECT_TYPE_SpellSummonMonkFamiliar: ESoundEffectType
 SOUND_EFFECT_TYPE_SpellChivalrousChallenge: ESoundEffectType
 SOUND_EFFECT_TYPE_SpellDivineDazzle: ESoundEffectType
 SOUND_EFFECT_TYPE_SpellFairWoundCleansing: ESoundEffectType
