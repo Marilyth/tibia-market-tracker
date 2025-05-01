@@ -3,7 +3,7 @@
 # Extracts the proto files from the Tibia client executable.
 cd "$(dirname "$0")"
 cd protod
-python2 ./protod ~/.local/share/CipSoft\ GmbH/Tibia/packages/Tibia/bin/client
+python3 ./protod ~/.local/share/CipSoft\ GmbH/Tibia/packages/Tibia/bin/client
 cd ..
 
 # Compile the proto files.

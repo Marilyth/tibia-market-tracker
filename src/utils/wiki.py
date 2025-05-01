@@ -9,7 +9,8 @@ import json
 from pydantic import BaseModel
 import lzma
 from lxml import etree
-from utils.data.loot_statistics import LootStatistics, Loot
+from blackboxprotobuf import decode_message, export_protofile
+from utils.data.loot_statistics import LootStatistics, Loot, Monster
 
 # Add the proto directory to the path so that we can import from it.
 sys.path.append(os.path.join(os.path.dirname(__file__), "data", "proto"))
@@ -28,7 +29,10 @@ class EventData(BaseModel):
         return f"{self.date.strftime('%Y.%m.%d')},{','.join(self.events)}"
 
 
+proto_monsters = {}
+proto_outfits = {}
 proto_items = {}
+marketable_proto_items = {}
 sprite_id_to_location = {}
 id_to_pretty_name = {}
 pretty_name_to_id = {}
@@ -96,26 +100,6 @@ class Wiki:
             statistics.append(LootStatistics(monster_id=-1, item_id=-1, loot=loot, kills=kills))
 
         return statistics
-
-    @staticmethod
-    def get_all_marketable_items() -> List[str]:
-        """
-        Fetches all marketable item names from the tibia fandom wiki.
-        The documentation for fandom apis are available at https://www.mediawiki.org/wiki/API:Main_page.
-        """
-        items = []
-        url = "https://tibia.fandom.com/api.php?action=query&list=categorymembers&cmtitle=Category%3AMarketable+Items&format=json&cmprop=title&cmlimit=500"
-        cmcontinue = ""
-        while True:
-            response = requests.get(url + (f"&{cmcontinue=}" if cmcontinue else "")).json()
-            items.extend([member["title"] for member in response["query"]["categorymembers"]])
-
-            if "continue" in response:
-                cmcontinue = response["continue"]["cmcontinue"]
-            else:
-                break
-
-        return sorted(set([item.split(" (")[0] for item in items]))
 
     @staticmethod
     def get_item_ids() -> Tuple[Dict[int, str], Dict[str, int]]:
@@ -190,11 +174,11 @@ class Wiki:
         return id_to_pretty_name
 
     @staticmethod
-    def get_marketable_proto_items() -> Dict[int, appearances_pb2.Appearance]:
-        """Parses the appearance.dat file, and returns all items with the market flag set.
+    def get_proto_appearances() -> Dict[int, appearances_pb2.Appearance]:
+        """Parses the appearance.dat file, and returns all items.
 
         Returns:
-            Dict[int, appearances_pb2.Appearance]: A dictionary mapping item ids to Appearance objects.
+            Dict[int, appearances_pb2.Appearance]: A dictionary mapping ids to Appearance objects.
         """
         if not proto_items:
             assets_folder = Wiki._get_assets_folder()
@@ -204,13 +188,53 @@ class Wiki:
             appearances.ParseFromString(open(f"{assets_folder}/{appearances_dat_file_name}", "rb").read())
 
             for item in appearances.object:
-                if str(item.flags.market):
-                    proto_items[item.id] = item
+                proto_items[item.id] = item
+            
+            for outfit in appearances.outfit:
+                proto_outfits[outfit.id] = outfit
+        
+        return proto_items, proto_outfits
 
-        return proto_items
-    
     @staticmethod
-    def get_sprite_for_id(sprite_id: int) -> Image:
+    def get_marketable_proto_items() -> Dict[int, appearances_pb2.Appearance]:
+        """Parses the appearance.dat file, and returns all items with the market flag set.
+
+        Returns:
+            Dict[int, appearances_pb2.Appearance]: A dictionary mapping item ids to Appearance objects.
+        """
+        if not marketable_proto_items:
+            all_proto_items, _ = Wiki.get_proto_appearances()
+            
+            for key in all_proto_items:
+                item = all_proto_items[key]
+                
+                if str(item.flags.market):
+                    marketable_proto_items[key] = item
+        
+        return marketable_proto_items
+
+    @staticmethod
+    def get_monsters() -> Dict[int, object]:
+        """Parses the staticdata.dat file, and returns all monsters.
+
+        Returns:
+            Dict[int, object]: A dictionary mapping monster ids to staticdata objects.
+        """
+        if not proto_monsters:
+            assets_folder = Wiki._get_assets_folder()
+            static_dat_file_name = [file_name for file_name in os.listdir(assets_folder) if file_name.startswith("staticdata-") and file_name.endswith(".dat")][0]
+
+            with open(f"{assets_folder}/{static_dat_file_name}", "rb") as f:
+                data = f.read()
+
+            message, typedef = decode_message(data)
+            for monster in message["1"]:
+                proto_monsters[monster["1"]] = monster
+
+        return proto_monsters
+
+    @staticmethod
+    def get_sprite_for_id(sprite_id: int, sprite_size: int = 32) -> Image:
         """Loads the sprite for the given sprite id.
 
         Returns:
@@ -231,10 +255,10 @@ class Wiki:
                         sprite_id_to_location[i] = (os.path.join(assets_folder, item["file"][:-5].replace(".bmp", ".png")), i - item["firstspriteid"])
         
         # Load the sprite from file.
-        sprite_size = 32
-        sprites_per_row = 12
+        sprites_per_row = 384 // sprite_size
+        file_name = sprite_id_to_location[sprite_id]
         
-        with Image.open(sprite_id_to_location[sprite_id][0]) as img:
+        with Image.open(file_name[0]) as img:
             sprite_index = sprite_id_to_location[sprite_id][1]
             
             # Calculate the x, y position of the sprite in the grid.
@@ -243,22 +267,26 @@ class Wiki:
             
             # Crop the sprite from the grid.
             return img.crop((x, y, x + sprite_size, y + sprite_size))
-    
+
     @staticmethod
-    def get_sprites_for_item(item_id: int) -> Tuple[Image.Image, int]:
+    def get_sprites_for_appearance(appearance: appearances_pb2.Appearance) -> Tuple[Image.Image, int]:
         """
-        Returns the sprites for the given item id.
+        Returns the sprites for the given appearance.
         
         Returns:
             List[Image, int]: A list of sprite images and their duration in ms.
         """
-        item_information = Wiki.get_marketable_proto_items()[item_id]
-        sprite_infos = item_information.frame_group[0].sprite_info
+        sprite_infos = appearance.frame_group[0].sprite_info
         frame_durations = sprite_infos.animation.sprite_phase
         
         sprites = []
         for i, sprite_id in enumerate(sprite_infos.sprite_id):
-            sprites.append((Wiki.get_sprite_for_id(sprite_id), frame_durations[i].duration_min if len(frame_durations) > i else 1000))
+            sprite_size = 32
+            for bbox in sprite_infos.bounding_box_per_direction:
+                if bbox.height > 32 or bbox.width > 32 or bbox.x > 32 or bbox.y > 32:
+                    sprite_size = 64
+                    
+            sprites.append((Wiki.get_sprite_for_id(sprite_id, sprite_size), frame_durations[i].duration_min if len(frame_durations) > i else 1000))
             
         if sprite_infos.animation.loop_type == shared_pb2.ANIMATION_LOOP_TYPE.ANIMATION_LOOP_TYPE_PINGPONG:
             # Append the middle frames again, in reverse order.
@@ -267,13 +295,14 @@ class Wiki:
         return sprites
     
     @staticmethod
-    def generate_gif_for_item(item_id: int):
-        """Generates a gif for the given item id.
+    def generate_gif_for_item_id(item_id: int):
+        """Generates a gif for the given id.
 
         Args:
             item_id (int): The item id.
         """
-        sprites = Wiki.get_sprites_for_item(item_id)
+        appearance = Wiki.get_proto_appearances()[0][item_id]
+        sprites = Wiki.get_sprites_for_appearance(appearance)
         
         # If the sprites folder doesn't exist, create it.
         if not os.path.exists("sprites"):
@@ -286,6 +315,41 @@ class Wiki:
             durations = [sprite[1] for sprite in sprites]
             sprites[0][0].save(f"sprites/{item_id}.gif", save_all=True, append_images=other_frames,
                                duration=durations, loop=0, disposal=2)
+    
+    @staticmethod
+    def generate_gif_for_outfit_id(outfit_id: int):
+        """Generates a gif for the given id.
+
+        Args:
+            item_id (int): The item id.
+        """
+        appearance = Wiki.get_proto_appearances()[1][outfit_id]
+        sprites = Wiki.get_sprites_for_appearance(appearance)
+        
+        # If the sprites folder doesn't exist, create it.
+        if not os.path.exists("sprites"):
+            os.makedirs("sprites")
+        
+        if len(sprites) == 1:
+            sprites[0][0].save(f"sprites/o{outfit_id}.gif")
+        else:
+            other_frames = [sprite[0] for sprite in sprites[1:]]
+            durations = [sprite[1] for sprite in sprites]
+            sprites[0][0].save(f"sprites/o{outfit_id}.gif", save_all=True, append_images=other_frames,
+                               duration=durations, loop=0, disposal=2)
+    
+    @staticmethod
+    def generate_gif_for_monster_id(monster_id: int):
+        """Generates a gif for the given id.
+
+        Args:
+            item_id (int): The item id.
+        """
+        appearance = Wiki.get_monsters()[monster_id]
+        if "1" not in appearance["3"]:
+            print("wtf")
+            return
+        Wiki.generate_gif_for_outfit_id(appearance["3"]["1"])
     
     @staticmethod
     def extract_lzma_sprites():

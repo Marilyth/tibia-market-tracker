@@ -40,3 +40,32 @@ market_categories = [
     MarketCategory(25, "Weapons: Wands"),
     MarketCategory(26, "Weapons: All"),
 ]
+
+# Taken from client using strings client | grep "market_".
+market_stats = [
+    "Armor",
+    "Attack",
+    "Capacity",
+    "Defence",
+    "Description",
+    "Expires After",
+    "Protection",
+    "Minimum Level",
+    "Vocations",
+    "Skill Boost",
+    "Charges",
+    "Weapon Type",
+    "Weight",
+    "Augments",
+    "Imbuement Slots",
+    "Cleave",
+    "Elemental Bond",
+    "Mantra",
+    "Classification",
+    "Tier",
+    "Number of Transactions",
+    "Minimum Magic Level",
+    "Magic Shield Capacity",
+    "Damage Reflection",
+    "Maximum Range Bonus",
+]
