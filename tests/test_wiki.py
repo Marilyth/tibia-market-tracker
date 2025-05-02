@@ -76,6 +76,22 @@ class TestWiki:
         for monster in monsters.values():
             self.wiki.generate_gif_for_monster_id(monster["1"])
     
+    @pytest.mark.parametrize(
+        "color_code, expected_rgb",
+        [
+            (0, [255, 255, 255]),
+            (1, [255, 212, 191]),
+            (19, [218, 218, 218]),
+            (20, [191, 159, 143]),
+        ],
+    )
+    def test_ColorCodeToRGB_WhenGivenValidCode_ReturnsExpected(self, color_code, expected_rgb):
+        # Act
+        rgb = self.wiki.colorcode_to_rgb(color_code)
+
+        # Assert
+        assert rgb == expected_rgb
+    
     def test_GetEventData_ReturnsExpected(self):
         # Act
         event = self.wiki.get_event_data()

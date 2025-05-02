@@ -11,6 +11,7 @@ import lzma
 from lxml import etree
 from blackboxprotobuf import decode_message, export_protofile
 from utils.data.loot_statistics import LootStatistics, Loot, Monster
+import colorsys
 
 # Add the proto directory to the path so that we can import from it.
 sys.path.append(os.path.join(os.path.dirname(__file__), "data", "proto"))
@@ -29,6 +30,7 @@ class EventData(BaseModel):
         return f"{self.date.strftime('%Y.%m.%d')},{','.join(self.events)}"
 
 
+color_grid = []
 proto_monsters = {}
 proto_outfits = {}
 proto_items = {}
@@ -391,6 +393,43 @@ class Wiki:
                         
                         # Delete the bmp file.
                         os.remove(f"{assets_folder}/{file_name[:-5]}")
+
+    @staticmethod
+    def colorcode_to_rgb(color_code: int) -> Tuple[int, int, int]:
+        """Converts a tibia color code to an RGB tuple.
+
+        Args:
+            color_code (int): The color code, which is an index on the 19x7 color grid.
+
+        Returns:
+            Tuple[int, int, int]: The RGB tuple.
+        """
+        if not color_grid:
+            # Can't seem to make a solid algorithm for the Tibia color grid. Each row seems picked almost at random.
+            row_saturation = [0.25, 0.25, 0.5, 0.66, 1, 1, 1]
+            row_value = [1, 0.75, 0.75, 0.75, 1, 0.75, 0.5]
+            
+            for i, row in enumerate(zip(row_saturation, row_value)):
+                row_grey = 1 - (1 / 7) * i
+                row_colors = []
+                
+                for j in range(19):
+                    # The first column replaces red with grey.
+                    if j == 0:
+                        row_colors.append([0, 0, row_grey])
+                        continue
+                    
+                    hue = (j * (1 / 18))
+                    row_colors.append([hue, row[0], row[1]])
+                        
+                color_grid.append(row_colors)
+    
+        # Convert the color code to a row and column.
+        row = color_code // 19
+        column = color_code % 19
+        color = color_grid[row][column]
+        
+        return [int(v * 255) for v in colorsys.hsv_to_rgb(*color)]
 
     @staticmethod
     def get_event_data() -> EventData:
