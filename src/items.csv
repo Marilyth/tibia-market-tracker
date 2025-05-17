@@ -119,7 +119,7 @@ Arching Leaves,25486
 Arching Tree,25484
 Archway,1637
 Archway (Lion),1568
-Archway (Ornamented),12480
+Archway (Ornamented),12481
 Archway (Stone),1561
 Areca Palm,17373
 Arena Badge,23487
@@ -303,7 +303,7 @@ Barrel (Brown),2519
 Barrel (Store),34301
 Barrel Filled with Hammers,30304
 Barrel Kit,2793
-Barrel and Anchor Lamp,31940
+Barrel and Anchor Lamp,31938
 Barrel of Beer,404
 Basalt,15301
 Basalt Core,43859
@@ -718,7 +718,7 @@ Brocade Tapestry,23725
 Broccoli,11461
 Broken Amulet,3080
 Broken Apparatus (Coils),8972
-Broken Apparatus (Electrodes),8977
+Broken Apparatus (Electrodes),8980
 Broken Bell,30185
 Broken Bottle,2892
 Broken Brown Glass,3117
@@ -1531,7 +1531,7 @@ Demon Infant,12182
 Demon Legs,3389
 Demon Oak Wood,22869
 Demon Shield,3420
-Demon Skull,31226
+Demon Skull,50061
 Demon Statue,34059
 Demon Trophy,7393
 Demon Trophy (Immobile),2670
@@ -2055,7 +2055,7 @@ Fabulous Legs,32617
 Faded Last Will,11544
 Fae Talisman,25295
 Fafnar Symbol,31443
-Faint Glow,12412
+Faint Glow,12518
 Fairy Wings,25694
 Fake Dwarven Beard,170
 Fake Rabbit's Foot,12174
@@ -3087,8 +3087,8 @@ Heart Cabinet,33033
 Heart Chair,33039
 Heart Chest,33046
 Heart Lamp,33027
-Heart Lamp (Four),33029
-Heart Lamp (Small),33031
+Heart Lamp (Four),33028
+Heart Lamp (Small),33030
 Heart Pillow,2393
 Heart Table,33035
 Heart of the Mountain (Item),25360
@@ -4313,7 +4313,7 @@ Opulent Floor Lamp (Lit),42349
 Opulent Floor Lamp (Unlit),42348
 Opulent Item Stand,42350
 Opulent Kline,42362
-Opulent Table,42325
+Opulent Table,42327
 Opulent Wood Floor Planks,42336
 Oracle Figurine,8147
 Orange,3586
@@ -4455,8 +4455,8 @@ Pair of Iron Fists,17828
 Pair of Nightmare Boots,32619
 Pair of Old Bracers,32705
 Pair of Soft Boots,6529
-Pair of Soulstalkers,34097
-Pair of Soulwalkers,34098
+Pair of Soulstalkers,34098
+Pair of Soulwalkers,34097
 Paladin Armor,8063
 Pale Worm's Scalp,32598
 Palette and Brushes,37313
@@ -4629,7 +4629,7 @@ Pig Foot,9693
 Pigeon Trophy,9538
 Pigeon Trophy (Replica),31266
 Piggy Bank,2995
-Pile of Alchemistic Books,27688
+Pile of Alchemistic Books,27687
 Pile of Bones,4285
 Pile of Dry Wood,39143
 Pile of Grave Earth,11484
@@ -5225,7 +5225,7 @@ Sacred Statue,2062
 Sacred Statue (Lit),2063
 Sacred Tree Amulet,9302
 Safety Pin,11493
-Sai,10389
+Sai,50183
 Salamander Shield,3445
 Salmon,3579
 Salt,33930
@@ -5247,7 +5247,7 @@ Sandscourge Figurine,35590
 Sandstone Railing,2209
 Sandstone Statue,2034
 Sandstone Window,6463
-Sanguine Battleaxe,43875
+Sanguine Battleaxe,43874
 Sanguine Blade,43864
 Sanguine Bludgeon,43872
 Sanguine Boots,43884
@@ -6408,11 +6408,8 @@ Thread Tree,3743
 Thread Tree (Parrot),6094
 Thread of Screw,5032
 Three Cans,24483
-Throatslitter,9959
+Throatslitter,9952
 Throne,2357
-Thread Tree (Parrot),6094
-Thread of Screw,5032
-Three Cans,24483
 Throwing Axe,35515
 Throwing Cake,904
 Throwing Knife,3298
@@ -7190,7 +7187,6 @@ Zombie Dummy,12050
 Altar,3524
 Animal Skull,3132
 Anvil,7843
-Apocalypse Mushroom,9894
 Aquarius Fungius,9862
 Astro Clock,751
 Badger Fur (Floor Decoration),2595
@@ -7206,7 +7202,6 @@ Bed (Dark-Haired Beauty),694
 Beech,3621
 Bench,2373
 Big Fern,3751
-Black Blisters,10690
 Blackboard,2605
 Blackened Flower,9884
 Block of Wood,2743
@@ -7246,15 +7241,12 @@ Carved Stone Tile (Ornamented Lizard),518
 Carved Stone Tile (Ornamented),516
 Carved Stone Tile (Salamander),513
 Castle Flag,2019
-Cat's Food Mushroom,3916
-Cat's Food Mushrooms,3917
 Cave Entrance,7479
 Cave Entrance (Mine),7478
 Cave Painting,15527
 Celestial Map,755
 Chalk,20125
 Chalk Board,854
-Chest of Drawers (Quest),2434
 Chill Nettle,3870
 Chimney (Immobile),7856
 Cleat,4988
@@ -7281,25 +7273,21 @@ Crystal Wall,15272
 Crystal Wall Lamp,44515
 Crystal Wall Lamp (Lit),44516
 Dawn Singer,3875
-Dead Man's Saddle,3907
 Dead Man's Saddles,3907
 Dead Minotaur (Item),4272
 Dead Tree,3634
 Desertfire Plant,9824
 Devil's Tongue Flower,3899
-Dew Kisser Flower,3894
 Dirt (Object),9445
 Dirt Wall,367
 Doomato,10714
 Dragon Scales,10881
 Dragon Statue,747
-Dragonbone Tree,9811
 Dragons Nest Tree,3752
 Draw Well,1931
 Dried Grass,993
 Dried Grass Roof,1197
 Dry Bush,3698
-Dry Earth (Zao),10160
 Dry Grass,993
 Dusk Catcher,3690
 Dustbin,2526
@@ -7318,22 +7306,14 @@ Fir Tree,3614
 Framework Window,6438
 Frog Leaf,3693
 Fur (Tile),6809
-Giant Glimmer Cap Mushroom,3920
-Giant Jungle Rose,3878
 Giant Tree (Verminous),10621
 Giant Verminous,10705
-Giggle Mushroom,3914
-Giggle Mushrooms,3915
-Glimmer Cap Mushroom,3918
-Glimmer Cap Mushrooms,3919
 Gnome Baby,44520
-Gold Blossom,3887
 Grappletackle,10725
 Gravel,4568
 Green Carpet,5581
 Green Fountain Bush,3750
 Green Wig Bush,3747
-Grey Sand,19278
 Grimy Wooden Plank,16489
 Grotto,13597
 High Grass,9999
@@ -7369,7 +7349,6 @@ Jutty,8728
 Ladder (Wood),1948
 Lady in the Fog Plant,3692
 Lamp (Lava),13661
-Large Black Crystal,10797
 Large Pearl Flower (Pink),3902
 Large Pearl Flower (Yellow),3921
 Large Throne,5916
@@ -7389,27 +7368,15 @@ Mammoth Skull,6977
 Mango Tree,5155
 Mango Tree (Harvestworthy),5156
 Mast,4941
-Meadow Star,3890
 Mechanism,8618
 Metal Fittings,5774
 Mire Sprout,3685
 Mold Floor,15027
 Moon Herb,3686
-Moss Cap Mushroom,3909
 Mossy Stone (Normal),1840
-Mountain (Earth),1027
-Mountain (Wall),1116
-Mourning Mushroom,9896
-Mud (Tile),10605
-Mud Whip,3687
-Muddy Brick Wall,17224
-Muddy Floor,355
-Muddy Floor (Dark),10235
-Muddy Floor (Light),10243
 Muddy Water,10494
 Muzzle,7849
 Mysterious Machine (Activated),845
-Necrotic Grass,9892
 Nordic Wall Window,7028
 Obsidian Statue,746
 Old Tree,3636
@@ -7422,9 +7389,7 @@ Palm,3639
 Part of a Giant Stone Dragon,10475
 Pear Tree,3619
 Pedestal,477
-Pepper Root Grass,9846
 Pestbringer,9900
-Pestilent Fern,9889
 Pile of Bones (Quest),4024
 Pile of Chopped Wood,2742
 Pillar (Royal),9429
@@ -7438,7 +7403,6 @@ Poplar,3622
 Purple Cardinal,3884
 Purple Kiss Bush,3753
 Rails,7130
-Rattleleaf Bush,9961
 Red Maple,3618
 Red Shrine Stone,1842
 Remains of a Spider Web,189
@@ -7449,7 +7413,6 @@ Royal Blossom,3665
 Rudder Blade,4970
 Rutted Stone,11281
 Sacrificial Stone,3532
-Sand (Brown),9531
 Sand (Light),9707
 Sand (White),104
 Sewer Grate,435
@@ -7470,8 +7433,6 @@ Slab with a Scorpion,34107
 Slab with a Snake,34105
 Sleeping Bear,7175
 Slime Fungus (Tile),12355
-Slime Table Mushroom,3912
-Slime Table Mushrooms,3913
 Slimy Wall,5563
 Sludge Fern,3694
 Small Basin,1940
@@ -7484,7 +7445,6 @@ Small Sail,1766
 Small Totem Pole,2299
 Snake Nest Bush,3746
 Snake Ornament,561
-Sneeze Blossom,3891
 Snowy Dead Tree (Branched),7021
 Snowy Dead Tree (Half Alive),3608
 Snowy Dead Tree (Rotten),7020
@@ -7538,7 +7498,6 @@ Swamp Lilly,3689
 Swamp Reed,3688
 Swamp Tentacles,9097
 Sycamore,3615
-Tainted Plant,9876
 Tent,264
 The Beard of the Colossus,12006
 The Big Toe of the Colossus,12017
@@ -7547,11 +7506,7 @@ The Fist of the Colossus,12011
 The Remains of a Spider Egg,234
 The Thumb of the Colossus,12010
 The Toes of the Colossus,12019
-Thornpeak Grass,9817
-Thread Tree,3743
-Throatslitter,9952
 Throatslitter (Rotten),9959
-Throne,2357
 Timber Archway,11332
 Timber Table,12022
 Timber Wall,10590
@@ -7561,7 +7516,6 @@ Tower Fern,3745
 Trapdoor,433
 Tree Hole,6452
 Tree Stump,7960
-Trollhair Plants,9847
 Turtle Sprouter,3876
 Vampire Lord Statue,8325
 Velvet Petal,3898
@@ -7657,3 +7611,1071 @@ Darklight Field,43626
 Darklight Spark,43590
 Exalted Seal,44750
 Spheric Teleporter,36874
+A Soulpit,48177
+Abyssal Calamary Soul Core,47810
+Acid Blob Soul Core,47626
+Acolyte of Darkness Soul Core,47653
+Acolyte of the Cult Soul Core,47522
+Adept of the Cult Soul Core,47523
+Adult Goanna Soul Core,47942
+Adventurer Soul Core,47754
+Afflicted Strider Soul Core,47997
+Agrestic Chicken Soul Core,47981
+Albino Dragon Soul Core,48089
+Alchemist's Boots,40592
+Amazon Soul Core,47452
+Amber Axe,47375
+Amber Bludgeon,47370
+Amber Bow,47371
+Amber Crossbow,47377
+Amber Crusher,46628
+Amber Cudgel,47376
+Amber Greataxe,47369
+Amber Infused Insect Heart,48513
+Amber Rod,47373
+Amber Sabre,47374
+Amber Sickle,48413
+Amber Slayer,47368
+Amber Souvenir,48508
+Amber Wand,47372
+Ancient Scarab Soul Core,47454
+Anglerfish Lamp,28674
+Angry Sugar Fairy Soul Core,49089
+Animated Feather Soul Core,47911
+Animated Snowman Soul Core,49031
+Another Yellow Present,37556
+Arachnophobica Soul Core,47923
+Arctic Faun Soul Core,49021
+Armadile Soul Core,48985
+Askarak Demon Soul Core,47710
+Askarak Lord Soul Core,48956
+Askarak Prince Soul Core,48957
+Assassin Soul Core,47501
+Aurora's Collection,44762
+Azure Frog Soul Core,47535
+Back Basket,12644
+Badger Soul Core,47467
+Baleful Bunny Soul Core,49030
+Bandit Soul Core,47500
+Bane Bringer Soul Core,47690
+Bane of Light Soul Core,47655
+Banshee Soul Core,47453
+Barbarian Bloodwalker Soul Core,47566
+Barbarian Brutetamer Soul Core,47574
+Barbarian Headsplitter Soul Core,47575
+Barbarian Skullhunter Soul Core,47565
+Barkless Devotee Soul Core,47866
+Barkless Fanatic Soul Core,47867
+Barrel and Anchor Lamp (Lit),31940
+Bashmu Soul Core,48002
+Bat Soul Core,47484
+Bear Soul Core,47394
+Beehive,48577
+Behemoth Soul Core,47431
+Beijinho,48253
+Bellicose Orger Soul Core,49037
+Bench (Troll),12639
+Berrypest Soul Core,47697
+Berserker Chicken Soul Core,48938
+Betrayed Wraith Soul Core,47544
+Bioluminescent Root End,48118
+Biscuit Barrier,45643
+Biting Book Soul Core,47902
+Black Heart,45351
+Black Sheep Soul Core,48929
+Black Sphinx Acolyte Soul Core,47935
+Blemished Spawn Soul Core,47996
+Blightwalker Soul Core,47556
+Bloated Man-Maggot Soul Core,48079
+Blood Beast Soul Core,47788
+Blood Crab Soul Core,47530
+Blood Hand Soul Core,47765
+Blood Priest Soul Core,47761
+Blossom Bed,45516
+Blossom Cabinet,45504
+Blue Djinn Soul Core,47455
+Blue Ice Cream Lamp,48435
+Blue Ice Cream Lamp (Lit),48436
+Blue Present,37552
+Blue and a Red Present,37551
+Boar Man Soul Core,48056
+Boar Soul Core,47698
+Bog Frog Soul Core,47715
+Bog Raider Soul Core,47603
+Bonebeast Soul Core,47463
+Bonelord Soul Core,47395
+Bony Sea Devil Soul Core,47952
+Boogy Soul Core,47862
+Brachiodemon Soul Core,47956
+Brain Squid Soul Core,47901
+Braindeath Soul Core,47564
+Branch Fence,12623
+Branchy Crawler Soul Core,47957
+Breach Brood Soul Core,47840
+Bride of Night Soul Core,47662
+Brigadeiro,48252
+Brimstone Bug Soul Core,47688
+Broken Shaper Soul Core,47851
+Bubblegum Blotch,48237
+Bug Soul Core,47422
+Bulltaur Alchemist Soul Core,48093
+Bulltaur Brute Soul Core,48092
+Bulltaur Forgepriest Soul Core,48094
+Burning Book Soul Core,47904
+Burning Gladiator Soul Core,47933
+Bursa Obscura,49160
+Burster Spectre Soul Core,47921
+Butterfly Soul Core (Blue),47503
+Butterfly Soul Core (Purple),47490
+Butterfly Soul Core (Red),47504
+Cake Golem Soul Core,47691
+Calamary Soul Core,48969
+Candy Bed (Footboard),48450
+Candy Bed (Headboard),48449
+Candy Cane Beam,48359
+Candy Cane Chair,48470
+Candy Cane Ladder,48494
+Candy Chest,48575
+Candy Cushion,48467
+Candy Floss Elemental Soul Core,49074
+Candy Horror Soul Core,49076
+Candy Lipstick,48241
+Candy Necklace,45641
+Candy-Coated Quiver,45644
+Capricious Phantom Soul Core,47958
+Carniphila Soul Core,47482
+Carnivostrich Soul Core,48058
+Carrion Worm Soul Core,47520
+Cat Soul Core,47587
+Cave Chimera Soul Core,47999
+Cave Devourer Soul Core,47880
+Cave Parrot Soul Core,47848
+Cave Rat Soul Core,47432
+Celestial Torch,49176
+Centipede Soul Core,47486
+Chagorz Igneous Obsidian,43966
+Chair (Red),10979
+Chakoya Toolshaper Soul Core,47570
+Chakoya Tribewarden Soul Core,47563
+Chakoya Windcaller Soul Core,47571
+Chasm Spawn Soul Core,47882
+Chicken Soul Core,47473
+Chocolate Blob Soul Core,49087
+Chocolate Fountain,48432
+Chocolate Table,48430
+Choking Fear Soul Core,47778
+Churro Heart,48254
+Clay Guardian Soul Core,47707
+Cliff Strider Soul Core,48989
+Cloak of Terror Soul Core,47954
+Clomp Soul Core,47829
+Cobra Assassin Soul Core,47930
+Cobra Scout Soul Core,47931
+Cobra Soul Core,47456
+Cobra Vizier Soul Core,47946
+Cocoa Grimoire,45639
+Converter Soul Core,48069
+Coral Frog Soul Core,47536
+Corms,12655
+Corym Charlatan Soul Core,47750
+Corym Skirmisher Soul Core,47751
+Corym Vanguard Soul Core,47752
+Courage Leech Soul Core,47964
+Cow Soul Core,49035
+Crab Soul Core,47474
+Cracked Insectoid Egg,13307
+Crape Man Soul Core,48054
+Crawler Soul Core,47727
+Crazed Beggar Soul Core,47637
+Crazed Summer Rearguard Soul Core,47927
+Crazed Summer Vanguard Soul Core,47926
+Crazed Winter Rearguard Soul Core,47925
+Crazed Winter Vanguard Soul Core,47924
+Cream Blob Soul Core,49095
+Creamy Grimoire,45640
+Crimson Frog Soul Core,47537
+Crocodile Soul Core,47481
+Crusher,46627
+Crustacea Gigantica Soul Core,47702
+Crypt Defiler Soul Core,48981
+Crypt Shambler Soul Core,47462
+Crypt Warden Soul Core,47936
+Crypt Warrior Soul Core,47984
+Crystal Lamp (Lit),31197
+Crystal Spider Soul Core,47572
+Crystal Wolf Soul Core,47717
+Crystalcrusher Soul Core,47734
+Cult Believer Soul Core,47874
+Cult Enforcer Soul Core,47875
+Cult Scholar Soul Core,49019
+Cunning Werepanther Soul Core,48087
+Curly Hortensis Lamp,31695
+Cursed Ape Soul Core,48063
+Cursed Book Soul Core,49023
+Cursed Prospector Soul Core,47950
+Cyclops Drone Soul Core,47590
+Cyclops Smith Soul Core,47589
+Cyclops Soul Core,47399
+Damaged Crystal Golem Soul Core,48982
+Damaged Worker Golem Soul Core,47636
+Dark Apprentice Soul Core,47579
+Dark Carnisylvan Soul Core,48006
+Dark Chocolate Coin,48250
+Dark Faun Soul Core,47868
+Dark Magician Soul Core,47578
+Dark Monk Soul Core,47502
+Dark Torturer Soul Core,47545
+Darklight Construct Soul Core,48068
+Darklight Emitter Soul Core,48072
+Darklight Matter Soul Core,48070
+Darklight Source Soul Core,48085
+Darklight Striker Soul Core,48086
+Dawnfire Asura Soul Core,47816
+Death Blob Soul Core,47627
+Death Priest Soul Core,48948
+Deathling Scout Soul Core,47908
+Deathling Spellsinger Soul Core,47915
+Deepling Brawler Soul Core,48976
+Deepling Elite Soul Core,48979
+Deepling Guard Soul Core,47723
+Deepling Master Librarian Soul Core,48977
+Deepling Scout Soul Core,47714
+Deepling Spellsinger Soul Core,47724
+Deepling Tyrant Soul Core,48978
+Deepling Warrior Soul Core,47722
+Deepling Worker Soul Core,47732
+Deepsea Blood Crab Soul Core,47594
+Deepworm Soul Core,47878
+Deer Soul Core,47408
+Defiler Soul Core,47549
+Demon Outcast Soul Core,47781
+Demon Parrot Soul Core,48939
+Demon Root,48510
+Demon Skeleton Soul Core,47414
+Demon Soul Core,47412
+Depot Box XXI,48486
+Destroyer Soul Core,47547
+Devourer Soul Core,47799
+Diabolic Imp Soul Core,47548
+Diamond Servant Replica Soul Core,49008
+Diamond Servant Soul Core,47706
+Dire Penguin Soul Core,47577
+Diremaw Soul Core,47879
+Dirty Water,12705
+Distorted Phantom Soul Core,47973
+Dog Soul Core,47409
+Doom Deer Soul Core,48936
+Doomsday Cultist Soul Core,47658
+Dragolisk Soul Core,48095
+Dragon Hatchling Soul Core,47585
+Dragon Lord Hatchling Soul Core,47586
+Dragon Lord Soul Core,47416
+Dragon Soul Core,47411
+Dragonling Soul Core,48991
+Draken Abomination Soul Core,47687
+Draken Elite Soul Core,47686
+Draken Spellweaver Soul Core,47671
+Draken Warmaster Soul Core,47670
+Draptor Soul Core,47700
+Dread Intruder Soul Core,47842
+Drillworm Soul Core,47739
+Dromedary Soul Core,47713
+Druid Pedestal,44647
+Druid's Apparition Soul Core,47966
+Dryad Soul Core,47583
+Duskbringer Soul Core,47656
+Dwarf Geomancer Soul Core,47442
+Dwarf Guard Soul Core,47446
+Dwarf Henchman Soul Core,47582
+Dwarf Soldier Soul Core,47447
+Dwarf Soul Core,47445
+Dworc Fleshhunter Soul Core,47492
+Dworc Venomsniper Soul Core,47493
+Dworc Voodoomaster Soul Core,47491
+Earth Elemental Soul Core,47602
+Efreet Soul Core,47465
+Elder Bonelord Soul Core,47470
+Elder Forest Fury Soul Core,49007
+Elder Mummy Soul Core,48949
+Elder Wyrm Soul Core,47763
+Elephant Soul Core,47488
+Elf Arcanist Soul Core,47439
+Elf Overseer Soul Core,47718
+Elf Scout Soul Core,47440
+Elf Soul Core,47438
+Emerald Damselfly Soul Core,47747
+Emerald Tortoise Soul Core,48043
+Energetic Book Soul Core,47906
+Energuardian of Tales Soul Core,47907
+Energy Elemental Soul Core,47601
+Enfeebled Silencer Soul Core,47864
+Enlightened of the Cult Soul Core,47521
+Enraged Crystal Golem Soul Core,47738
+Enslaved Dwarf Soul Core,47742
+Eternal Guardian Soul Core,47668
+Evil Prospector Soul Core,47951
+Evil Sheep Lord Soul Core,48933
+Evil Sheep Soul Core,47645
+Execowtioner Soul Core,47793
+Exhausted Small Spores,43785
+Exotic Bat Soul Core,47990
+Exotic Cave Spider Soul Core,47985
+Eyeless Devourer Soul Core,47995
+Falcon Knight Soul Core,47899
+Falcon Paladin Soul Core,47900
+Faun Soul Core,47858
+Feral Sphinx Soul Core,47938
+Feral Werecrocodile Soul Core,48076
+Feverish Citizen Soul Core,48951
+Feversleep Soul Core,47783
+Filth Toad Soul Core,48959
+Fire Devil Soul Core,47417
+Fire Elemental Soul Core,47425
+Firestarter Soul Core,48960
+Fish Eye,48517
+Fish Soul Core,47726
+Flame,33877
+Flamingo Soul Core,47489
+Flask with Lemon Sirup,48196
+Flask with Moon Melon Sirup,48194
+Flask with Raspberry Sirup,48195
+Flimsy Lost Soul Soul Core,47947
+Floating Savant Soul Core,47896
+Fluorescent Fungi,28920
+Flying Book Soul Core,49022
+Foam Stalker Soul Core,48035
+Forest Fury Soul Core,47770
+Fox Soul Core,47883
+Frazzlemaw Soul Core,47784
+Freakish Lost Soul Soul Core,47949
+Frost Dragon Hatchling Soul Core,47593
+Frost Dragon Soul Core,47561
+Frost Flower Asura Soul Core,47890
+Frost Giant Soul Core,47567
+Frost Giantess Soul Core,47576
+Frost Troll Soul Core,47429
+Fruit Drop Soul Core,49092
+Full Honey Glass,48280
+Furious Fire Elemental Soul Core,47773
+Furious Troll Soul Core,47643
+Fury Soul Core,47551
+Gang Member Soul Core,47638
+Gargoyle Soul Core,47460
+Gazer Soul Core,47471
+Gazer Spectre Soul Core,47920
+Ghastly Dragon Soul Core,47683
+Ghost Soul Core,47424
+Ghost Wolf Soul Core,49006
+Ghoul Soul Core,47396
+Ghoulish Hyaena Soul Core,48943
+Giant Spider Soul Core,47415
+Gingerbread Key,48198
+Gingerbread Key (Moon Melon and Raspberry),48200
+Gingerbread Key (Moon Melon),48199
+Gingerbread Key (Moon Melon, Raspberry and Lemon),48178
+Gingerbread Key Recipe,48102
+Gingerbread Man Soul Core,49086
+Girtablilu Warrior Soul Core,48001
+Gladiator Soul Core,47639
+Gloom Wolf Soul Core,49005
+Gloomy Poisonous Fungi,28926
+Glooth Anemone Soul Core,47790
+Glooth Bandit Soul Core,47813
+Glooth Blob Soul Core,47797
+Glooth Brigand Soul Core,47814
+Glooth Golem Soul Core,47786
+Glowing Sulphur Fungi,28924
+Gnarlhound Soul Core,47678
+Goblin Assassin Soul Core,47606
+Goblin Leader Soul Core,47581
+Goblin Scavenger Soul Core,47607
+Goblin Soul Core,47437
+Goggle Cake Soul Core,49075
+Golden Servant Replica Soul Core,49009
+Golden Servant Soul Core,47705
+Goldhanded Cultist Bride Soul Core,49015
+Goldhanded Cultist Soul Core,49014
+Gore Horn Soul Core,48041
+Gorerilla Soul Core,48051
+Gozzler Soul Core,47635
+Grave Guard Soul Core,48945
+Grave Robber Soul Core,48980
+Gravedigger Soul Core,47766
+Greasy Stone,12421
+Greater Fragment,46626
+Green Djinn Soul Core,47427
+Green Frog Soul Core,47534
+Green Ice Cream Lamp,48439
+Green Ice Cream Lamp (Lit),48440
+Green and a Blue Present,37549
+Green and a Red Present,37550
+Grim Reaper Soul Core,47608
+Grimeleech Soul Core,47830
+Grynch Clan Goblin Soul Core,47592
+Gryphon Soul Core,49032
+Guardian of Tales Soul Core,49024
+Gummy Rotworm,48116
+Guzzlemaw Soul Core,47776
+Hand of Cursed Fate Soul Core,47541
+Handful of Marzipan Carrots,48582
+Harpy Soul Core,48057
+Haunted Dragon Soul Core,49010
+Haunted Treeling Soul Core,47624
+Headpecker Soul Core,48049
+Heart Lamp (Four-Lit),33029
+Heart Lamp (Small-Lit),33031
+Hellfire Fighter Soul Core,47554
+Hellflayer Soul Core,47832
+Hellhound Soul Core,47553
+Hellspawn Soul Core,47632
+Herald of Gloom Soul Core,47661
+Hero Soul Core,47449
+Hibernal Moth Soul Core,49027
+Hideous Fungus Soul Core,47744
+High Voltage Elemental Soul Core,47812
+Hive Overseer Soul Core,48975
+Honey Elemental Soul Core,49088
+Honour Guard Soul Core,48950
+Horse Soul Core (Brown),48962
+Horse Soul Core (Gray),48963
+Horse Soul Core (Taupe),48961
+Hot Dog Soul Core,48934
+Hulking Carnisylvan Soul Core,48004
+Hulking Prehemoth Soul Core,48046
+Humongous Fungus Soul Core,47740
+Hunter Soul Core,47390
+Husky Soul Core,48931
+Hyaena Soul Core,47459
+Hyaena Statue,12466
+Hydra Soul Core,47483
+Ice Dragon Soul Core,49011
+Ice Golem Soul Core,47568
+Ice Witch Soul Core,47573
+Icecold Book Soul Core,47905
+Iks Ahpututu Soul Core,48064
+Iks Aucar Soul Core,48061
+Iks Chuka Soul Core,48062
+Iks Churrascan Soul Core,49039
+Iks Pututu Soul Core,48060
+Iks Yapunac Soul Core,48091
+Infected Weeper Soul Core,48992
+Infernal Demon Soul Core,47961
+Infernal Frog Soul Core,48940
+Infernal Phantom Soul Core,47959
+Infernalist Soul Core,47641
+Ink Blob Soul Core,47903
+Insane Siren Soul Core,47929
+Insect Swarm Soul Core,47673
+Insect Tarsus,48512
+Insectoid Scout Soul Core,48958
+Insectoid Worker Soul Core,47733
+Instable Breach Brood Soul Core,47845
+Instable Sparkion Soul Core,47844
+Intricate Cage Key,48190
+Iron Servant Replica Soul Core,47853
+Iron Servant Soul Core,47704
+Ironblight Soul Core,48990
+Island Troll Soul Core,47539
+Jelly Fountain,45045
+Jellyfish Soul Core,48970
+Juggernaut Soul Core,47555
+Jungle Moa Soul Core,48033
+Juvenile Bashmu Soul Core,48003
+Killer Caiman Soul Core,47677
+Killer Rabbit Soul Core,48937
+Knight Pedestal,44644
+Knight's Apparition Soul Core,47967
+Knowledge Elemental Soul Core,49025
+Kollos Soul Core,48973
+Kongra Soul Core,47478
+Lacewing Moth Soul Core,49026
+Ladybug Soul Core,48967
+Lamassu Soul Core,47937
+Lancer Beetle Soul Core,47681
+Larva Soul Core,47457
+Lava Golem Soul Core,48988
+Lava Lurker Soul Core,47886
+Lavafungus Soul Core,47998
+Lavaworm Soul Core,47991
+Leaf Golem Soul Core,47769
+Lesser Fragment,46625
+Lich Soul Core,47461
+Lime Tart,48255
+Liodile Soul Core,48055
+Lion Soul Core,47418
+Little Corym Charlatan Soul Core,48994
+Lizard Chosen Soul Core,47672
+Lizard Dragon Priest Soul Core,47674
+Lizard High Guard Soul Core,47676
+Lizard Legionnaire Soul Core,47675
+Lizard Magistratus Soul Core,47684
+Lizard Noble Soul Core,47685
+Lizard Sentinel Soul Core,47476
+Lizard Snakecharmer Soul Core,47477
+Lizard Templar Soul Core,47475
+Lizard Zaogun Soul Core,47669
+Loricate Orger Soul Core,49036
+Lost Basher Soul Core,47756
+Lost Berserker Soul Core,47743
+Lost Exile Soul Core,47877
+Lost Husher Soul Core,47755
+Lost Soul Soul Core,47543
+Lost Thrower Soul Core,47757
+Lumbering Carnivor Soul Core,47916
+Mad Scientist Soul Core,47640
+Magic Bag of Magic Chests,48475
+Magic Forcefield (Orange),37000
+Magic Wolf Trap,12368
+Magma Crawler Soul Core,47741
+Makara Soul Core,48038
+Mammoth Soul Core,47529
+Manta Ray Soul Core,48968
+Manticore Soul Core,47940
+Mantosaurus Soul Core,48048
+Many Faces Soul Core,47953
+Marid Soul Core,47466
+Marsh Stalker Soul Core,47749
+Marzipan Carrot,48586
+Massive Earth Elemental Soul Core,47600
+Massive Energy Elemental Soul Core,48932
+Massive Fire Elemental Soul Core,47559
+Massive Water Elemental Soul Core,47540
+Matcha Turtle,48239
+Matcha Turtle Recipe,48481
+Mean Lost Soul Soul Core,47948
+Meandering Mushroom Soul Core,48066
+Medusa Soul Core,47646
+Mega Dragon Soul Core,48097
+Menacing Carnivor Soul Core,47918
+Mercurial Menace Soul Core,48053
+Mercury Blob Soul Core,47628
+Merlkin Soul Core,47479
+Metal Gargoyle Soul Core,47787
+Midnight Asura Soul Core,47817
+Midnight Panther Soul Core,47703
+Midnight Spawn Soul Core,47659
+Midnight Warrior Soul Core,47660
+Milk Chocolate Coin,48249
+Minotaur Amazon Soul Core,47792
+Minotaur Archer Soul Core,47401
+Minotaur Cult Follower Soul Core,47871
+Minotaur Cult Prophet Soul Core,47872
+Minotaur Cult Zealot Soul Core,47873
+Minotaur Guard Soul Core,47406
+Minotaur Hunter Soul Core,47795
+Minotaur Invader Soul Core,49002
+Minotaur Mage Soul Core,47400
+Minotaur Soul Core,47402
+Mirror Image Spell,48192
+Misguided Bully Soul Core,47855
+Misguided Thief Soul Core,47856
+Mitmah Scout Soul Core,48098
+Mitmah Seer Soul Core,48099
+Modified Gnarlhound Soul Core,48983
+Mole Soul Core,49020
+Monk Soul Core,47433
+Mooh'Tah Warrior Soul Core,47794
+Moohtant Soul Core,47791
+Moon Melon,48197
+Moon Melon Slice,48179
+Morbid Floor Lamp,45347
+Morbid Floor Lamp (Lit),45348
+Mould (Field),42853
+Mould Phantom Soul Core,47965
+Mummy Soul Core,47441
+Mushroom Sniffer Soul Core,47735
+Mutated Bat Soul Core,47622
+Mutated Human Soul Core,47634
+Mutated Rat Soul Core,47619
+Mutated Tiger Soul Core,47629
+Mycobiontic Beetle Soul Core,48065
+Naga Archer Soul Core,48036
+Naga Boat,39756
+Naga Warrior Soul Core,48037
+Necromancer Soul Core,47388
+Nibblemaw Soul Core,49073
+Nightfiend Soul Core,47764
+Nighthunter Soul Core,48045
+Nightmare Scion Soul Core,47631
+Nightmare Soul Core,47557
+Nightsky Cupcake,48240
+Nightsky Cupcake Recipe,48482
+Nightslayer Soul Core,47654
+Nightstalker Soul Core,47633
+Noble Lion Soul Core,49003
+Nomad Soul Core (Basic),47558
+Nomad Soul Core (Blue),48965
+Nomad Soul Core (Female),48966
+Northern Pike Soul Core,48971
+Novice of the Cult Soul Core,47524
+Noxious Ripptor Soul Core,48050
+Nymph Soul Core,47865
+Ogre Brute Soul Core,47826
+Ogre Rowdy Soul Core,47944
+Ogre Ruffian Soul Core,47943
+Ogre Sage Soul Core,47945
+Ogre Savage Soul Core,47827
+Ogre Shaman Soul Core,47828
+Ominous Soul Core,49163
+Omnivora Soul Core,47819
+Oozing Carcass Soul Core,48067
+Oozing Corpus Soul Core,48071
+Opulent Spice Rack,42335
+Orc Berserker Soul Core,47387
+Orc Cult Fanatic Soul Core,49018
+Orc Cult Inquisitor Soul Core,47869
+Orc Cult Minion Soul Core,47870
+Orc Cult Priest Soul Core,49017
+Orc Cultist Soul Core,49016
+Orc Leader Soul Core,47435
+Orc Marauder Soul Core,47667
+Orc Rider Soul Core,47383
+Orc Shaman Soul Core,47385
+Orc Soul Core,47384
+Orc Spearman Soul Core,47426
+Orc Warlord Soul Core,47381
+Orc Warrior Soul Core,47386
+Orchid Frog Soul Core,47538
+Orclops Doomhauler Soul Core,47849
+Orclops Ravager Soul Core,47850
+Orewalker Soul Core,48987
+Orger Soul Core,49033
+Oven (Feyrist),48193
+Paladin Pedestal,44645
+Paladin's Apparition Soul Core,47968
+Pallet,12649
+Panda Soul Core,47485
+Parder Soul Core,48032
+Parrot Soul Core,47494
+Pastry Dragon,48256
+Pegasus Feather,48424
+Penguin Soul Core,47562
+Peppermint Backpack,48114
+Percht Soul Core,49028
+Petrified Leaf,48515
+Phantasm Soul Core,47552
+Pig Soul Core,47436
+Pigeon Soul Core,48993
+Pile of Alchemistic Books (Lit),27688
+Pile of Presents,37547
+Pink Blossom Lamp,45518
+Pink Blossom Lamp (Lit),45520
+Pink Ice Cream Lamp,48437
+Pink Ice Cream Lamp (Lit),48438
+Pirat Bombardier Soul Core,47988
+Pirat Cutthroat Soul Core,47986
+Pirat Mate Soul Core,47989
+Pirat Scoundrel Soul Core,47987
+Pirate Buccaneer Soul Core,47518
+Pirate Corsair Soul Core,47519
+Pirate Cutthroat Soul Core,47517
+Pirate Ghost Soul Core,47526
+Pirate Marauder Soul Core,47516
+Pirate Skeleton Soul Core,47525
+Pixie Soul Core,47861
+Plaguesmith Soul Core,47560
+Poacher Soul Core,47580
+Podzilla's Finest,48419
+Poison Spider Soul Core,47413
+Poisonous Carnisylvan Soul Core,48005
+Polar Bear Soul Core,47419
+Pooka Soul Core,47859
+Pool of Tears,33876
+Pop Tart Painting,48434
+Potent Dew,48422
+Powerful Light Blue Seed,45648
+Powerful Pink Seed,45646
+Powerful Purple Seed,45650
+Powerful Red Seed,45647
+Powerful Violet Seed,45649
+Powerful Yellow Seed,45651
+Preserved Dark Seed,48505
+Preserved Light Blue Seed,45654
+Preserved Pink Seed,45652
+Preserved Purple Seed,45656
+Preserved Red Seed,45653
+Preserved Violet Seed,45655
+Preserved Yellow Seed,45657
+Priestess Soul Core,47434
+Priestess of the Wild Sun Soul Core,47934
+Processed Blue Tea Leaves,48420
+Purple Blossom Lamp,45521
+Purple Blossom Lamp (Lit),45522
+Putrid Mummy Soul Core,47857
+Quara Constrictor Scout Soul Core,47509
+Quara Constrictor Soul Core,47508
+Quara Hydromancer Scout Soul Core,47513
+Quara Hydromancer Soul Core,47512
+Quara Looter Soul Core,49082
+Quara Mantassin Scout Soul Core,47511
+Quara Mantassin Soul Core,47510
+Quara Pincher Scout Soul Core,47515
+Quara Pincher Soul Core,47514
+Quara Plunderer Soul Core,49081
+Quara Predator Scout Soul Core,47507
+Quara Predator Soul Core,47506
+Quara Raider Soul Core,49080
+Rabbit Soul Core,47450
+Rabid Wolf Soul Core,49040
+Rage Squid Soul Core,47909
+Ragged Rabid Wolf Soul Core,49041
+Raging Fire Soul Core,47815
+Rainbow Waffles,48248
+Rainbow Waffles Recipe,48483
+Rat Soul Core,47398
+Ravenous Lava Lurker Soul Core,47888
+Reality Reaver Soul Core,47838
+Red Heart,45525
+Red Present,37553
+Redeemed Soul Soul Core,49004
+Renegade Knight Soul Core,47824
+Renegade Quara Constrictor Soul Core,48997
+Renegade Quara Hydromancer Soul Core,48998
+Renegade Quara Mantassin Soul Core,48999
+Renegade Quara Pincher Soul Core,49000
+Renegade Quara Predator Soul Core,49001
+Resin Parasite,48511
+Resinous Fish Fin,48509
+Retching Horror Soul Core,47780
+Rhindeer Soul Core,48059
+Ring of Temptation,45642
+Ripper Spectre Soul Core,47919
+Roaring Lion Soul Core,47771
+Roast Pork Soul Core,49034
+Root Tentacle,48516
+Root Vegetable Dish,12656
+Rootthing Amber Shaper Soul Core,49078
+Rootthing Bug Tracker Soul Core,49077
+Rootthing Nutshell Soul Core,49079
+Rorc Soul Core,47768
+Rose Milk Cake,48238
+Rose Milk Cake Recipe,48480
+Rot Elemental Soul Core,47798
+Rotten Golem Soul Core,47962
+Rotten Man-Maggot Soul Core,48080
+Rotworm Soul Core,47403
+Rustheap Golem Soul Core,47789
+Sabretooth Soul Core,48042
+Sacred Spider Soul Core,48947
+Salamander Soul Core,47748
+Sand Toys,49156
+Sandcrawler Soul Core,47682
+Sandstone Scorpion Soul Core,48944
+Sandtimer,33786
+Sarcophagus (Open),12464
+Scarab Soul Core,47458
+Schiach Soul Core,49029
+Scorpion Altar,12492
+Scorpion Soul Core,47420
+Sea Serpent Soul Core,47595
+Seacrest Serpent Soul Core,48996
+Seagull Soul Core,47532
+Serpent Spawn Soul Core,47497
+Shaburak Demon Soul Core,47709
+Shaburak Lord Soul Core,48954
+Shaburak Prince Soul Core,48955
+Shadow Hound Soul Core,47657
+Shadow Pupil Soul Core,47760
+Shaper Matriarch Soul Core,47854
+Shark Soul Core,47725
+Sheep Soul Core,47392
+Shelf,12641
+Shock Head Soul Core,47774
+Shrieking Cry-Stal Soul Core,48052
+Shrine (Blue),33019
+Shrine (Green),33021
+Shrine (Orange),33023
+Shrine (Violet),33025
+Sibang Soul Core,47480
+Sight of Surrender Soul Core,47775
+Silencer Soul Core,47777
+Silver Rabbit Soul Core,47569
+Skeleton Elite Warrior Soul Core,47913
+Skeleton Soul Core,47410
+Skeleton Warrior Soul Core,47598
+Skull Cabinet,45327
+Skunk Soul Core,47468
+Slime Soul Core,47397
+Slug Soul Core,47712
+Small Blue Present,37554
+Small Gingerbread House,49166
+Small Spore Reservoir,43745
+Smuggler Soul Core,47499
+Snake Soul Core,47405
+Son of Verminor Soul Core,47533
+Sopping Carcass Soul Core,48083
+Sopping Corpus Soul Core,48084
+Sorcerer Pedestal,44646
+Sorcerer's Apparition Soul Core,47969
+Soul Prism,49164
+Soul-Broken Harbinger Soul Core,47928
+Souleater Soul Core,47689
+Sparkion Soul Core,47839
+Spectre Soul Core,47546
+Sphinx Soul Core,47939
+Spider Soul Core,47407
+Spidris Elite Soul Core,48974
+Spidris Soul Core,48972
+Spiky Carnivor Soul Core,47917
+Spit Nettle Soul Core,47498
+Spitter Soul Core,47730
+Spooky Chest,45325
+Spore Cloud,43296
+Spores,43294
+Squid Warden Soul Core,47910
+Squidgy Slime Soul Core,48930
+Squirrel Soul Core,47584
+Stabilizing Dread Intruder Soul Core,47847
+Stabilizing Reality Reaver Soul Core,47846
+Stalker Soul Core,47448
+Stalking Stalk Soul Core,48047
+Stampor Soul Core,47699
+Starving Wolf Soul Core,48953
+Stoic Iks Boots,44648
+Stoic Iks Casque,44636
+Stoic Iks Chestplate,44620
+Stoic Iks Cuirass,44619
+Stoic Iks Culet,44642
+Stoic Iks Faulds,44643
+Stoic Iks Headpiece,44637
+Stoic Iks Sandals,44649
+Stone Devourer Soul Core,48984
+Stone Golem Soul Core,47443
+Stone Rhino Soul Core,49012
+Stonerefiner Soul Core,47876
+Strange Inedible Fruit,48514
+Streaked Devourer Soul Core,47994
+Sugar (Quest),48201
+Sugar Cube Soul Core,49085
+Sugar Cube Worker Soul Core,49094
+Sulphider Soul Core,48039
+Sulphur Spouter Soul Core,48040
+Summer Court Portal,29979
+Swamp Troll Soul Core,47451
+Swampling Soul Core,47753
+Swan Maiden Soul Core,49013
+Swarmer Soul Core,47729
+Sweet Present,48578
+Tackleweed,10828
+Tainted Soul Soul Core,47818
+Taiyaki,48115
+Taiyaki Ice Cream,48273
+Tarantula Soul Core,47496
+Tarnished Spirit Soul Core,47767
+Tattered Piece of Paper,48278
+Blue Witches' Cauldron Flower,49225
+Chill Nettle Shrub,49222
+Cormayan Beech,49219
+Kapok Tree,49218
+Spotted Jungle Orchid,49224
+Sycamore Tree,49220
+Ember Chair,49233
+Ember Table,49243
+Meager Porker,32023
+Ember Bench,49237
+Large Obelisk,49174
+Large Obelisk (Lit),49175
+Ominous Trashcan,44563
+Ember Bed,49257
+Arbaziloth Santa,50124
+Arbaziloth Shoulder Piece,50067
+Bloodstained Scythe,50101
+Brinebrute Claw,50056
+Brinebrute Inferniarch Soul Core,50105
+Broodrider Inferniarch Soul Core,50107
+Broodrider Saddle,50058
+Chaos Critical Dice (Replica),49273
+Demon Claws,50060
+Demon Finger,49908
+Demon In a Green Box,50064
+Demon Skull (Store),31226
+Demonfang Mask,49534
+Demonic Core Essence,49909
+Demonic Matter,49894
+Dreadfire Headpiece,49533
+Gorger Antlers,50059
+Gorger Inferniarch Soul Core,50108
+Hellhunter Eye,50055
+Hellhunter Inferniarch Soul Core,50104
+Hellstalker Visor,49532
+Love Elixir (Replica),49272
+Maliceforged Helmet,49531
+Sineater Inferniarch Soul Core,50106
+Sineater Wing,50057
+Skin of Gralvalon,49892
+Skin of Malvaroth,49893
+Skin of Twisterror,49891
+Some Troll Food,49904
+Spellreaper Inferniarch Soul Core,50103
+Spellreaper Staff Totem,50054
+Mummified Demon Finger,49908
+Ember Cabinet,49245
+Ember Chest,49241
+Draining Inferniarch Arbalest,49862
+Draining Inferniarch Battleaxe,49865
+Draining Inferniarch Blade,49877
+Draining Inferniarch Bow,49859
+Draining Inferniarch Flail,49871
+Draining Inferniarch Greataxe,49868
+Draining Inferniarch Rod,49886
+Draining Inferniarch Slayer,49880
+Draining Inferniarch Wand,49883
+Draining Inferniarch Warhammer,49874
+Inferniarch Arbalest,49522
+Inferniarch Battleaxe,49523
+Inferniarch Blade,49527
+Inferniarch Bow,49520
+Inferniarch Flail,49525
+Inferniarch Greataxe,49524
+Inferniarch Rod,49529
+Inferniarch Slayer,49530
+Inferniarch Wand,49528
+Inferniarch Warhammer,49526
+Rending Inferniarch Arbalest,49861
+Rending Inferniarch Battleaxe,49864
+Rending Inferniarch Blade,49876
+Rending Inferniarch Bow,49858
+Rending Inferniarch Flail,49870
+Rending Inferniarch Greataxe,49867
+Rending Inferniarch Rod,49885
+Rending Inferniarch Slayer,49879
+Rending Inferniarch Wand,49882
+Rending Inferniarch Warhammer,49873
+Siphoning Inferniarch Arbalest,49863
+Siphoning Inferniarch Battleaxe,49866
+Siphoning Inferniarch Blade,49878
+Siphoning Inferniarch Bow,49860
+Siphoning Inferniarch Flail,49872
+Siphoning Inferniarch Greataxe,49869
+Siphoning Inferniarch Rod,49887
+Siphoning Inferniarch Slayer,49881
+Siphoning Inferniarch Wand,49884
+Siphoning Inferniarch Warhammer,49875
+Sacrificial Altar,49407
+Candy Bed,48452
+Energy Vein (Marapur),39547
+Small Fire Elemental,49267
+Small Fire Elemental (Lit),49265
+Small Volcano,49258
+Small Volcano (Lit),49259
+Sickbay Cabinet,50180
+Fragment of a Statue (1st),55336
+Fragment of a Statue (2nd),55337
+Fragment of a Statue (3rd),55338
+Guardian Statue (Quest),55338
+Gaunt Briar,19758
+Sickbay Table,50180
+Demon in a Golden Box,50063
+Demon in a Green Box,50064
+Demon in a Red Box,50062
+Rotrender Claw,50066
+Rotrender Scalp,50065
+Rotrender's Sceptre,50052
+Blood Coin,50053
+Contained Rift,49889
+Pulsating Rift,49888
+Monk (Creature) Soul Core,47433
+Rotrenders Rot,49907
+Amber Kusarigama,50239
+Bambus Jo,50270
+Boots of Enlightenment,50267
+Charged Merudri Ring,50147
+Cobra Bo,50167
+Collar of Orange Plasma,50152
+Coned Hat of Enlightenment,50274
+Coned Hat of Spirits,50188
+Dark Vision Bandana,50190
+Death Oyoroi,50260
+Depth Claws,50176
+Draining Inferniarch Claws,50252
+Eldritch Crescent Moon Spade,50169
+Eldritch Monk Boots,50266
+Enchanted Merudri Brooch,50154
+Enchanted Werewolf Helmet (Fist),50191
+Energy Robe,50279
+Falcon Sais,50161
+Fists of Enlightenment,50271
+Ghazbaran Oyoroi,50275
+Gilded Eldritch Crescent Moon Spade,50170
+Gnomish Cuirass,50276
+Gnomish Footwraps,50290
+Good Remains of a Merudri,50311
+Grand Sanguine Claws,50158
+Guarded Crystal Sphere,50227
+Harmony Amulet,50195
+Ice Robe,50280
+Inferniarch Claws,50250
+Jade Conical Hat,50193
+Jade Legs,50185
+Jungle Survivor Legs,50186
+Lasting Exercise Wraps,50295
+Leaf Robe,50277
+Legs of Wisdom,50187
+Light Bandana,50194
+Light Jo Staff,50166
+Lion Claws,50162
+Magma Robe,50278
+Merudri Brooch,50156
+Merudri Nanbando,50261
+Merudri Ring,50149
+Merudri Scale Mail,50263
+Mighty Demonic Core Essence,50312
+Monk Robe,50258
+Monk's Apparition Soul Core,50330
+Mutant Hide Trousers,50184
+Naga Katar,50160
+Nunchaku,50182
+Nunchaku of Enlightenment,50273
+Pair of Monk Fists,50181
+Plain Monk Robe,50257
+Rending Inferniarch Claws,50251
+Ring of Orange Plasma,50150
+Robe of Enlightenment,50268
+Sais,50183
+Sais of Enlightenment,50272
+Sanguine Trousers,50146
+Sensing Crown,50313
+Siphoning Inferniarch Claws,50253
+Soulgarb,50254
+Soulkamas,50159
+Soulsoles,50240
+Stoic Iks Robe,50255
+Durable Exercise Wraps,50294
+Enchanted Guarded Crystal Sphere,50310
+Exercise Wraps,50293
+Essence Extractor,43628
+Naga Tanko,50262
+Blossom Chair,45496
+Blossom Chest,45500
+Gravestone Chair,45321
+Gravestone Table,45330
+Lilypad Table,45502
+Reaper Clock,45332
+Reaper Painting,45352
+Sickbed,50216
+Spooky Mirror,45354
+Greater Spiritualist Gem,49373
+Lesser Spiritualist Gem,49371
+Moonhunter Figurine,50233
+Pine Cone,49910
+Skill Trainer (Fist),50296
+Spiritualist Gem,49372
+Brain in a Jar (Store),50221
+Creatures in Jars,50218
+Several Skulls,50237
+Small Creatures in Jars,50220
+Leech Terrarium,50224
+Paramedic Demon,50241
+Magical Tree (Monk),50314
+Charged Ethereal Ring,50147
+Ethereal Coned Hat,50188
+Ethereal Ring,50149
+Demon Mengu,50189
+Iks Footwraps,50291
+Merudri Battle Mail,50264
+Sai of Enlightenment,50272
+Sanguine Claws,50157
+Falcon Sai,50161
+Simple Jo Staff,50166
+Maddening Mushroom,44180
+Spirit Bind,50275
