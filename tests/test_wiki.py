@@ -54,6 +54,14 @@ class TestWiki:
         for item in items.values():
             self.wiki.generate_gif_for_item_id(item.id)
 
+    def test_GenerateGifForAllOutfits_WhenCalled_DoesntThrow(self):
+        # Arrange.
+        _, outfits = self.wiki.get_proto_appearances()
+
+        # Act.
+        for outfit in outfits.values():
+            self.wiki.generate_gif_for_outfit_id(outfit.id)
+
     def test_GetLootStatistics_ReturnsExpected(self):
         # Act
         loot_stats = self.wiki.get_loot_statistics("Demon")
