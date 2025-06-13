@@ -52,7 +52,7 @@ class Wiki:
         """
         # If on linux:
         if os.name == "posix":
-            return os.path.expanduser("~/.local/share/CipSoft GmbH/Tibia/packages/Tibia/assets")
+            return os.path.expanduser("/root/.local/share/CipSoft GmbH/Tibia/packages/Tibia/assets")
         else:
             return os.path.expanduser("~\\AppData\\Local\\Tibia\\packages\\Tibia\\assets")
 
@@ -438,7 +438,7 @@ class Wiki:
         Returns:
             EventData: Today's EventData object.
         """
-        event_schedule_json = os.path.expanduser("~/.local/share/CipSoft GmbH/Tibia/packages/Tibia/cache/eventschedule.json")
+        event_schedule_json = os.path.expanduser("/root/.local/share/CipSoft GmbH/Tibia/packages/Tibia/cache/eventschedule.json")
 
         if not os.path.exists(event_schedule_json):
             raise Exception("Failed to find event schedule json file. Make sure to log in to the game at least once.")
