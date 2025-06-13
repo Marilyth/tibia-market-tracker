@@ -42,7 +42,7 @@ pretty_name_to_id = {}
 class Wiki:
     def __init__(self):
         pass
-    
+
     @staticmethod
     def _get_assets_folder() -> str:
         """Returns the path to the assets folder.
@@ -285,7 +285,7 @@ class Wiki:
         for i, sprite_id in enumerate(sprite_infos.sprite_id):
             sprite_size = 32
             for bbox in sprite_infos.bounding_box_per_direction:
-                if bbox.height > 32 or bbox.width > 32 or bbox.x > 32 or bbox.y > 32:
+                if bbox.y + bbox.height > 32 or bbox.x + bbox.width > 32:
                     sprite_size = 64
                     
             sprites.append((Wiki.get_sprite_for_id(sprite_id, sprite_size), frame_durations[i].duration_min if len(frame_durations) > i else 1000))
