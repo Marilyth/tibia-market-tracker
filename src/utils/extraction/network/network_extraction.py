@@ -106,15 +106,22 @@ class NetworkExtractor(Extractor):
             repeat_like_human(lambda: pyautogui.press("down"), starting_index, wait_time=0.06, target_deviation=0.01)
 
         fail_count = 0
+        time_since_last_batch = time.time()
+        time_between_batches = 5 # There seems to be a sliding window ratelimit of 10 requests per 5 seconds in the client.
 
         while True:
-            wait_like_human(5, 0.05)
+            time_to_wait = time_between_batches - (time.time() - time_since_last_batch)
+
+            if time_to_wait > 0:
+                print(f"Waiting {time_to_wait:.2f} seconds before requesting next batch of items.")
+                wait_like_human(time_to_wait + 0.05, 0.05)
             
             pyautogui.PAUSE = 0.01
             self.packet_analyser.results = []
 
             # Request the next batch of items.
             repeat_like_human(lambda: pyautogui.press("down"), batch_size, wait_time=0.1, target_deviation=0.01)
+            time_since_last_batch = time.time()
 
             # Wait for the packet to be processed.
             wait_until(lambda: len(self.packet_analyser.results) >= batch_size, 3, 0.01)
@@ -153,4 +160,4 @@ class NetworkExtractor(Extractor):
 
             self.packet_analyser.results.clear()
 
-        return results
+        return results.values()
