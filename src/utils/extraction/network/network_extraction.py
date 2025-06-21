@@ -121,7 +121,8 @@ class NetworkExtractor(Extractor):
             wait_until(lambda: len(self.packet_analyser.results) >= batch_size, 2, 0.01)
 
             # Get the results.
-            print(f"Received market packets for: {"".join([str(result.id) for result in self.packet_analyser.results])}.")
+            processed_ids = ", ".join([str(result.id) for result in self.packet_analyser.results])
+            print(f"Received market packets for: {processed_ids}.")
             results += self.packet_analyser.results
             processed_count = len(self.packet_analyser.results)
 
