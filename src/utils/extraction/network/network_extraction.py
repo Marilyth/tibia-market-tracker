@@ -75,7 +75,7 @@ class NetworkExtractor(Extractor):
 
         return market_value_items, market_boards
 
-    def crawl_market(self, category_index: int, starting_index: int = 0) -> List[MarketValues]:
+    def crawl_market(self, category_index: int, starting_index: int = 0, batch_size: int = 5) -> List[MarketValues]:
         """
         Crawls the market for all items by iterating through the categories.
 
@@ -99,7 +99,7 @@ class NetworkExtractor(Extractor):
 
         # Tab to the item list. This number might have to be changed if the market is updated.
         repeat_like_human(lambda: pyautogui.press("tab"), 10, wait_time=0.1)
-        
+
         # Go through the items quickly, except for the last one.
         # This is to make sure the item's value is fully loaded and we aren't rate limited.
         if starting_index > 1:
@@ -107,48 +107,49 @@ class NetworkExtractor(Extractor):
             wait_like_human(8)
 
         fail_count = 0
-        result = None
 
         while True:
+            self.packet_analyser.results.clear()
+            
             pyautogui.PAUSE = 0.01
             self.packet_analyser.results = []
 
-            # Go to the next item.
-            wait_like_human(0.3, 0.05)
-            pyautogui.press("down")
+            # Request the next batch of items.
+            repeat_like_human(lambda: pyautogui.press("down"), batch_size, wait_time=0.06, target_deviation=0.01)
 
             # Wait for the packet to be processed.
-            was_processed = wait_until(lambda: len(self.packet_analyser.results) > 0, 2, 0.01)
+            wait_until(lambda: len(self.packet_analyser.results) >= batch_size, 2, 0.01)
 
-            if not was_processed:
+            # Get the results.
+            print(f"Received market packets for: {"".join([str(result.id) for result in self.packet_analyser.results])}.")
+            results += self.packet_analyser.results
+            processed_count = len(self.packet_analyser.results)
+
+            if processed_count == 0:
                 fail_count += 1
 
-                # Reading the item failed 5 times. Continue with next category.
                 if fail_count >= 5:
                     print("Failed to process packet. Continuing with next category.")
                     break
-                else:
-                    # Retry the item.
-                    if result:
-                        wait_like_human(0.3, 0.05)
-                        self.packet_analyser.results = []
-                        pyautogui.press("up")
-                        
-                        was_processed = wait_until(lambda: len(self.packet_analyser.results) > 0, 2, 0.01)
-                        if was_processed:
-                            test_result = self.packet_analyser.results.pop(0)
 
-                            if test_result.id != result.id:
-                                print("Reached end of category. Going up did not yield the last item.")
-                                break
-                    
-                    continue
+            if processed_count < batch_size:
+                print("Received less items than requested. Redoing.")
 
-            # Get the result.
-            fail_count = 0
-            result = self.packet_analyser.results.pop(0)
-            results.append(result)
+                # Go back to the last item that was processed.
+                wait_like_human(1, 0.05)
+                self.packet_analyser.results = []
+                repeat_like_human(lambda: pyautogui.press("up"), batch_size - processed_count, wait_time=0.06, target_deviation=0.01)
 
-            print(f"Received market packet for {result.id}")
+                was_processed = wait_until(lambda: len(self.packet_analyser.results) >= 0, 2, 0.01)
+                if was_processed and results:
+                    # Check if the last item is the same as the last processed item.
+                    # If not, we can assume we reached the end of the category.
+                    test_result = self.packet_analyser.results.pop(0)
+
+                    if test_result.id != results[-1].id:
+                        print("Reached end of category. Going up did not yield the last item.")
+                        break
+
+                continue
 
         return results
