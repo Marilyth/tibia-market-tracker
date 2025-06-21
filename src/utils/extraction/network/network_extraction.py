@@ -75,7 +75,7 @@ class NetworkExtractor(Extractor):
 
         return market_value_items, market_boards
 
-    def crawl_market(self, category_index: int, starting_index: int = 0, batch_size: int = 5) -> List[MarketValues]:
+    def crawl_market(self, category_index: int, starting_index: int = 0, batch_size: int = 10) -> List[MarketValues]:
         """
         Crawls the market for all items by iterating through the categories.
 
@@ -85,7 +85,7 @@ class NetworkExtractor(Extractor):
         Returns:
             A list of MarketValues objects.
         """
-        results = []
+        results = {}
 
         # Reopen the market to avoid being kicked out.
         self.client.close_market()
@@ -104,27 +104,37 @@ class NetworkExtractor(Extractor):
         # This is to make sure the item's value is fully loaded and we aren't rate limited.
         if starting_index > 1:
             repeat_like_human(lambda: pyautogui.press("down"), starting_index, wait_time=0.06, target_deviation=0.01)
-            wait_like_human(8)
 
         fail_count = 0
 
         while True:
-            self.packet_analyser.results.clear()
+            wait_like_human(5, 0.05)
             
             pyautogui.PAUSE = 0.01
             self.packet_analyser.results = []
 
             # Request the next batch of items.
-            repeat_like_human(lambda: pyautogui.press("down"), batch_size, wait_time=0.06, target_deviation=0.01)
+            repeat_like_human(lambda: pyautogui.press("down"), batch_size, wait_time=0.1, target_deviation=0.01)
 
             # Wait for the packet to be processed.
-            wait_until(lambda: len(self.packet_analyser.results) >= batch_size, 2, 0.01)
+            wait_until(lambda: len(self.packet_analyser.results) >= batch_size, 3, 0.01)
 
             # Get the results.
             processed_ids = ", ".join([str(result.id) for result in self.packet_analyser.results])
-            print(f"Received market packets for: {processed_ids}.")
-            results += self.packet_analyser.results
             processed_count = len(self.packet_analyser.results)
+            print(f"Received {processed_count} market packets for: {processed_ids}.")
+
+            # If all items have been seen already, we can stop for this category.
+            reached_end = True
+            
+            for result in self.packet_analyser.results:
+                if result.id not in results:
+                    reached_end = False
+                    results[result.id] = result
+
+            if reached_end:
+                print("Reached end of market items for this category.")
+                break
 
             if processed_count == 0:
                 fail_count += 1
@@ -137,20 +147,10 @@ class NetworkExtractor(Extractor):
                 print("Received less items than requested. Redoing.")
 
                 # Go back to the last item that was processed.
-                wait_like_human(1, 0.05)
-                self.packet_analyser.results = []
-                repeat_like_human(lambda: pyautogui.press("up"), batch_size - processed_count, wait_time=0.06, target_deviation=0.01)
+                crawl_up_amount = batch_size - processed_count
 
-                was_processed = wait_until(lambda: len(self.packet_analyser.results) >= 0, 2, 0.01)
-                if was_processed and results:
-                    # Check if the last item is the same as the last processed item.
-                    # If not, we can assume we reached the end of the category.
-                    test_result = self.packet_analyser.results.pop(0)
+                repeat_like_human(lambda: pyautogui.press("up"), crawl_up_amount, wait_time=0.06, target_deviation=0.01)
 
-                    if test_result.id != results[-1].id:
-                        print("Reached end of category. Going up did not yield the last item.")
-                        break
-
-                continue
+            self.packet_analyser.results.clear()
 
         return results

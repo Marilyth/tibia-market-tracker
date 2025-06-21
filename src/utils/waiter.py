@@ -15,9 +15,11 @@ def wait_until(func: Callable[[], bool], timeout: float = 10, interval: float = 
         True if func returned True, False if timeout was reached.
     """
     start_time = time.time()
+
     while not func():
         if time.time() - start_time > timeout:
             return False
+        
         time.sleep(interval)
     
     return True
