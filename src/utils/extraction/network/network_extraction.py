@@ -75,13 +75,15 @@ class NetworkExtractor(Extractor):
 
         return market_value_items, market_boards
 
-    def crawl_market(self, category_index: int, starting_index: int = 0, batch_size: int = 10) -> List[MarketValues]:
+    def crawl_market(self, category_index: int, starting_index: int = 0, batch_size: int = 10, batch_interval: int = 5) -> List[MarketValues]:
         """
         Crawls the market for all items by iterating through the categories.
 
         Args:
             category_index: The index of the category to start at.
             starting_index: The index of the item to start at.
+            batch_size: The number of items to request per batch_interval.
+            batch_interval: The interval in seconds between each batch request.
         Returns:
             A list of MarketValues objects.
         """
@@ -107,10 +109,12 @@ class NetworkExtractor(Extractor):
 
         fail_count = 0
         time_since_last_batch = time.time()
-        time_between_batches = 5 # There seems to be a sliding window ratelimit of 10 requests per 5 seconds in the client.
-
+        spaced_input = batch_interval / batch_size
+        
+        # Batch the items per second to avoid ping time.
         while True:
-            time_to_wait = time_between_batches - (time.time() - time_since_last_batch)
+            time_passed = time.time() - time_since_last_batch
+            time_to_wait = spaced_input - time_passed
 
             if time_to_wait > 0:
                 print(f"Waiting {time_to_wait:.2f} seconds before requesting next batch of items.")
@@ -120,11 +124,11 @@ class NetworkExtractor(Extractor):
             self.packet_analyser.results = []
 
             # Request the next batch of items.
-            repeat_like_human(lambda: pyautogui.press("down"), batch_size, wait_time=0.1, target_deviation=0.01)
+            repeat_like_human(lambda: pyautogui.press("down"), batch_size, wait_time=spaced_input, target_deviation=0.01)
             time_since_last_batch = time.time()
 
-            # Wait for the packet to be processed.
-            wait_until(lambda: len(self.packet_analyser.results) >= batch_size, 3, 0.01)
+            # Wait for the packets to be processed.
+            wait_until(lambda: len(self.packet_analyser.results) >= batch_size, 1, 0.01)
 
             # Get the results.
             processed_ids = ", ".join([str(result.id) for result in self.packet_analyser.results])
@@ -132,7 +136,7 @@ class NetworkExtractor(Extractor):
             print(f"Received {processed_count} market packets for: {processed_ids}.")
 
             # If all items have been seen already, we can stop for this category.
-            reached_end = True
+            reached_end = processed_count > 0
             
             for result in self.packet_analyser.results:
                 if result.id not in results:
@@ -156,7 +160,8 @@ class NetworkExtractor(Extractor):
                 # Go back to the last item that was processed.
                 crawl_up_amount = batch_size - processed_count
 
-                repeat_like_human(lambda: pyautogui.press("up"), crawl_up_amount, wait_time=0.06, target_deviation=0.01)
+                repeat_like_human(lambda: pyautogui.press("up"), crawl_up_amount, wait_time=spaced_input, target_deviation=0.01)
+                time_since_last_batch = time.time()
 
             self.packet_analyser.results.clear()
 

@@ -32,7 +32,10 @@ def repeat_like_human(func: callable, repetitions: int, wait_time: float = 0.2, 
     """
     for i in range(repetitions):
         func()
-        wait_like_human(wait_time, target_deviation)
+        
+        # Wait if this is not the last repetition.
+        if i < repetitions - 1:
+            wait_like_human(wait_time, target_deviation)
 
 
 def wait_like_human(wait_time: float, target_deviation: float = 0.1):
