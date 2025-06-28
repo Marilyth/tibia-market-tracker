@@ -82,7 +82,7 @@ class Client:
         Checks if the update or install button exists, and if so, installs or updates and starts Tibia.
         """
         # Tibia is using a default client, no need to use the launcher.
-        if self._wait_until_find("images/PasswordField.png", click=False, cache=False, timeout=5):
+        if self._wait_until_find("images/PasswordField.png", click=False, cache=False, timeout=5)[0] != -1:
             return
         
         # Don't click on the play button yet. We first need to replace the config file after the update.
