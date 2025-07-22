@@ -1,18 +1,16 @@
 from xtea import *
 from typing import List
-import zlib
-import binascii
+from mitmproxy.utils import strutils
+from mitmproxy import tcp
 from utils.extraction.network.packet_names import client_commands, server_commands
 from utils.extraction.network.market_packet_reader import MarketPacketReader, MarketPacketValues
 from utils.json_helper import object_to_json
-from scapy.all import *
 import time
 import sys
 import subprocess
 import os
 import traceback
 from threading import Lock
-
 
 class PacketAnalyser:
     def __init__(self, rounds: int = 64, byte_order: str = sys.byteorder):
@@ -37,10 +35,19 @@ class PacketAnalyser:
         self.queue_lock = Lock()
         self.prev = bytes()
 
+    def tcp_message(self, flow: tcp.TCPFlow):
+        message = flow.messages[-1]
+        
+        if message.from_client:
+            print(f"client says {strutils.bytes_to_escaped_str(message.content)}")
+        else:
+            print(f"server says {strutils.bytes_to_escaped_str(message.content)}")
+            
+        self.handle_packet(flow, message)
+            
     def set_key(self, key: List[int]):
         if len(key) != 4:
             raise ValueError("Key must be 4 integers long.")
-
 
         self.queue_lock.acquire()
 
@@ -102,53 +109,7 @@ class PacketAnalyser:
 
         return data + b"\x00" * missing_bytes
 
-    def _handle_packet(self, packet: Packet):
-        """Helper function to handle a packet.
-
-        Args:
-            packet (Packet): The packet to handle.
-        """
-        # If the key is not set yet, add the packet to the queue and handle later.
-        if self.key is None:
-            self.queue.append(packet)
-            return
-        
-        # Print packet flag, i.e. S, A, PA, SA, etc.
-        packet_src = packet['IP'].src
-        packet_src_port = packet['TCP'].sport
-        packet_src = f"{packet_src}:{packet_src_port}"
-        packet_seq = packet['TCP'].seq
-        packet_load = len(packet[Raw].load) if Raw in packet else 0
-
-        # There seem to be multiple identical streams when talking to Tibia.
-        # The first one is being blocked by us. Also ignore all streams that are not from Tibia 7171.
-        if packet_src == self.blocked_src or packet_src_port != 7171:
-            return
-
-        load = packet[Raw].load if Raw in packet else None
-        next_data = packet[Raw].load if Raw in packet else None
-
-        # A packet might contain multiple commands. Handle them one by one.
-        while next_data:
-            result = self._decrypt_packet(next_data, f"{packet['IP'].src}:{packet['TCP'].sport}")
-            next_data = None
-        
-            if result:
-                payload, command_name, next_data = result
-
-                packet_reader = MarketPacketReader(payload)
-                try:
-                    packet_reader.read_packet()
-                    self.results.append(packet_reader.result)
-                except Exception as e:
-                    if "packet type" not in str(e):
-                        if not self.blocked_src:
-                            self.blocked_src = packet_src
-                            print(f"Blocked {packet_src} due to error: {e}")
-                        traceback.print_exc()
-                        print(f"Error while reading market packet {payload}: {e}")
-
-    def handle_packet(self, packet: Packet):
+    def handle_packet(self, flow: tcp.TCPFlow, packet: tcp.TCPMessage):
         """Handles a Tibia packet.
 
         Args:
@@ -157,7 +118,7 @@ class PacketAnalyser:
         self.queue_lock.acquire()
         
         try:
-            self._handle_packet(packet)
+            self._handle_packet(flow, packet)
         except Exception as e:
             traceback.print_exc()
             print(f"Error while decrypting packet: {e}")
@@ -300,4 +261,48 @@ class PacketAnalyser:
         command_name = self.command_type_to_name(command, client_commands if not from_server else server_commands)
 
         return payload, command_name, next_data
-    
+
+    def _handle_packet(self, flow: tcp.TCPFlow, packet: tcp.TCPMessage):
+        """Helper function to handle a packet.
+
+        Args:
+            packet (Packet): The packet to handle.
+        """
+        # If the key is not set yet, add the packet to the queue and handle later.
+        if self.key is None:
+            self.queue.append((flow, packet))
+            return
+        
+        packet_srv = flow.server_conn.address[0]
+        packet_srv_port = flow.server_conn.address[1]
+        packet_srv = f"{packet_srv}:{packet_srv_port}"
+        packet_seq = len(flow.messages)
+        packet_load = len(packet.content)
+        
+        # There seem to be multiple identical streams when talking to Tibia.
+        # The first one is being blocked by us. Also ignore all streams that are not from Tibia 7171.
+        if packet_srv == self.blocked_src or packet_srv_port != 7171:
+            return
+
+        load = packet.content
+        next_data = packet.content
+
+        # A packet might contain multiple commands. Handle them one by one.
+        while next_data:
+            result = self._decrypt_packet(next_data, f"{packet['IP'].src}:{packet['TCP'].sport}")
+            next_data = None
+        
+            if result:
+                payload, command_name, next_data = result
+
+                packet_reader = MarketPacketReader(payload)
+                try:
+                    packet_reader.read_packet()
+                    self.results.append(packet_reader.result)
+                except Exception as e:
+                    if "packet type" not in str(e):
+                        if not self.blocked_src:
+                            self.blocked_src = packet_src
+                            print(f"Blocked {packet_src} due to error: {e}")
+                        traceback.print_exc()
+                        print(f"Error while reading market packet {payload}: {e}")

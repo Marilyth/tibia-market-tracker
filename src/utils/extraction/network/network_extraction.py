@@ -1,3 +1,4 @@
+import asyncio
 from utils.client import Client
 from utils.data.market_values import MarketValues, MarketBoard, MarketBoardTraderData
 from utils.extraction.memory.memory_extraction import MemoryExtractor
@@ -16,23 +17,21 @@ import traceback
 from utils.human_movement import wait_like_human, repeat_like_human
 from utils.waiter import wait_until
 from utils.json_helper import object_to_json
+from utils.extraction.network.proxy import start_proxy
 
 
 class NetworkExtractor(Extractor):
     def __init__(self, client: Client):
         super().__init__(client)
         self.memory_extractor = MemoryExtractor(client)
-        self.packet_sniffer = PacketSniffer(record=False)
         self.packet_analyser = PacketAnalyser()
-        self.tcp_reassembler = TCPReassembler()
-        self.tcp_reassembler.set_new_data_callback(self.packet_analyser.handle_packet)
         self.xtea_key = None
 
-    def setup(self, manual_session: bool = False):
+    async def setup(self, manual_session: bool = False):
         """
         Sets up the network extraction by sniffing packets, logging in, extracting the XTEA key, and opening the market.
         """
-        self.packet_sniffer.sniff(self.tcp_reassembler.add_to_queue)
+        await start_proxy(self.packet_analyser)
         self.client.start_game()
         self.client.login_to_game()
         
@@ -44,7 +43,7 @@ class NetworkExtractor(Extractor):
         
         # Don't actually do anything if this is a manual session.
         while manual_session:
-            time.sleep(1)
+            await asyncio.sleep(1)
 
     def extract_market_values(self) -> Tuple[List[MarketValues], List[MarketBoard]]:
         items: List[MarketPacketValues] = []

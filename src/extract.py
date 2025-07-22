@@ -1,3 +1,4 @@
+import asyncio
 import os
 import time
 import sys
@@ -87,8 +88,8 @@ def update_metadata():
         traceback.print_exc()
         print(f"Writing metadata failed: {e}")
 
-def do_market_search(email: str, password: str, char_index: int, virtual_display: bool, virtual_display_visible: bool):
-    def market_search():
+async def do_market_search(email: str, password: str, char_index: int, virtual_display: bool, virtual_display_visible: bool):
+    async def market_search():
         from utils.extraction.memory.memory_extraction import MemoryExtractor
         from utils.extraction.network.network_extraction import NetworkExtractor
         from utils.extraction.extractor import Extractor
@@ -96,9 +97,9 @@ def do_market_search(email: str, password: str, char_index: int, virtual_display
 
         client = Client("./Tibia/Tibia", email, password, char_index)
         extractor: Extractor = NetworkExtractor(client)
-        extractor.setup()
+        await extractor.setup()
 
-        market_values, market_boards = extractor.extract_market_values()
+        market_values, market_boards = await asyncio.to_thread(extractor.extract_market_values)
         client.exit_tibia()
 
         print(f"Market values: {len(market_values)}")
@@ -155,8 +156,7 @@ def do_market_search(email: str, password: str, char_index: int, virtual_display
     else:
         market_search()
 
-
-if __name__ == "__main__":
+async def main():
     with open(os.path.join(os.path.dirname(__file__), "config", "config.json"), "r") as c:
         config = json.loads(c.read())
         api_url += f":{config['apiPort']}"
@@ -200,4 +200,8 @@ if __name__ == "__main__":
     os.makedirs("./results", exist_ok=True)
 
     print(f"Using account {username} on slot {slot}.")
-    do_market_search(username, password, slot, config["useVirtualDisplay"], config["showVirtualDisplay"])
+    await do_market_search(username, password, slot, config["useVirtualDisplay"], config["showVirtualDisplay"])
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
