@@ -1,4 +1,4 @@
-from utils.extraction.network.packet_analyser import PacketAnalyser
+from utils.extraction.network.network_sniffer import NetworkSniffer
 from utils.extraction.network.market_packet_reader import MarketPacketValues
 from utils.extraction.network.packet_sniffer import PacketSniffer
 from utils.extraction.network.tcp_reassembler import TCPReassembler
@@ -9,7 +9,7 @@ import time
 
 class TestDebugger:
     def setup_method(self):
-        self.analyzer = PacketAnalyser()
+        self.analyzer = NetworkSniffer()
         self.sniffer = PacketSniffer(interface=None)
         self.tcp_reassembler = TCPReassembler()
 

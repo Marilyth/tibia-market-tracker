@@ -2,6 +2,7 @@ from xtea import *
 from typing import List
 from mitmproxy.utils import strutils
 from mitmproxy import tcp
+from mitmproxy import http
 from utils.extraction.network.packet_names import client_commands, server_commands
 from utils.extraction.network.market_packet_reader import MarketPacketReader, MarketPacketValues
 from utils.json_helper import object_to_json
@@ -12,7 +13,7 @@ import os
 import traceback
 from threading import Lock
 
-class PacketAnalyser:
+class NetworkSniffer:
     def __init__(self, rounds: int = 64, byte_order: str = sys.byteorder):
         """Initialises an XTeaDecrypter.
 
@@ -35,16 +36,34 @@ class PacketAnalyser:
         self.queue_lock = Lock()
         self.prev = bytes()
 
+    def request(self, flow: http.HTTPFlow):
+        """Handles a request packet.
+
+        Args:
+            flow (tcp.HTTPFlow): The HTTP flow to handle.
+        """
+        # Ignore requests, we only care about TCP messages.
+        print(f"Client sends: {flow.request.text[:1024]}")
+
+    def response(self, flow: http.HTTPFlow):
+        """Handles a response packet.
+
+        Args:
+            flow (tcp.HTTPFlow): The HTTP flow to handle.
+        """
+        # Ignore responses, we only care about TCP messages.
+        print(f"Server replies: {flow.response.text[:1024]}")
+
     def tcp_message(self, flow: tcp.TCPFlow):
         message = flow.messages[-1]
-        
+
         if message.from_client:
             print(f"client says {strutils.bytes_to_escaped_str(message.content)}")
         else:
             print(f"server says {strutils.bytes_to_escaped_str(message.content)}")
-            
+
         self.handle_packet(flow, message)
-            
+
     def set_key(self, key: List[int]):
         if len(key) != 4:
             raise ValueError("Key must be 4 integers long.")
@@ -62,7 +81,7 @@ class PacketAnalyser:
         # Handle all packets in the queue.
         for packet in self.queue:
             try:
-                self._handle_packet(packet)
+                self._handle_packet(packet[0], packet[1])
             except Exception as e:
                 pass
         
@@ -86,12 +105,12 @@ class PacketAnalyser:
         return "Unknown"
 
     def decrypt(self, data: bytes) -> bytes:
-        decrypted_data = self.xtea.decrypt(PacketAnalyser.pad_data(data))
+        decrypted_data = self.xtea.decrypt(NetworkSniffer.pad_data(data))
         
         return decrypted_data
     
     def encrypt(self, data: bytes) -> bytes:
-        encrypted_data = self.xtea.encrypt(PacketAnalyser.pad_data(data))
+        encrypted_data = self.xtea.encrypt(NetworkSniffer.pad_data(data))
         
         return encrypted_data
     
@@ -150,7 +169,7 @@ class PacketAnalyser:
         Returns:
             bytes: The decompressed bytes object.
         """
-        data_str = PacketAnalyser.bytes_to_readable_string(data)
+        data_str = NetworkSniffer.bytes_to_readable_string(data)
 
         # zlib does not work with Tibia packets, so use the zlib.net C# library.
         if not sender in self.decompressor:

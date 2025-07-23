@@ -7,8 +7,9 @@
         {
             "name": "Python: Main File",
             "type": "python",
+            "cwd": "${workspaceFolder}/src",
             "request": "launch",
-            "program": "src/extract.py",
+            "program": "extract.py",
             "console": "integratedTerminal",
             "env": {
                 "PYTHONPATH": "${workspaceFolder}/src:${workspaceFolder}/tests"

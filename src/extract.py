@@ -7,9 +7,9 @@ import datetime
 import json
 import requests
 import psutil
-from install_tibia import install_tibia, download_package
+from install_tibia import download_package, get_tibia_path
 from utils.wiki import Wiki
-from utils.json_helper import object_to_json, json_to_object
+from utils.json_helper import object_to_json
 from utils.data.market_values import ItemMetaData
 from utils.schedule import Schedule
 
@@ -95,7 +95,7 @@ async def do_market_search(email: str, password: str, char_index: int, virtual_d
         from utils.extraction.extractor import Extractor
         from utils.client import Client
 
-        client = Client("./Tibia/Tibia", email, password, char_index)
+        client = Client(get_tibia_path(), email, password, char_index)
         extractor: Extractor = NetworkExtractor(client)
         await extractor.setup()
 
@@ -152,11 +152,14 @@ async def do_market_search(email: str, password: str, char_index: int, virtual_d
             import pyautogui
             import Xlib.display
             pyautogui._pyautogui_x11._display = Xlib.display.Display(os.environ['DISPLAY'])
-            market_search()
+            
+            await market_search()
     else:
-        market_search()
+        await market_search()
 
 async def main():
+    global api_url, config, dry_run
+    
     with open(os.path.join(os.path.dirname(__file__), "config", "config.json"), "r") as c:
         config = json.loads(c.read())
         api_url += f":{config['apiPort']}"

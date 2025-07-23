@@ -4,16 +4,23 @@ import os
 from pyvirtualdisplay import Display
 import Xlib.display
 
-def is_tibia_downloaded():
+def get_tibia_path():
     """Checks if Tibia is installed.
     """
-    return os.path.exists("./Tibia/Tibia")
+    potential_locations = ["./Tibia/Tibia", os.path.expanduser("~/Games/Tibia/Tibia"), "/usr/local/bin/tibia"]
+    
+    for location in potential_locations:
+        if os.path.exists(location):
+            return location
+    
+    return None
+        
 
 def download_package():
     """Downloads and extracts the Tibia package, if it is not already downloaded.
     """
     # Check if Tibia is already downloaded.
-    if is_tibia_downloaded():
+    if get_tibia_path():
         print("Tibia is already downloaded.")
         return
 
@@ -40,7 +47,7 @@ def download_package():
 
     print("Extraction complete.")
 
-    if not is_tibia_downloaded():
+    if not get_tibia_path():
         raise Exception("Tibia downloading failed.")
 
 def install_tibia():
@@ -51,7 +58,7 @@ def install_tibia():
         import pyautogui
         from utils.client import Client
         pyautogui._pyautogui_x11._display = Xlib.display.Display(os.environ['DISPLAY'])
-        client = Client("./Tibia/Tibia", None, None)
+        client = Client(get_tibia_path(), None, None)
         client.start_game()
         client.exit_tibia()
 
