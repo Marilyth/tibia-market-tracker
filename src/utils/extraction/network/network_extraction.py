@@ -1,7 +1,6 @@
 import asyncio
 from utils.client import Client
 from utils.data.market_values import MarketValues, MarketBoard, MarketBoardTraderData
-from utils.extraction.memory.memory_extraction import MemoryExtractor
 from utils.extraction.network.network_sniffer import NetworkSniffer
 from utils.extraction.network.market_packet_reader import MarketPacketValues
 from utils.extraction.network.debugger import XteaDebugger
@@ -21,11 +20,10 @@ from utils.extraction.network.proxy import start_proxy
 class NetworkExtractor(Extractor):
     def __init__(self, client: Client):
         super().__init__(client)
-        self.memory_extractor = MemoryExtractor(client)
         self.packet_analyser = NetworkSniffer()
         self.xtea_key = None
 
-    async def setup(self, manual_session: bool = True):
+    async def setup(self, manual_session: bool = False):
         """
         Sets up the network extraction by sniffing packets, logging in, extracting the XTEA key, and opening the market.
         """
@@ -146,9 +144,13 @@ class NetworkExtractor(Extractor):
     def _setup_session(self):
         self.client.start_game()
         self.client.login_to_game()
-            
-        self.xtea_key = XteaDebugger(self.client.tibia_process_id).find_key()
-        self.packet_analyser.set_key(self.xtea_key)
+        
+        self._extract_key()
+        
         if not self.client.open_market():
             self.client.exit_tibia()
             raise Exception("Failed to open market.")
+        
+    def _extract_key(self):
+        self.xtea_key = XteaDebugger().find_key()
+        self.packet_analyser.set_key(self.xtea_key)

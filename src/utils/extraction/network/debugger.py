@@ -5,15 +5,15 @@ from utils.extraction.memory.memory_reader import MemoryReader
 
 
 class XteaDebugger:
-    def __init__(self, process_id: int):
-        self.process_id = process_id
+    def __init__(self):
+        self.process_id = MemoryReader.get_process_id("client")[-1]
         self.breakpoint_address = None
     
     def find_breakpoint_address(self) -> str:
         """Find the breakpoint address of the XTEA encryption function.
         This is done by finding the magic number 0x61c88647 in the executable.
         """
-        file_location = os.path.join("/", "root", ".local", "share", "CipSoft GmbH", "Tibia", "packages", "Tibia", "bin", "client")
+        file_location = "/root/.local/share/CipSoft GmbH/Tibia/packages/Tibia/bin/client"
 
         # Extract the assembly executable of Tibia.
         command = ["objdump", "-M", "intel", "-Sd", file_location]

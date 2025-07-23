@@ -43,7 +43,7 @@ class NetworkSniffer:
             flow (tcp.HTTPFlow): The HTTP flow to handle.
         """
         # Ignore requests, we only care about TCP messages.
-        print(f"Client sends: {flow.request.text[:1024]}")
+        print(f"\n -> {flow.request.pretty_url}: {flow.request.text[:1024]}")
 
     def response(self, flow: http.HTTPFlow):
         """Handles a response packet.
@@ -52,15 +52,10 @@ class NetworkSniffer:
             flow (tcp.HTTPFlow): The HTTP flow to handle.
         """
         # Ignore responses, we only care about TCP messages.
-        print(f"Server replies: {flow.response.text[:1024]}")
+        print(f"\n <- {flow.request.pretty_url}: {flow.response.text[:1024]}")
 
     def tcp_message(self, flow: tcp.TCPFlow):
         message = flow.messages[-1]
-
-        if message.from_client:
-            print(f"client says {strutils.bytes_to_escaped_str(message.content)}")
-        else:
-            print(f"server says {strutils.bytes_to_escaped_str(message.content)}")
 
         self.handle_packet(flow, message)
 
@@ -214,8 +209,6 @@ class NetworkSniffer:
         
         from_server = ":7171" in sender
 
-        #self.log(f"{raw_data}\n")
-
         # First 2 bytes are the size of the packet load in multiples of 8 bytes (minus the header) in little endian. I.e. 0c00 is 12 bytes.
         packet_size = int.from_bytes(raw_data[:2], byteorder=sys.byteorder, signed=False) * 8
         actual_size = len(raw_data[6:])
@@ -295,33 +288,34 @@ class NetworkSniffer:
         packet_srv = flow.server_conn.address[0]
         packet_srv_port = flow.server_conn.address[1]
         packet_srv = f"{packet_srv}:{packet_srv_port}"
-        packet_seq = len(flow.messages)
-        packet_load = len(packet.content)
         
         # There seem to be multiple identical streams when talking to Tibia.
         # The first one is being blocked by us. Also ignore all streams that are not from Tibia 7171.
         if packet_srv == self.blocked_src or packet_srv_port != 7171:
             return
 
-        load = packet.content
         next_data = packet.content
 
         # A packet might contain multiple commands. Handle them one by one.
         while next_data:
-            result = self._decrypt_packet(next_data, f"{packet['IP'].src}:{packet['TCP'].sport}")
+            result = self._decrypt_packet(next_data, packet_srv)
             next_data = None
         
             if result:
                 payload, command_name, next_data = result
+                
+                arrow = "->" if packet.from_client else "<-"
+                print(f"\n {arrow} {payload[1]} ({command_name}): {payload}")
 
                 packet_reader = MarketPacketReader(payload)
                 try:
                     packet_reader.read_packet()
                     self.results.append(packet_reader.result)
+                    print(f"Received market packet {self.results[-1].id}.")
                 except Exception as e:
                     if "packet type" not in str(e):
                         if not self.blocked_src:
-                            self.blocked_src = packet_src
-                            print(f"Blocked {packet_src} due to error: {e}")
+                            self.blocked_src = packet_srv
+                            print(f"Blocked {packet_srv} due to error: {e}")
                         traceback.print_exc()
                         print(f"Error while reading market packet {payload}: {e}")

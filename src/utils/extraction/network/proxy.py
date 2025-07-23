@@ -9,7 +9,7 @@ import subprocess
 
 async def start_proxy(addons: List):
     options = Options()
-    master = DumpMaster(options)
+    master = DumpMaster(options, with_dumper=False)
     master.addons.add(*addons)
 
     asyncio.create_task(master.run())

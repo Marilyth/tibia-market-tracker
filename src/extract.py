@@ -12,6 +12,9 @@ from utils.wiki import Wiki
 from utils.json_helper import object_to_json
 from utils.data.market_values import ItemMetaData
 from utils.schedule import Schedule
+from utils.extraction.network.network_extraction import NetworkExtractor
+from utils.extraction.extractor import Extractor
+from utils.client import Client
 
 dry_run: bool = False
 api_url: str = "https://api.tibiamarket.top"
@@ -90,11 +93,6 @@ def update_metadata():
 
 async def do_market_search(email: str, password: str, char_index: int, virtual_display: bool, virtual_display_visible: bool):
     async def market_search():
-        from utils.extraction.memory.memory_extraction import MemoryExtractor
-        from utils.extraction.network.network_extraction import NetworkExtractor
-        from utils.extraction.extractor import Extractor
-        from utils.client import Client
-
         client = Client(get_tibia_path(), email, password, char_index)
         extractor: Extractor = NetworkExtractor(client)
         await extractor.setup()
@@ -159,6 +157,9 @@ async def do_market_search(email: str, password: str, char_index: int, virtual_d
 
 async def main():
     global api_url, config, dry_run
+    
+    # TODO: Remove testing code.
+    await NetworkExtractor(None).setup(True)
     
     with open(os.path.join(os.path.dirname(__file__), "config", "config.json"), "r") as c:
         config = json.loads(c.read())
