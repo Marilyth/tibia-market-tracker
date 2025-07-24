@@ -16,7 +16,7 @@ async def start_proxy(addons: List):
 
     # Need to install certificate of mitm to proxy SSL traffic.
     certificate_path = os.path.expanduser("~/.mitmproxy/mitmproxy-ca-cert.pem")
-    subprocess.run(["mv", certificate_path, "/usr/local/share/ca-certificates/mitmproxy.crt"])
+    subprocess.run(["cp", certificate_path, "/usr/local/share/ca-certificates/mitmproxy.crt"])
     subprocess.run(["update-ca-certificates"])
 
     os.environ["http_proxy"] = "http://localhost:8080"

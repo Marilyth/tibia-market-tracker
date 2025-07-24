@@ -224,13 +224,11 @@ class NetworkSniffer:
         
         return response
 
-    def _decrypt_packet(self, raw_data: bytes, sender: str):
+    def _decrypt_packet(self, packet: tcp.TCPMessage, raw_data: bytes, sender: str):
         """ Decrypts a client packet using the XTEA algorithm.
         """
         if not raw_data:
             return
-        
-        from_server = ":7171" in sender
 
         # First 2 bytes are the size of the packet load in multiples of 8 bytes (minus the header) in little endian. I.e. 0c00 is 12 bytes.
         packet_size = int.from_bytes(raw_data[:2], byteorder=sys.byteorder, signed=False) * 8
@@ -243,7 +241,7 @@ class NetworkSniffer:
         is_compressed = compression_flag == 0xC000
         is_valid = is_compressed or compression_flag == 0x0000
 
-        if self.incomplete_packets and from_server and not is_valid:
+        if self.incomplete_packets and not packet.from_client and not is_valid:
             # Append the raw_data to the last incomplete packet.
             incomplete_packet = [packet for packet in self.incomplete_packets if packet[1] == sender][-1]
             raw_data = incomplete_packet[0] + raw_data
@@ -255,7 +253,7 @@ class NetworkSniffer:
             is_valid = is_compressed or compression_flag == 0x0000
             self.incomplete_packets.remove(incomplete_packet)
 
-        if packet_size > actual_size and from_server and is_compressed:
+        if packet_size > actual_size and not packet.from_client and is_compressed:
             # Packet is not complete yet. Wait for the next packet.
             self.incomplete_packets.append((raw_data, sender))
             return
@@ -276,26 +274,25 @@ class NetworkSniffer:
         payload = decrypted_data
 
         if not is_valid:
-            if not from_server:
+            if packet.from_client:
                 print(f"Invalid compression flag: {compression_flag}")
                 return
             else:
                 raise Exception(f"Invalid compression flag: {compression_flag}")
         
+        # Because the payload is now a multiple of 8 bytes, a few bytes are superfluous sometimes.
+        truncate_bytes = int.from_bytes(payload[:1], byteorder=sys.byteorder, signed=False)
+        if truncate_bytes > 0:
+            payload = payload[:-truncate_bytes]
+                
         if is_compressed:
-            # Because the payload is now a multiple of 8 bytes, a few bytes are superfluous sometimes.
-            truncate_bytes = int.from_bytes(payload[:1], byteorder=sys.byteorder, signed=False)
-            if truncate_bytes > 0:
-                payload = payload[:-truncate_bytes]
-
             decrypted_data = self.decompress_bytes(payload[1:], sender)
             decompressed_data_length = int.from_bytes(decrypted_data[:2], byteorder=sys.byteorder, signed=False)
             payload = payload[:1] + decrypted_data[2:]
 
         command = payload[1] if payload else -1
-        command_name = self.command_type_to_name(command, client_commands if not from_server else server_commands)
 
-        return payload, command_name, next_data
+        return payload[2:], command, next_data
 
     def _handle_packet(self, flow: tcp.TCPFlow, packet: tcp.TCPMessage):
         """Helper function to handle a packet.
@@ -321,17 +318,21 @@ class NetworkSniffer:
 
         # A packet might contain multiple commands. Handle them one by one.
         while next_data:
-            result = self._decrypt_packet(next_data, packet_srv)
+            result = self._decrypt_packet(packet, next_data, packet_srv)
             next_data = None
         
             if result:
-                payload, command_name, next_data = result
+                payload, command_code, next_data = result
+                command_name = self.command_type_to_name(command_code, client_commands if packet.from_client else server_commands)
                 
                 arrow = "->" if packet.from_client else "<-"
-                print(f"\n {arrow} {payload[1]} ({command_name}): {payload}")
+                print(f"\n {arrow} {command_code} ({command_name}): {payload}")
 
-                packet_reader = MarketPacketReader(payload)
+                if command_code != 0xF8 or packet.from_client:
+                    continue
+                
                 try:
+                    packet_reader = MarketPacketReader(payload)
                     packet_reader.read_packet()
                     self.results.append(packet_reader.result)
                     print(f"Received market packet {self.results[-1].id}.")

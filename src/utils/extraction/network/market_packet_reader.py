@@ -21,16 +21,7 @@ class MarketPacketReader:
 
         Args:
             has_tier (bool, optional): Whether the packet has an item tier. Defaults to False.
-
-        Raises:
-            Exception: If the packet type is not 0xF8.
         """
-        packet_truncated = struct.unpack("B", self._read_bytes(1))[0]
-        packet_type = struct.unpack("B", self._read_bytes(1))[0]
-
-        if packet_type != 0xF8:
-            raise Exception(f"Invalid header packet type: {packet_type}")
-
         self.result.id = struct.unpack("H", self._read_bytes(2))[0]
 
         meta_data = ItemMetaData(id=self.result.id)
