@@ -1,8 +1,7 @@
 from xtea import *
 from typing import List
-from mitmproxy.utils import strutils
-from mitmproxy import tcp
-from mitmproxy import http
+from mitmproxy import ctx, tcp, http, flow
+from mitmproxy.io import FlowReader, FlowWriter
 from utils.extraction.network.packet_names import client_commands, server_commands
 from utils.extraction.network.market_packet_reader import MarketPacketReader, MarketPacketValues
 from utils.json_helper import object_to_json
@@ -13,8 +12,9 @@ import os
 import traceback
 from threading import Lock
 
+
 class NetworkSniffer:
-    def __init__(self, rounds: int = 64, byte_order: str = sys.byteorder):
+    def __init__(self, rounds: int = 64, byte_order: str = sys.byteorder, record: bool = False):
         """Initialises an XTeaDecrypter.
 
         Args:
@@ -35,6 +35,26 @@ class NetworkSniffer:
         self.decrompression_stream = bytes()
         self.queue_lock = Lock()
         self.prev = bytes()
+        self.flow_file = None
+
+        if record:
+            self.flow_file = open("flow.mitm", "wb")
+
+    def replay(self, record_file: str = "flow.mitm"):
+        """Replays the flow file that was written by the sniffer.
+        """
+        with open(record_file, "rb") as f:
+            reader = FlowReader(f)
+            flows = list(reader.stream())
+
+            for flow_instance in flows:
+                if isinstance(flow_instance, tcp.TCPFlow):
+                    self.tcp_message(flow_instance)
+                elif isinstance(flow_instance, http.HTTPFlow):
+                    if not flow_instance.response:
+                        self.request(flow_instance)
+                    else:
+                        self.response(flow_instance)
 
     def request(self, flow: http.HTTPFlow):
         """Handles a request packet.
@@ -43,6 +63,7 @@ class NetworkSniffer:
             flow (tcp.HTTPFlow): The HTTP flow to handle.
         """
         # Ignore requests, we only care about TCP messages.
+        self._write_flow(flow)
         print(f"\n -> {flow.request.pretty_url}: {flow.request.text[:1024]}")
 
     def response(self, flow: http.HTTPFlow):
@@ -52,9 +73,11 @@ class NetworkSniffer:
             flow (tcp.HTTPFlow): The HTTP flow to handle.
         """
         # Ignore responses, we only care about TCP messages.
+        self._write_flow(flow)
         print(f"\n <- {flow.request.pretty_url}: {flow.response.text[:1024]}")
 
     def tcp_message(self, flow: tcp.TCPFlow):
+        self._write_flow(flow)
         message = flow.messages[-1]
 
         self.handle_packet(flow, message)
@@ -319,3 +342,15 @@ class NetworkSniffer:
                             print(f"Blocked {packet_srv} due to error: {e}")
                         traceback.print_exc()
                         print(f"Error while reading market packet {payload}: {e}")
+
+    def _write_flow(self, flow: flow.Flow):
+        """Writes a flow to a file.
+
+        Args:
+            flow: The flow to write.
+        """
+        if self.flow_file is None:
+            return
+
+        writer = FlowWriter(self.flow_file)
+        writer.add(flow)
