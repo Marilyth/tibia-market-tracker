@@ -2,9 +2,9 @@ from xtea import *
 from typing import List
 from mitmproxy import ctx, tcp, http, flow
 from mitmproxy.io import FlowReader, FlowWriter
-from utils.extraction.network.packet_names import client_commands, server_commands
-from utils.extraction.network.market_packet_reader import MarketPacketReader, MarketPacketValues
-from utils.json_helper import object_to_json
+from utils.extraction.network.packets.packet_utils import read_packet
+from utils.extraction.network.packets.PacketBase import PacketBase
+from utils.extraction.network.packets.server.MarketDetail import MarketDetail
 import time
 import sys
 import subprocess
@@ -31,7 +31,7 @@ class NetworkSniffer:
         self.xtea = None
         self.blocked_src: str = None
         self.incomplete_packets = []
-        self.results: List[MarketPacketValues] = []
+        self.results: List[MarketDetail] = []
         self.decrompression_stream = bytes()
         self.queue_lock = Lock()
         self.prev = bytes()
@@ -102,7 +102,7 @@ class NetworkSniffer:
                 self._handle_packet(packet[0], packet[1])
             except Exception as e:
                 pass
-        
+
         self.queue_lock.release()
 
     @staticmethod
@@ -119,19 +119,19 @@ class NetworkSniffer:
         for command_name, command_type in commands.items():
             if command_type == type:
                 return command_name
-        
+
         return "Unknown"
 
     def decrypt(self, data: bytes) -> bytes:
         decrypted_data = self.xtea.decrypt(NetworkSniffer.pad_data(data))
-        
+
         return decrypted_data
-    
+
     def encrypt(self, data: bytes) -> bytes:
         encrypted_data = self.xtea.encrypt(NetworkSniffer.pad_data(data))
-        
+
         return encrypted_data
-    
+
     @staticmethod
     def pad_data(data: bytes) -> bytes:
         """Pads the data to be encrypted. It has to be a multiple of 8 bytes.
@@ -153,15 +153,9 @@ class NetworkSniffer:
             packet (Packet): The packet to handle.
         """
         self.queue_lock.acquire()
-        
-        try:
-            self._handle_packet(flow, packet)
-        except Exception as e:
-            traceback.print_exc()
-            print(f"Error while decrypting packet: {e}")
-        finally:
-            self.queue_lock.release()
-        
+        self._handle_packet(flow, packet)
+        self.queue_lock.release()
+
     @staticmethod
     def bytes_to_readable_string(data: bytes) -> str:
         """Converts a bytes object to a readable string.
@@ -176,7 +170,7 @@ class NetworkSniffer:
             return " ".join([f"0x{byte:02x}" for byte in data])
         else:
             return None
-        
+
     def decompress_bytes(self, data: bytes, sender: str) -> bytes:
         """Decompresses a bytes object.
 
@@ -203,28 +197,28 @@ class NetworkSniffer:
         response = b''
         while len(response) == 0 or response[-1] != 10:
             new_response = self.decompressor[sender].stdout.read()
-            
+
             if new_response:
                 response += new_response
 
             time.sleep(0.01)
-        
+
         response = response.decode().strip()
 
         if "Exception" in response:
             raise Exception(response)
-        
+
         byte_expressions = response.split(" ")
-        
+
         # Convert e.g. ['1B', 'A2'] to [0x1B, 0xA2].
         byte_expressions = [int(byte_expression, 16) for byte_expression in byte_expressions]
 
         # Convert byte_expressions to bytes.
         response = bytes(byte_expressions)
-        
+
         return response
 
-    def _decrypt_packet(self, packet: tcp.TCPMessage, raw_data: bytes, sender: str):
+    def _decrypt_packet(self, packet: tcp.TCPMessage, raw_data: bytes, sender: str) -> tuple[PacketBase, bytes] | None:
         """ Decrypts a client packet using the XTEA algorithm.
         """
         if not raw_data:
@@ -237,7 +231,7 @@ class NetworkSniffer:
         # The next 2 bytes, are the sequence number, and the next 2 bytes are the compression flag.
         sequence_number = int.from_bytes(raw_data[2:4], byteorder=sys.byteorder, signed=False)
         compression_flag = int.from_bytes(raw_data[4:6], byteorder=sys.byteorder, signed=False)
-        
+
         is_compressed = compression_flag == 0xC000
         is_valid = is_compressed or compression_flag == 0x0000
 
@@ -257,7 +251,7 @@ class NetworkSniffer:
             # Packet is not complete yet. Wait for the next packet.
             self.incomplete_packets.append((raw_data, sender))
             return
-        
+
         # Unfinished packet was not completed. Remove it.
         for packet in self.incomplete_packets[:]:
             if packet[1] == sender:
@@ -269,30 +263,29 @@ class NetworkSniffer:
         if packet_size < actual_size:
             next_data = raw_data[6 + packet_size:]
             raw_data = raw_data[:packet_size + 6]
-        
+
         decrypted_data = self.decrypt(raw_data[6:6 + packet_size])
         payload = decrypted_data
 
         if not is_valid:
             if packet.from_client:
                 print(f"Invalid compression flag: {compression_flag}")
-                return
+                return None
             else:
                 raise Exception(f"Invalid compression flag: {compression_flag}")
-        
+
         # Because the payload is now a multiple of 8 bytes, a few bytes are superfluous sometimes.
         truncate_bytes = int.from_bytes(payload[:1], byteorder=sys.byteorder, signed=False)
+        payload = payload[1:]
+
         if truncate_bytes > 0:
             payload = payload[:-truncate_bytes]
-                
+
         if is_compressed:
-            decrypted_data = self.decompress_bytes(payload[1:], sender)
-            decompressed_data_length = int.from_bytes(decrypted_data[:2], byteorder=sys.byteorder, signed=False)
-            payload = payload[:1] + decrypted_data[2:]
+            # First 2 bytes are the size of the decompressed data.
+            payload = self.decompress_bytes(payload, sender)[2:]
 
-        command = payload[1] if payload else -1
-
-        return payload[2:], command, next_data
+        return read_packet(payload, packet.from_client), next_data
 
     def _handle_packet(self, flow: tcp.TCPFlow, packet: tcp.TCPMessage):
         """Helper function to handle a packet.
@@ -304,45 +297,45 @@ class NetworkSniffer:
         if self.key is None:
             self.queue.append((flow, packet))
             return
-        
+
         packet_srv = flow.server_conn.address[0]
         packet_srv_port = flow.server_conn.address[1]
         packet_srv = f"{packet_srv}:{packet_srv_port}"
-        
+
         # There seem to be multiple identical streams when talking to Tibia.
         # The first one is being blocked by us. Also ignore all streams that are not from Tibia 7171.
-        if packet_srv == self.blocked_src or packet_srv_port != 7171:
+        if False and packet_srv == self.blocked_src or packet_srv_port != 7171:
             return
 
         next_data = packet.content
 
         # A packet might contain multiple commands. Handle them one by one.
         while next_data:
-            result = self._decrypt_packet(packet, next_data, packet_srv)
-            next_data = None
-        
-            if result:
-                payload, command_code, next_data = result
-                command_name = self.command_type_to_name(command_code, client_commands if packet.from_client else server_commands)
-                
-                arrow = "->" if packet.from_client else "<-"
-                print(f"\n {arrow} {command_code} ({command_name}): {payload}")
+            result = None
 
-                if command_code != 0xF8 or packet.from_client:
-                    continue
-                
-                try:
-                    packet_reader = MarketPacketReader(payload)
-                    packet_reader.read_packet()
-                    self.results.append(packet_reader.result)
-                    print(f"Received market packet {self.results[-1].id}.")
-                except Exception as e:
-                    if "packet type" not in str(e):
-                        if not self.blocked_src:
-                            self.blocked_src = packet_srv
-                            print(f"Blocked {packet_srv} due to error: {e}")
-                        traceback.print_exc()
-                        print(f"Error while reading market packet {payload}: {e}")
+            try:
+                result = self._decrypt_packet(packet, next_data, packet_srv)
+            except Exception as e:
+                if not self.blocked_src:
+                    self.blocked_src = packet_srv
+                    print(f"Blocked {packet_srv} due to error: {e}")
+
+                traceback.print_exc()
+                print(f"Error while reading market packet {packet.content}: {e}")
+
+            if not result:
+                return
+
+            game_packet, next_data = result
+            #print(str(game_packet))
+
+            if isinstance(game_packet, MarketDetail):
+                # If the packet is a MarketDetail packet, add it to the results.
+                self.results.append(game_packet)
+                print(f"Received market packet {game_packet.id}.")
+            else:
+                # Handle other packets.
+                pass
 
     def _write_flow(self, flow: flow.Flow):
         """Writes a flow to a file.

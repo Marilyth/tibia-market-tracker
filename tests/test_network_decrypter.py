@@ -1,8 +1,5 @@
 from utils.extraction.network.network_sniffer import NetworkSniffer
-from utils.extraction.network.market_packet_reader import MarketPacketValues
 import os
-import traceback
-import time
 
 
 class TestDebugger:
@@ -11,7 +8,7 @@ class TestDebugger:
 
     def test_RecordedTraffic_CanRead(self):
         # Arrange
-        
+
         # Read the xtea key from key.txt.
         with open(os.path.join(os.path.dirname(__file__), "example_traffic_analysis", "key.txt"), "r") as f:
             key = f.read().strip()
@@ -43,7 +40,7 @@ class TestDebugger:
                     data = packet.split(b"Raw: ")[1]
                     data = eval(data)
                     packages.append([data, packet.split(b" > ")[0].split(b" ")[-1]])
-        
+
         # Act
         decrypted_payloads = []
         for package, sender in packages:
