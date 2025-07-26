@@ -1,4 +1,5 @@
 from utils.extraction.network.network_sniffer import NetworkSniffer
+from utils.extraction.network.xtea_utils import setup
 import os
 
 
@@ -14,7 +15,7 @@ class TestDebugger:
             key = f.read().strip()
             key = key.split(",")
             key = [int(k) for k in key]
-            self.analyzer.set_key(key)
+            setup(key_segment=key)
 
         # Act
         self.analyzer.replay(os.path.join(os.path.dirname(__file__), "example_traffic_analysis", "flow.mitm"))

@@ -35,7 +35,7 @@ class NetworkExtractor(Extractor):
             await asyncio.sleep(1)
 
     def extract_market_values(self) -> Tuple[List[MarketValues], List[MarketBoard]]:
-        items: List[MarketPacketValues] = []
+        items: List[MarketDetail] = []
         market_value_items: List[MarketValues] = []
         market_boards: List[MarketBoard] = []
 
@@ -44,13 +44,13 @@ class NetworkExtractor(Extractor):
                 items.extend(self.crawl_market(category.index))
             except Exception as e:
                 traceback.print_exc()
-                
+
                 print(f"Error while crawling market: {e}")
                 break
 
         # Convert items to MarketValues objects.
         for item in items:
-            market_values, historical_values = item.convert_to_marketvalues()
+            market_values, historical_values = packet_to_marketvalues(item)
             market_sellers = sorted([MarketBoardTraderData(name=seller.name, amount=seller.amount, price=seller.price, time=seller.timestamp) for seller in item.sell_offers], key=lambda x: x.price)
             market_buyers = sorted([MarketBoardTraderData(name=buyer.name, amount=buyer.amount, price=buyer.price, time=buyer.timestamp) for buyer in item.buy_offers], key=lambda x: x.price, reverse=True)
             market_boards.append(MarketBoard(id=item.id, sellers=market_sellers, buyers=market_buyers, update_time=time.time()))
@@ -87,7 +87,7 @@ class NetworkExtractor(Extractor):
 
         # Tab to the item list. This number might have to be changed if the market is updated.
         repeat_like_human(lambda: pyautogui.press("tab"), 10, wait_time=0.1)
-        
+
         # Go through the items quickly, except for the last one.
         # This is to make sure the item's value is fully loaded and we aren't rate limited.
         if starting_index > 1:
@@ -121,7 +121,7 @@ class NetworkExtractor(Extractor):
                         wait_like_human(0.3, 0.05)
                         self.packet_analyser.results = []
                         pyautogui.press("up")
-                        
+
                         was_processed = wait_until(lambda: len(self.packet_analyser.results) > 0, 2, 0.01)
                         if was_processed:
                             test_result = self.packet_analyser.results.pop(0)
@@ -129,7 +129,7 @@ class NetworkExtractor(Extractor):
                             if test_result.id != result.id:
                                 print("Reached end of category. Going up did not yield the last item.")
                                 break
-                    
+
                     continue
 
             # Get the result.
@@ -144,13 +144,12 @@ class NetworkExtractor(Extractor):
     def _setup_session(self):
         self.client.start_game()
         self.client.login_to_game()
-        
+
         self._extract_key()
-        
+
         if not self.client.open_market():
             self.client.exit_tibia()
             raise Exception("Failed to open market.")
-        
+
     def _extract_key(self):
-        self.xtea_key = XteaDebugger().find_key()
-        self.packet_analyser.set_key(self.xtea_key)
+        setup(key_segment=XteaDebugger().find_key())

@@ -5,6 +5,7 @@ from mitmproxy.io import FlowReader, FlowWriter
 from utils.extraction.network.packets.packet_utils import read_packet
 from utils.extraction.network.packets.PacketBase import PacketBase
 from utils.extraction.network.packets.server.MarketDetail import MarketDetail
+from utils.extraction.network.xtea_utils import decrypt, is_ready
 import time
 import sys
 import subprocess
@@ -14,7 +15,7 @@ from threading import Lock
 
 
 class NetworkSniffer:
-    def __init__(self, rounds: int = 64, byte_order: str = sys.byteorder, record: bool = False):
+    def __init__(self, record: bool = False):
         """Initialises an XTeaDecrypter.
 
         Args:
@@ -23,9 +24,7 @@ class NetworkSniffer:
             byte_order (str, optional): The byte order to use for decryption. Defaults to "little".
         """
         self.decompressor = {}
-        self.byte_order = byte_order
-        self.queue = []
-        self.rounds = rounds
+        self.queue: list[flow.Flow] = []
         self.key = None
         self.key_string = None
         self.xtea = None
@@ -56,104 +55,52 @@ class NetworkSniffer:
                     else:
                         self.response(flow_instance)
 
-    def request(self, flow: http.HTTPFlow):
+    def request(self, http_flow: http.HTTPFlow):
         """Handles a request packet.
 
         Args:
-            flow (tcp.HTTPFlow): The HTTP flow to handle.
+            http_flow (http.HTTPFlow): The HTTP flow to handle.
         """
         # Ignore requests, we only care about TCP messages.
-        self._write_flow(flow)
-        print(f"\n -> {flow.request.pretty_url}: {flow.request.text[:1024]}")
+        self._write_flow(http_flow)
+        print(f"\n -> {http_flow.request.pretty_url}: {http_flow.request.text[:1024]}")
 
-    def response(self, flow: http.HTTPFlow):
+    def response(self, http_flow: http.HTTPFlow):
         """Handles a response packet.
 
         Args:
-            flow (tcp.HTTPFlow): The HTTP flow to handle.
+            http_flow (http.HTTPFlow): The HTTP flow to handle.
         """
         # Ignore responses, we only care about TCP messages.
-        self._write_flow(flow)
-        print(f"\n <- {flow.request.pretty_url}: {flow.response.text[:1024]}")
+        self._write_flow(http_flow)
+        print(f"\n <- {http_flow.request.pretty_url}: {http_flow.response.text[:1024]}")
 
-    def tcp_message(self, flow: tcp.TCPFlow):
-        self._write_flow(flow)
-        message = flow.messages[-1]
-
-        self.handle_packet(flow, message)
-
-    def set_key(self, key: List[int]):
-        if len(key) != 4:
-            raise ValueError("Key must be 4 integers long.")
-
-        self.queue_lock.acquire()
-
-        self.key = key
-        self.key_string = b""
-        for key in self.key:
-            self.key_string += key.to_bytes(4, byteorder=self.byte_order, signed=False)
-
-        self.xtea = new(self.key_string, mode=MODE_ECB, rounds=self.rounds, endian="<" if self.byte_order == "little" else ">")
-        print(f"Key set to {self.key}.")
-
-        # Handle all packets in the queue.
-        for packet in self.queue:
-            try:
-                self._handle_packet(packet[0], packet[1])
-            except Exception as e:
-                pass
-
-        self.queue_lock.release()
-
-    @staticmethod
-    def command_type_to_name(type: int, commands: dict) -> str:
-        """Converts a type to a type name.
+    def tcp_message(self, tcp_flow: tcp.TCPFlow):
+        """Handles a TCP message packet.
 
         Args:
-            type (int): The type to convert.
-            commands (dict): The commands to use for the conversion.
-
-        Returns:
-            str: The type name.
+            tcp_flow (tcp.TCPFlow): The TCP flow to handle.
         """
-        for command_name, command_type in commands.items():
-            if command_type == type:
-                return command_name
+        self._write_flow(tcp_flow)
+        message = tcp_flow.messages[-1]
 
-        return "Unknown"
+        self.handle_packet(tcp_flow, message)
 
-    def decrypt(self, data: bytes) -> bytes:
-        decrypted_data = self.xtea.decrypt(NetworkSniffer.pad_data(data))
-
-        return decrypted_data
-
-    def encrypt(self, data: bytes) -> bytes:
-        encrypted_data = self.xtea.encrypt(NetworkSniffer.pad_data(data))
-
-        return encrypted_data
-
-    @staticmethod
-    def pad_data(data: bytes) -> bytes:
-        """Pads the data to be encrypted. It has to be a multiple of 8 bytes.
-
-        Args:
-            data (bytes): The data to pad.
-
-        Returns:
-            bytes: The padded data.
-        """
-        missing_bytes = (8 - len(data) % 8) % 8
-
-        return data + b"\x00" * missing_bytes
-
-    def handle_packet(self, flow: tcp.TCPFlow, packet: tcp.TCPMessage):
+    def handle_packet(self, tcp_flow: tcp.TCPFlow, packet: tcp.TCPMessage):
         """Handles a Tibia packet.
 
         Args:
-            packet (Packet): The packet to handle.
+            tcp_flow (tcp.TCPFlow): The TCP flow to handle.
+            packet (tcp.TCPMessage): The packet to handle.
         """
         self.queue_lock.acquire()
-        self._handle_packet(flow, packet)
+        self.queue.append((tcp_flow, packet))
+
+        if is_ready():
+            for tcp_flow, packet in list(self.queue):
+                self.queue.pop()
+                self._handle_packet(tcp_flow, packet)
+
         self.queue_lock.release()
 
     @staticmethod
@@ -264,7 +211,7 @@ class NetworkSniffer:
             next_data = raw_data[6 + packet_size:]
             raw_data = raw_data[:packet_size + 6]
 
-        decrypted_data = self.decrypt(raw_data[6:6 + packet_size])
+        decrypted_data = decrypt(raw_data[6:6 + packet_size])
         payload = decrypted_data
 
         if not is_valid:
@@ -293,11 +240,6 @@ class NetworkSniffer:
         Args:
             packet (Packet): The packet to handle.
         """
-        # If the key is not set yet, add the packet to the queue and handle later.
-        if self.key is None:
-            self.queue.append((flow, packet))
-            return
-
         packet_srv = flow.server_conn.address[0]
         packet_srv_port = flow.server_conn.address[1]
         packet_srv = f"{packet_srv}:{packet_srv_port}"
@@ -313,6 +255,8 @@ class NetworkSniffer:
         while next_data:
             result = None
 
+            if len(flow.messages) == 609:
+                print("Flow has 609 messages. This is probably a bug in the sniffer. Please report this.")
             try:
                 result = self._decrypt_packet(packet, next_data, packet_srv)
             except Exception as e:
@@ -327,7 +271,6 @@ class NetworkSniffer:
                 return
 
             game_packet, next_data = result
-            #print(str(game_packet))
 
             if isinstance(game_packet, MarketDetail):
                 # If the packet is a MarketDetail packet, add it to the results.

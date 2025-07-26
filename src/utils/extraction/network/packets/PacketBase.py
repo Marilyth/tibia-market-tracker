@@ -14,6 +14,11 @@ class PacketBase:
         else:
             self.command = ServerCommand._value2member_map_.get(self.packet_code, ServerCommand.Invalid)
 
+    def _write_bytes(self, value: bytes) -> None:
+        """Writes bytes to the packet at the current offset and updates the offset."""
+        self.packet += value
+        self.offset += len(value)
+
     def _get_bytes(self, length: int) -> bytes:
         """Reads a specified number of bytes from the packet and updates the offset.
 
@@ -28,6 +33,16 @@ class PacketBase:
 
         return value
 
+    def _write_format(self, fmt: str, value: object) -> None:
+        """Writes a formatted value to the packet at the current offset and updates the offset.
+
+        Args:
+            fmt (str): The format string for struct.pack.
+            value (object): The value to write to the packet.
+        """
+        packed_value = struct.pack(fmt, value)
+        self._write_bytes(packed_value)
+
     def _read_format(self, fmt: str, length: int) -> object:
         """Reads a formatted value from the packet.
 
@@ -39,6 +54,15 @@ class PacketBase:
             object: The unpacked value from the packet.
         """
         return struct.unpack(fmt, self._get_bytes(length))[0]
+
+    def _write_string(self, value: str) -> None:
+        """Writes a string to the packet, prefixed by its length.
+
+        Args:
+            value (str): The string to write.
+        """
+        encoded_value = value.encode("utf-8")
+        self._write_bytes(encoded_value)
 
     def _read_string(self, length: int) -> str:
         """Reads a string of a given length from the packet.
@@ -54,6 +78,16 @@ class PacketBase:
 
         return self._read_format(f"{length}s", length).decode("utf-8")
 
+    def _write_prefixed_string(self, value: str) -> None:
+        """Writes a string to the packet, prefixed by its length.
+
+        Args:
+            value (str): The string to write.
+        """
+        encoded_value = value.encode("utf-8")
+        self._write_short(len(encoded_value))
+        self._write_bytes(encoded_value)
+
     def _read_prefixed_string(self) -> str:
         """Reads a string that starts with a short indicating its length.
 
@@ -61,6 +95,14 @@ class PacketBase:
             str: The string read from the packet.
         """
         return self._read_string(self._read_short())
+
+    def _write_byte(self, value: int) -> None:
+        """Writes a single byte to the packet.
+
+        Args:
+            value (int): The byte to write, should be in the range 0-255.
+        """
+        self._write_format("B", value)
 
     def _read_byte(self) -> int:
         """Reads a single ubyte from the packet.
@@ -70,6 +112,14 @@ class PacketBase:
         """
         return self._read_format("B", 1)
 
+    def _write_short(self, value: int) -> None:
+        """Writes a 2-byte short to the packet.
+
+        Args:
+            value (int): The short integer to write.
+        """
+        self._write_format("H", value)
+
     def _read_short(self) -> int:
         """Reads a ushort (2 bytes) from the packet.
 
@@ -78,6 +128,14 @@ class PacketBase:
         """
         return self._read_format("H", 2)
 
+    def _write_int(self, value: int) -> None:
+        """Writes a 4-byte integer to the packet.
+
+        Args:
+            value (int): The integer to write.
+        """
+        self._write_format("I", value)
+
     def _read_int(self) -> int:
         """Reads a 4-byte uinteger from the packet.
 
@@ -85,6 +143,14 @@ class PacketBase:
             int: The integer read from the packet.
         """
         return self._read_format("I", 4)
+
+    def _write_long(self, value: int) -> None:
+        """Writes a long (8 bytes) to the packet.
+
+        Args:
+            value (int): The long integer to write.
+        """
+        self._write_format("Q", value)
 
     def _read_long(self) -> int:
         """Reads an 8-byte ulong from the packet.

@@ -1,4 +1,3 @@
-import struct
 from typing import List, Tuple
 from utils.data.market_values import ItemMetaData, MarketValues
 from utils.extraction.network.packets.PacketBase import PacketBase
@@ -8,15 +7,15 @@ from time import time
 class MarketDetail(PacketBase):
     def __init__(self, packet: bytes):
         super().__init__(packet, from_client=False)
-        
-        self.id: int = None
-        self.tier: int = -1
-        self.details: List[str] = None
+
+        self.id: int
+        self.tier: int
+        self.details: List[str]
         self.buy_history: List[HistoryPacketValue] = []
         self.sell_history: List[HistoryPacketValue] = []
         self.buy_offers: List[OfferPacketValue] = []
         self.sell_offers: List[OfferPacketValue] = []
-        
+
         self._read_packet()
 
     def _read_packet(self):
@@ -49,7 +48,7 @@ class MarketDetail(PacketBase):
         """Reads the details of a market packet. I.e. it's description, etc.
         """
         self.details = []
-        
+
         # Go through each category. The amount can change every update.
         for _ in range(26):
             self.details.append(self._read_prefixed_string())
@@ -128,7 +127,7 @@ class MarketDetail(PacketBase):
 
         sell_offer_amount = self._read_int()
         self.sell_offers.extend(read_offers(sell_offer_amount))
-        
+
         # Sort sell offers by price, ascending.
         self.sell_offers.sort(key=lambda x: x.price)
 
@@ -210,7 +209,7 @@ def packet_to_marketvalues(packet: MarketDetail) -> Tuple[MarketValues, List[Mar
         npc_trade_steps[0].append(f"Sell {npc_trade_steps[0][0]}x to NPC {sorted_buy_data[0].name} in {sorted_buy_data[0].location} for {sorted_buy_data[0].price}.")
         npc_trade_steps[0].append(f"Profit: {total_immediate_profit}.")
         npc_trade_steps[0].append(f"Total oz: {npc_trade_steps[0][0] * weight}.")
-    
+
     # Buy from NPC, sell to players.
     if sorted_sell_data and sorted_sell_data[0].price > 0:
         for player_buy_offer in packet.buy_offers:
@@ -242,9 +241,9 @@ def packet_to_marketvalues(packet: MarketDetail) -> Tuple[MarketValues, List[Mar
             continue
 
         timestamp = time() - (i * 86400)
-        historical_values.append(MarketValues(id=packet.id, time=timestamp, 
+        historical_values.append(MarketValues(id=packet.id, time=timestamp,
                                                 day_average_buy=int(history[0].average_price), day_average_sell=int(history[1].average_price),
-                                                day_sold=history[1].traded, day_bought=history[0].traded, 
+                                                day_sold=history[1].traded, day_bought=history[0].traded,
                                                 day_highest_sell=history[1].max_price, day_lowest_sell=history[1].min_price,
                                                 day_highest_buy=history[0].max_price, day_lowest_buy=history[0].min_price))
 

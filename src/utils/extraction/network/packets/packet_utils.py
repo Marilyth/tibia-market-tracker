@@ -1,6 +1,7 @@
 from utils.extraction.network.packets.PacketBase import PacketBase
 from utils.extraction.network.packets.packet_names import ClientCommand, ServerCommand
 from utils.extraction.network.packets.server.MarketDetail import MarketDetail
+from utils.extraction.network.packets.client.MarketBrowse import MarketBrowse
 
 
 def read_packet(packet: bytes, from_client: bool) -> PacketBase:
@@ -13,6 +14,8 @@ def read_packet(packet: bytes, from_client: bool) -> PacketBase:
     Returns:
         PacketBase: An instance of PacketBase with the parsed packet data.
     """
+    packet = packet if packet else bytes([0])
+
     if from_client:
         return _read_client_packet(packet)
     else:
@@ -31,5 +34,7 @@ def _read_client_packet(packet: bytes) -> PacketBase:
     packet_code = packet[0]
 
     match packet_code:
+        case ClientCommand.MarketBrowse.value:
+            return MarketBrowse(packet)
         case _:
             return PacketBase(packet, True)
