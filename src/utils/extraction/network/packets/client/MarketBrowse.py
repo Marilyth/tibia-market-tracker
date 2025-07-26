@@ -1,5 +1,6 @@
 from utils.data.market_values import ItemMetaData
 from utils.extraction.network.packets.PacketBase import PacketBase
+from utils.extraction.network.packets.enums import MarketBrowseType
 
 
 class MarketBrowse(PacketBase):
@@ -8,11 +9,12 @@ class MarketBrowse(PacketBase):
 
         self.id: int
         self.tier: int
+        self.browse_type: MarketBrowseType
 
         self._read_packet()
 
     def _read_packet(self):
-        unknown = self._read_byte()
+        self.browse_type = MarketBrowseType(self._read_byte())
         self.id = self._read_short()
 
         meta_data = ItemMetaData(id=self.id)

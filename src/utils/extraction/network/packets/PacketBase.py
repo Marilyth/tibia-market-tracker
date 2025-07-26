@@ -14,6 +14,10 @@ class PacketBase:
         else:
             self.command = ServerCommand._value2member_map_.get(self.packet_code, ServerCommand.Invalid)
 
+    def get_excess(self) -> bytes:
+        """Returns the excess of the packet, which is the remaining bytes after everything has been read."""
+        return self.packet[self.offset:]
+
     def _write_bytes(self, value: bytes) -> None:
         """Writes bytes to the packet at the current offset and updates the offset."""
         self.packet += value

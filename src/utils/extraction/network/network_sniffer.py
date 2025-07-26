@@ -165,7 +165,7 @@ class NetworkSniffer:
 
         return response
 
-    def _decrypt_packet(self, packet: tcp.TCPMessage, raw_data: bytes, sender: str) -> tuple[PacketBase, bytes] | None:
+    def _decrypt_packet(self, packet: tcp.TCPMessage, raw_data: bytes, sender: str) -> tuple[list[PacketBase], bytes] | None:
         """ Decrypts a client packet using the XTEA algorithm.
         """
         if not raw_data:
@@ -270,15 +270,16 @@ class NetworkSniffer:
             if not result:
                 return
 
-            game_packet, next_data = result
+            game_packets, next_data = result
 
-            if isinstance(game_packet, MarketDetail):
-                # If the packet is a MarketDetail packet, add it to the results.
-                self.results.append(game_packet)
-                print(f"Received market packet {game_packet.id}.")
-            else:
-                # Handle other packets.
-                pass
+            for game_packet in game_packets:
+                if isinstance(game_packet, MarketDetail):
+                    # If the packet is a MarketDetail packet, add it to the results.
+                    self.results.append(game_packet)
+                    print(f"Received market packet {game_packet.id}.")
+                else:
+                    # Handle other packets.
+                    pass
 
     def _write_flow(self, flow: flow.Flow):
         """Writes a flow to a file.
