@@ -34,8 +34,9 @@ class NetworkExtractor(Extractor):
         # TODO: Remove test code.
         await asyncio.to_thread(input, 'Enter to extract key')
         await asyncio.to_thread(self._extract_key)
-        await asyncio.to_thread(input, 'Enter to inject message')
-        self.packet_analyser.inject_tcp_message(b'\x67')  # Example message. go south.
+        while True:
+            await asyncio.to_thread(input, 'Enter to inject message')
+            self.packet_analyser.inject_tcp_message(b'\xf5\x03\x9eK\x00')  # Example message. Request albino armor.
 
         # Don't actually do anything if this is a manual session.
         while manual_session:
