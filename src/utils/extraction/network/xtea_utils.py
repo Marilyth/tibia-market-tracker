@@ -2,11 +2,11 @@ import sys
 from xtea import new, MODE_ECB, XTEACipher
 
 
-_rounds: int
-_byte_order: str
-_key: list[int]
-_key_string: bytes
-_xtea: XTEACipher
+_rounds: int = 64
+_byte_order: str = sys.byteorder
+_key: list[int] = None
+_key_string: bytes = None
+_xtea: XTEACipher = None
 
 def setup(rounds: int = 64, byte_order: str = sys.byteorder, key_segment: list[int] = None):
     global _rounds, _byte_order, _key, _key_string, _xtea

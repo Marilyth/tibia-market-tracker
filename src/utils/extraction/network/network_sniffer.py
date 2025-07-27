@@ -5,7 +5,7 @@ from mitmproxy.io import FlowReader, FlowWriter
 from utils.extraction.network.packets.packet_utils import read_packet
 from utils.extraction.network.packets.PacketBase import PacketBase
 from utils.extraction.network.packets.server.MarketDetail import MarketDetail
-from utils.extraction.network.xtea_utils import decrypt, is_ready
+from utils.extraction.network.xtea_utils import decrypt, encrypt, is_ready
 import time
 import sys
 import subprocess
@@ -35,6 +35,8 @@ class NetworkSniffer:
         self.queue_lock = Lock()
         self.prev = bytes()
         self.flow_file = None
+        self.main_flow = None
+        self.sequence_numbers: dict[tuple, int] = {}
 
         if record:
             self.flow_file = open("flow.mitm", "wb")
@@ -75,16 +77,51 @@ class NetworkSniffer:
         self._write_flow(http_flow)
         print(f"\n <- {http_flow.request.pretty_url}: {http_flow.response.text[:1024]}")
 
+    def inject_tcp_message(self, message: bytes, to_client: bool = False):
+        """Injects a TCP message into the sniffer.
+
+        Args:
+            message (bytes): The TCP message to inject.
+            to_client (bool): Whether the message is from the client or server.
+        """
+        # Add a padding length byte to the encrypted message.
+        padding_bytes = (8 - (len(message) + 1) % 8) % 8
+        message = padding_bytes.to_bytes(1, 'little') + message
+
+        encrypted_message = encrypt(message)
+
+        # Build and prepend header.
+        connection = self.main_flow.client_conn.address if not to_client else self.main_flow.server_conn.address
+        length = len(encrypted_message) // 8
+        sequence_number = self.sequence_numbers[connection] + 1
+        self.sequence_numbers[connection] = sequence_number
+        compression_flag = 0
+
+        message = (
+            length.to_bytes(2, 'little') +
+            sequence_number.to_bytes(2, 'little') +
+            compression_flag.to_bytes(2, 'little') +
+            encrypted_message
+        )
+
+        ctx.master.commands.call("inject.tcp", self.main_flow, to_client, message)
+
     def tcp_message(self, tcp_flow: tcp.TCPFlow):
         """Handles a TCP message packet.
 
         Args:
             tcp_flow (tcp.TCPFlow): The TCP flow to handle.
         """
-        self._write_flow(tcp_flow)
+        if self.main_flow is None:
+            self.main_flow = tcp_flow
+
         message = tcp_flow.messages[-1]
 
         self.handle_packet(tcp_flow, message)
+
+        # Write the flow to a file.
+        #tcp_flow.messages = tcp_flow.messages[-1:]
+        self._write_flow(tcp_flow)
 
     def handle_packet(self, tcp_flow: tcp.TCPFlow, packet: tcp.TCPMessage):
         """Handles a Tibia packet.
@@ -165,11 +202,13 @@ class NetworkSniffer:
 
         return response
 
-    def _decrypt_packet(self, packet: tcp.TCPMessage, raw_data: bytes, sender: str) -> tuple[list[PacketBase], bytes] | None:
+    def _decrypt_packet(self, tcp_flow: tcp.TCPFlow, packet: tcp.TCPMessage, raw_data: bytes) -> tuple[list[PacketBase], bytes] | None:
         """ Decrypts a client packet using the XTEA algorithm.
         """
         if not raw_data:
             return
+
+        sender = tcp_flow.client_conn.address if packet.from_client else tcp_flow.server_conn.address
 
         # First 2 bytes are the size of the packet load in multiples of 8 bytes (minus the header) in little endian. I.e. 0c00 is 12 bytes.
         packet_size = int.from_bytes(raw_data[:2], byteorder=sys.byteorder, signed=False) * 8
@@ -232,6 +271,8 @@ class NetworkSniffer:
             # First 2 bytes are the size of the decompressed data.
             payload = self.decompress_bytes(payload, sender)[2:]
 
+        self.sequence_numbers[sender] = sequence_number
+
         return read_packet(payload, packet.from_client), next_data
 
     def _handle_packet(self, flow: tcp.TCPFlow, packet: tcp.TCPMessage):
@@ -246,7 +287,7 @@ class NetworkSniffer:
 
         # There seem to be multiple identical streams when talking to Tibia.
         # The first one is being blocked by us. Also ignore all streams that are not from Tibia 7171.
-        if False and packet_srv == self.blocked_src or packet_srv_port != 7171:
+        if packet_srv == self.blocked_src or packet_srv_port != 7171:
             return
 
         next_data = packet.content
@@ -255,10 +296,8 @@ class NetworkSniffer:
         while next_data:
             result = None
 
-            if len(flow.messages) == 609:
-                print("Flow has 609 messages. This is probably a bug in the sniffer. Please report this.")
             try:
-                result = self._decrypt_packet(packet, next_data, packet_srv)
+                result = self._decrypt_packet(flow, packet, next_data)
             except Exception as e:
                 if not self.blocked_src:
                     self.blocked_src = packet_srv
@@ -279,7 +318,7 @@ class NetworkSniffer:
                     print(f"Received market packet {game_packet.id}.")
                 else:
                     # Handle other packets.
-                    pass
+                    print(f"Received packet {game_packet}.")
 
     def _write_flow(self, flow: flow.Flow):
         """Writes a flow to a file.

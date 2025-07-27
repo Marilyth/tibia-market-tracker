@@ -2,7 +2,9 @@ import asyncio
 from utils.client import Client
 from utils.data.market_values import MarketValues, MarketBoard, MarketBoardTraderData
 from utils.extraction.network.network_sniffer import NetworkSniffer
-from utils.extraction.network.market_packet_reader import MarketPacketValues
+from utils.extraction.network.xtea_utils import setup
+from utils.extraction.network.packets.server import MarketDetail
+from utils.extraction.network.packets.packet_utils import packet_to_marketvalues
 from utils.extraction.network.debugger import XteaDebugger
 from utils.extraction.extractor import Extractor
 from utils.market_categories import market_categories
@@ -20,7 +22,7 @@ from utils.extraction.network.proxy import start_proxy
 class NetworkExtractor(Extractor):
     def __init__(self, client: Client):
         super().__init__(client)
-        self.packet_analyser = NetworkSniffer()
+        self.packet_analyser = NetworkSniffer(record=True)
         self.xtea_key = None
 
     async def setup(self, manual_session: bool = False):
@@ -28,8 +30,13 @@ class NetworkExtractor(Extractor):
         Sets up the network extraction by sniffing packets, logging in, extracting the XTEA key, and opening the market.
         """
         await start_proxy([self.packet_analyser])
-        await asyncio.to_thread(self._setup_session)
-        
+
+        # TODO: Remove test code.
+        await asyncio.to_thread(input, 'Enter to extract key')
+        await asyncio.to_thread(self._extract_key)
+        await asyncio.to_thread(input, 'Enter to inject message')
+        self.packet_analyser.inject_tcp_message(b'\x67')  # Example message. go south.
+
         # Don't actually do anything if this is a manual session.
         while manual_session:
             await asyncio.sleep(1)
