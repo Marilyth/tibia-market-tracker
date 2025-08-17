@@ -5,6 +5,7 @@ from mitmproxy.io import FlowReader, FlowWriter
 from utils.extraction.network.packets.packet_utils import read_packet
 from utils.extraction.network.packets.PacketBase import PacketBase
 from utils.extraction.network.packets.server.MarketDetail import MarketDetail
+from utils.extraction.network.packets.client.MarketBrowse import MarketBrowse
 from utils.extraction.network.xtea_utils import decrypt, encrypt, is_ready
 import time
 import sys
@@ -13,6 +14,29 @@ import os
 import traceback
 from threading import Lock
 
+
+class SequenceManager:
+    def __init__(self):
+        self.next_sequence = 0
+        self.injection_count = 0
+
+    def handle_source_message(self, message: bytes):
+        """Replaces the sequence of the message with the current one."""
+        message_sequence = int.from_bytes(message[2:4], 'little')
+
+        # If the sequence is not the next one, return the message unchanged.
+        if message_sequence != self.next_sequence:
+            return message
+
+        message = bytearray(message)
+        message[2:4] = self.get_next_actual_sequence().to_bytes(2, 'little')
+        self.next_sequence += 1
+
+        return bytes(message)
+
+    def get_next_actual_sequence(self):
+        """Returns the next actual sequence number."""
+        return self.next_sequence + self.injection_count
 
 class NetworkSniffer:
     def __init__(self, record: bool = False):
@@ -30,13 +54,14 @@ class NetworkSniffer:
         self.xtea = None
         self.blocked_src: str = None
         self.incomplete_packets = []
-        self.results: List[MarketDetail] = []
+        self.detail_results: dict[int, MarketDetail] = {}
+        self.browse_results: dict[int, MarketBrowse] = {}
         self.decrompression_stream = bytes()
         self.queue_lock = Lock()
         self.prev = bytes()
         self.flow_file = None
         self.main_flow = None
-        self.sequence_numbers: dict[tuple, int] = {}
+        self.sequence_numbers: dict[tuple, SequenceManager] = {}
 
         if record:
             self.flow_file = open("flow.mitm", "wb")
@@ -77,24 +102,27 @@ class NetworkSniffer:
         self._write_flow(http_flow)
         print(f"\n <- {http_flow.request.pretty_url}: {http_flow.response.text[:1024]}")
 
-    def inject_tcp_message(self, message: bytes, to_client: bool = False):
+    def inject_tcp_message(self, packet: PacketBase):
         """Injects a TCP message into the sniffer.
 
         Args:
             message (bytes): The TCP message to inject.
             to_client (bool): Whether the message is from the client or server.
         """
+        connection = self.main_flow.client_conn.address if packet.from_client else self.main_flow.server_conn.address
+        sequence_manager = self.sequence_numbers[connection]
+
         # Add a padding length byte to the encrypted message.
+        message = packet.packet
+
         padding_bytes = (8 - (len(message) + 1) % 8) % 8
         message = padding_bytes.to_bytes(1, 'little') + message
 
         encrypted_message = encrypt(message)
 
         # Build and prepend header.
-        connection = self.main_flow.client_conn.address if not to_client else self.main_flow.server_conn.address
         length = len(encrypted_message) // 8
-        sequence_number = self.sequence_numbers[connection] + 1
-        self.sequence_numbers[connection] = sequence_number
+        sequence_number = sequence_manager.get_next_actual_sequence()
         compression_flag = 0
 
         message = (
@@ -104,7 +132,7 @@ class NetworkSniffer:
             encrypted_message
         )
 
-        ctx.master.commands.call("inject.tcp", self.main_flow, to_client, message)
+        ctx.master.commands.call("inject.tcp", self.main_flow, not packet.from_client, b"injected" + message)
 
     def tcp_message(self, tcp_flow: tcp.TCPFlow):
         """Handles a TCP message packet.
@@ -116,12 +144,9 @@ class NetworkSniffer:
             self.main_flow = tcp_flow
 
         message = tcp_flow.messages[-1]
+        self._write_flow(tcp_flow)
 
         self.handle_packet(tcp_flow, message)
-
-        # Write the flow to a file.
-        #tcp_flow.messages = tcp_flow.messages[-1:]
-        self._write_flow(tcp_flow)
 
     def handle_packet(self, tcp_flow: tcp.TCPFlow, packet: tcp.TCPMessage):
         """Handles a Tibia packet.
@@ -208,6 +233,11 @@ class NetworkSniffer:
         if not raw_data:
             return
 
+        is_injected = raw_data.startswith(b"injected")
+        if is_injected:
+            raw_data = raw_data[8:]
+            packet.content = raw_data
+
         sender = tcp_flow.client_conn.address if packet.from_client else tcp_flow.server_conn.address
 
         # First 2 bytes are the size of the packet load in multiples of 8 bytes (minus the header) in little endian. I.e. 0c00 is 12 bytes.
@@ -225,24 +255,14 @@ class NetworkSniffer:
             # Append the raw_data to the last incomplete packet.
             incomplete_packet = [packet for packet in self.incomplete_packets if packet[1] == sender][-1]
             raw_data = incomplete_packet[0] + raw_data
-            actual_size = len(raw_data[6:])
-            packet_size = int.from_bytes(raw_data[:2], byteorder=sys.byteorder, signed=False) * 8
-            sequence_number = int.from_bytes(raw_data[2:4], byteorder=sys.byteorder, signed=False)
-            compression_flag = int.from_bytes(raw_data[4:6], byteorder=sys.byteorder, signed=False)
-            is_compressed = compression_flag == 0xC000
-            is_valid = is_compressed or compression_flag == 0x0000
             self.incomplete_packets.remove(incomplete_packet)
+
+            return self._decrypt_packet(tcp_flow, packet, raw_data)
 
         if packet_size > actual_size and not packet.from_client and is_compressed:
             # Packet is not complete yet. Wait for the next packet.
             self.incomplete_packets.append((raw_data, sender))
             return
-
-        # Unfinished packet was not completed. Remove it.
-        for packet in self.incomplete_packets[:]:
-            if packet[1] == sender:
-                print("Unfinished packet was not completed. Removing.")
-                self.incomplete_packets.remove(packet)
 
         # If size is bigger than the actual size, there is another packet appended to this one.
         next_data = None
@@ -250,6 +270,20 @@ class NetworkSniffer:
             next_data = raw_data[6 + packet_size:]
             raw_data = raw_data[:packet_size + 6]
 
+        # Handle sequence number changes in case packages were injected.
+        if not sender in self.sequence_numbers:
+            self.sequence_numbers[sender] = SequenceManager()
+
+        sequence_manager = self.sequence_numbers[sender]
+
+        if is_injected:
+            sequence_manager.injection_count += 1
+        else:
+            modified_raw_data = sequence_manager.handle_source_message(raw_data)
+            packet.content.replace(raw_data, modified_raw_data)
+            raw_data = modified_raw_data
+
+        # Decrypt the packet.
         decrypted_data = decrypt(raw_data[6:6 + packet_size])
         payload = decrypted_data
 
@@ -270,8 +304,6 @@ class NetworkSniffer:
         if is_compressed:
             # First 2 bytes are the size of the decompressed data.
             payload = self.decompress_bytes(payload, sender)[2:]
-
-        self.sequence_numbers[sender] = sequence_number
 
         return read_packet(payload, packet.from_client), next_data
 
@@ -313,12 +345,14 @@ class NetworkSniffer:
 
             for game_packet in game_packets:
                 if isinstance(game_packet, MarketDetail):
-                    # If the packet is a MarketDetail packet, add it to the results.
-                    self.results.append(game_packet)
+                    self.detail_results[game_packet.id](game_packet)
                     print(f"Received market packet {game_packet.id}.")
+                elif isinstance(game_packet, MarketBrowse):
+                    self.browse_results[game_packet.id](game_packet)
+                    print(f"Received market browse packet {game_packet.id}")
                 else:
-                    # Handle other packets.
-                    print(f"Received packet {game_packet}.")
+                    # Might want to handle other packets in the future.
+                    pass
 
     def _write_flow(self, flow: flow.Flow):
         """Writes a flow to a file.

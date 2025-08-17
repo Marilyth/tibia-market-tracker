@@ -43,20 +43,20 @@ def _read_server_packet(packet: bytes) -> PacketBase:
 
     match packet_code:
         case ServerCommand.MarketDetail.value:
-            return MarketDetail(packet)
+            return MarketDetail().from_packet(packet)
         case ServerCommand.MarketBrowse.value:
-            return ServerMarketBrowse(packet)
+            return ServerMarketBrowse().from_packet(packet)
         case _:
-            return PacketBase(packet, False)
+            return PacketBase(False).from_packet(packet)
 
 def _read_client_packet(packet: bytes) -> PacketBase:
     packet_code = packet[0]
 
     match packet_code:
         case ClientCommand.MarketBrowse.value:
-            return ClientMarketBrowse(packet)
+            return ClientMarketBrowse().from_packet(packet)
         case _:
-            return PacketBase(packet, True)
+            return PacketBase(True).from_packet(packet)
 
 def packet_to_marketvalues(details: MarketDetail, offers: ServerMarketBrowse) -> tuple[MarketValues, list[MarketValues]]:
     """Converts the packet to a MarketValues object to reduce required storage.

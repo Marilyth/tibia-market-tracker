@@ -3,16 +3,28 @@ import struct
 
 
 class PacketBase:
-    def __init__(self, packet: bytes, from_client: bool):
+    def __init__(self, from_client: bool):
         self.from_client = from_client
-        self.packet = packet
         self.offset = 0
+        self.packet = None
+        self.packet_code = None
+        self.command = None
+
+    def from_packet(self, packet: bytes) -> 'PacketBase':
+        """Creates a PacketBase instance from a raw packet.
+
+        Args:
+            packet (bytes): The raw packet data.
+        """
+        self.packet = packet
         self.packet_code = self._read_byte()
 
         if self.from_client:
             self.command = ClientCommand._value2member_map_.get(self.packet_code, ClientCommand.Invalid)
         else:
             self.command = ServerCommand._value2member_map_.get(self.packet_code, ServerCommand.Invalid)
+
+        return self
 
     def get_excess(self) -> bytes:
         """Returns the excess of the packet, which is the remaining bytes after everything has been read."""

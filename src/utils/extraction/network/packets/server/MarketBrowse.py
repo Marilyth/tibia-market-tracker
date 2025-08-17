@@ -13,8 +13,8 @@ class OfferPacketValue:
 
 
 class MarketBrowse(PacketBase):
-    def __init__(self, packet):
-        super().__init__(packet, True)
+    def __init__(self):
+        super().__init__(True)
 
         self.id: int
         self.tier: int = -1
@@ -22,7 +22,11 @@ class MarketBrowse(PacketBase):
         self.buy_offers: list[OfferPacketValue] = []
         self.sell_offers: list[OfferPacketValue] = []
 
+    def from_packet(self, packet) -> 'MarketBrowse':
+        super().from_packet(packet)
         self._read_packet()
+
+        return self
 
     def _read_packet(self):
         self._read_header()

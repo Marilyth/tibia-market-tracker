@@ -3,8 +3,8 @@ from utils.extraction.network.packets.PacketBase import PacketBase
 
 
 class MarketDetail(PacketBase):
-    def __init__(self, packet: bytes):
-        super().__init__(packet, from_client=False)
+    def __init__(self):
+        super().__init__(from_client=False)
 
         self.id: int
         self.tier: int = -1
@@ -12,7 +12,11 @@ class MarketDetail(PacketBase):
         self.buy_history: list[HistoryPacketValue] = []
         self.sell_history: list[HistoryPacketValue] = []
 
+    def from_packet(self, packet: bytes) -> 'MarketDetail':
+        super().from_packet(packet)
         self._read_packet()
+
+        return self
 
     def _read_packet(self):
         """Reads a market packet, and saves the result to self.result.

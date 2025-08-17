@@ -3,20 +3,17 @@ from utils.client import Client
 from utils.data.market_values import MarketValues, MarketBoard, MarketBoardTraderData
 from utils.extraction.network.network_sniffer import NetworkSniffer
 from utils.extraction.network.xtea_utils import setup
-from utils.extraction.network.packets.server import MarketDetail
+from utils.extraction.network.packets.PacketBase import PacketBase
+from utils.extraction.network.packets.client.MarketBrowse import MarketBrowse
+from utils.extraction.network.packets.enums import MarketBrowseType
 from utils.extraction.network.packets.packet_utils import packet_to_marketvalues
 from utils.extraction.network.debugger import XteaDebugger
 from utils.extraction.extractor import Extractor
-from utils.market_categories import market_categories
 import time
-from typing import *
-import pyautogui
-from tqdm import tqdm
 import traceback
-from utils.human_movement import wait_like_human, repeat_like_human
-from utils.waiter import wait_until
-from utils.json_helper import object_to_json
+from utils.human_movement import wait_like_human_async
 from utils.extraction.network.proxy import start_proxy
+from utils.wiki import Wiki
 
 
 class NetworkExtractor(Extractor):
@@ -36,118 +33,113 @@ class NetworkExtractor(Extractor):
         await asyncio.to_thread(self._extract_key)
         while True:
             await asyncio.to_thread(input, 'Enter to inject message')
-            self.packet_analyser.inject_tcp_message(b'\xf5\x03\x9eK\x00')  # Example message. Request albino armor.
+            # Example message. Request albino armor.
+            self.packet_analyser.inject_tcp_message(PacketBase(b'\x67', True))
 
         # Don't actually do anything if this is a manual session.
         while manual_session:
             await asyncio.sleep(1)
 
-    def extract_market_values(self) -> Tuple[List[MarketValues], List[MarketBoard]]:
-        items: List[MarketDetail] = []
-        market_value_items: List[MarketValues] = []
-        market_boards: List[MarketBoard] = []
+    async def extract_market_values(self) -> tuple[list[MarketValues], list[MarketBoard]]:
+        extracted_items: tuple[MarketValues, list[MarketValues]] = []
+        market_items = [item for item in Wiki.get_marketable_proto_items().values()]
 
-        for category in tqdm(market_categories[:19] + market_categories[-1:], desc=f"Category"):
-            try:
-                items.extend(self.crawl_market(category.index))
-            except Exception as e:
-                traceback.print_exc()
+        self.client.walk_to_depot()
+        self.client.wiggle()
+        last_wiggle = time.time()
 
-                print(f"Error while crawling market: {e}")
-                break
+        batch_size = 10
+        interval = 0.1
+        timeout = 2
+        max_retry_count = 3
+        current_retry_count = 0
+
+        while market_items:
+            if time.time() - last_wiggle > 60:
+                self.client.close_market()
+                self.client.wiggle()
+                last_wiggle = time.time()
+
+            # Get the next batch of items.
+            batch = market_items[:batch_size]
+            tasks = []
+
+            # Create MarketBrowse packets for each item in the batch.
+            for item in batch:
+                tasks.append(self.request_market_values(item.id, timeout=timeout))
+                wait_like_human_async(interval)
+
+            results = asyncio.gather(*tasks, return_exceptions=True)
+            success_count = 0
+
+            for item, result in zip(batch, results):
+                if isinstance(result, TimeoutError):
+                    # Timeouts are expected, so long as we have some results.
+                    continue
+                elif isinstance(result, Exception):
+                    print(f"Error while requesting market values for item {item.id}: {result}")
+                    traceback.print_exc()
+                    continue
+
+                extracted_items.append(result)
+                market_items.remove(item)
+                success_count += 1
+
+            if success_count == 0:
+                if current_retry_count >= max_retry_count:
+                    raise Exception("Failed to extract market values after multiple retries.")
+
+                print(f"Failed to extract market values for all items in batch. {current_retry_count=}")
+                current_retry_count += 1
+
+            # If we had a timeout, wait longer to avoid spamming the server.
+            if success_count < batch_size:
+                await wait_like_human_async(interval * 3)
+
+        market_boards: list[MarketBoard] = []
+        market_value_items: list[MarketValues] = []
 
         # Convert items to MarketValues objects.
-        for item in items:
-            market_values, historical_values = packet_to_marketvalues(item)
-            market_sellers = sorted([MarketBoardTraderData(name=seller.name, amount=seller.amount, price=seller.price, time=seller.timestamp) for seller in item.sell_offers], key=lambda x: x.price)
-            market_buyers = sorted([MarketBoardTraderData(name=buyer.name, amount=buyer.amount, price=buyer.price, time=buyer.timestamp) for buyer in item.buy_offers], key=lambda x: x.price, reverse=True)
+        for market_values, historical_values in extracted_items:
+            market_sellers = sorted([MarketBoardTraderData(name=seller.name, amount=seller.amount, price=seller.price, time=seller.timestamp) for seller in market_values.sell_offers], key=lambda x: x.price)
+            market_buyers = sorted([MarketBoardTraderData(name=buyer.name, amount=buyer.amount, price=buyer.price, time=buyer.timestamp) for buyer in market_values.buy_offers], key=lambda x: x.price, reverse=True)
             market_boards.append(MarketBoard(id=item.id, sellers=market_sellers, buyers=market_buyers, update_time=time.time()))
 
             for historical_value in historical_values[::-1]:
                 market_value_items.append(historical_value)
 
             market_value_items.append(market_values)
-            #print(f"Converted to market_value_item: {object_to_json(market_values)}")
 
         return market_value_items, market_boards
 
-    def crawl_market(self, category_index: int, starting_index: int = 0) -> List[MarketValues]:
-        """
-        Crawls the market for all items by iterating through the categories.
+    async def request_market_values(self, item_id: int, timeout: int = 2) -> tuple[MarketValues, list[MarketValues]]:
+        """ Requests market values for a specific item by its ID.
 
         Args:
-            category_index: The index of the category to start at.
-            starting_index: The index of the item to start at.
+            item_id (int): The ID of the item to request market values for.
+            timeout (int, optional): The maximum time to wait for the response. Defaults to 2 seconds.
+
+        Raises:
+            TimeoutError: Raised if the response is not received within the timeout period.
+
         Returns:
-            A list of MarketValues objects.
+            tuple[MarketValues, list[MarketValues]]: The market values and historical values for the requested item.
         """
-        results = []
+        market_item = Wiki.get_marketable_proto_items()[item_id]
+        market_browse_packet = MarketBrowse().from_data(item_id, 1 if market_item.tier > -1 else -1, MarketBrowseType.Browse)
+        self.packet_analyser.inject_tcp_message(market_browse_packet)
 
-        # Reopen the market to avoid being kicked out.
-        self.client.close_market()
-        self.client.wiggle()
-        self.client.open_market()
+        wait_time = time.time() + timeout
+        while item_id not in self.packet_analyser.browse_results or item_id not in self.packet_analyser.detail_results:
+            if time.time() > wait_time:
+                raise TimeoutError(f"Timeout while waiting for market browse packet for item {item_id}.")
 
-        self.client._wait_until_find("images/Category.png", click=True, cache=False, coordinate_deviation=1)
+            await asyncio.sleep(0.1)
 
-        # Go to the correct category.
-        repeat_like_human(lambda: pyautogui.press("down"), category_index, wait_time=0.1)
+        market_browse = self.packet_analyser.browse_results[item_id]
+        market_detail = self.packet_analyser.detail_results[item_id]
 
-        # Tab to the item list. This number might have to be changed if the market is updated.
-        repeat_like_human(lambda: pyautogui.press("tab"), 10, wait_time=0.1)
-
-        # Go through the items quickly, except for the last one.
-        # This is to make sure the item's value is fully loaded and we aren't rate limited.
-        if starting_index > 1:
-            repeat_like_human(lambda: pyautogui.press("down"), starting_index, wait_time=0.06, target_deviation=0.01)
-            wait_like_human(8)
-
-        fail_count = 0
-        result = None
-
-        while True:
-            pyautogui.PAUSE = 0.01
-            self.packet_analyser.results = []
-
-            # Go to the next item.
-            wait_like_human(0.3, 0.05)
-            pyautogui.press("down")
-
-            # Wait for the packet to be processed.
-            was_processed = wait_until(lambda: len(self.packet_analyser.results) > 0, 2, 0.01)
-
-            if not was_processed:
-                fail_count += 1
-
-                # Reading the item failed 5 times. Continue with next category.
-                if fail_count >= 5:
-                    print("Failed to process packet. Continuing with next category.")
-                    break
-                else:
-                    # Retry the item.
-                    if result:
-                        wait_like_human(0.3, 0.05)
-                        self.packet_analyser.results = []
-                        pyautogui.press("up")
-
-                        was_processed = wait_until(lambda: len(self.packet_analyser.results) > 0, 2, 0.01)
-                        if was_processed:
-                            test_result = self.packet_analyser.results.pop(0)
-
-                            if test_result.id != result.id:
-                                print("Reached end of category. Going up did not yield the last item.")
-                                break
-
-                    continue
-
-            # Get the result.
-            fail_count = 0
-            result = self.packet_analyser.results.pop(0)
-            results.append(result)
-
-            print(f"Received market packet for {result.id}")
-
-        return results
+        return packet_to_marketvalues(market_detail, market_browse)
 
     def _setup_session(self):
         self.client.start_game()
