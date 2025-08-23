@@ -1,5 +1,5 @@
 from utils.data.market_values import ItemMetaData
-from utils.extraction.network.packets.PacketBase import PacketBase
+from utils.extraction.network.packets.packet_base import PacketBase
 
 
 class MarketDetail(PacketBase):

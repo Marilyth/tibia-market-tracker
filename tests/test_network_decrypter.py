@@ -1,4 +1,4 @@
-from utils.extraction.network.NetworkSniffer import NetworkSniffer
+from utils.extraction.network.network_sniffer import NetworkSniffer
 from utils.extraction.network.xtea_utils import setup
 import os
 

@@ -1,4 +1,4 @@
-from utils.extraction.network.packets.server.MarketDetail import MarketDetail
+from utils.extraction.network.packets.server.market_detail import MarketDetail
 import pytest
 
 

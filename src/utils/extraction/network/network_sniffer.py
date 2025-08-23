@@ -2,12 +2,12 @@ from xtea import *
 from typing import List
 from mitmproxy import ctx, tcp, http, flow
 from mitmproxy.io import FlowReader, FlowWriter
-from utils.extraction.network.SequenceManager import SequenceManager
+from utils.extraction.network.sequence_manager import SequenceManager
 from utils.extraction.network.packets.packet_utils import read_packet
-from utils.extraction.network.packets.PacketBase import PacketBase
-from utils.extraction.network.packets.server.MarketDetail import MarketDetail
-from utils.extraction.network.packets.server.MarketBrowse import MarketBrowse
-from utils.extraction.network.packets.client.MarketBrowse import MarketBrowse as ClientMarketBrowse
+from utils.extraction.network.packets.packet_base import PacketBase
+from utils.extraction.network.packets.server.market_detail import MarketDetail
+from utils.extraction.network.packets.server.market_browse import MarketBrowse
+from utils.extraction.network.packets.client.market_browse import MarketBrowse as ClientMarketBrowse
 from utils.extraction.network.xtea_utils import decrypt, encrypt, is_ready
 import time
 import sys
@@ -124,6 +124,10 @@ class NetworkSniffer:
         self._write_flow(tcp_flow)
 
         self.handle_packet(tcp_flow, message)
+
+    def is_ready_for_injection(self) -> bool:
+        """Returns whether the sniffer is ready for injection."""
+        return self.main_flow is not None and is_ready()
 
     def handle_packet(self, tcp_flow: tcp.TCPFlow, packet: tcp.TCPMessage):
         """Handles a Tibia packet.
@@ -325,7 +329,6 @@ class NetworkSniffer:
             game_packets, next_data = result
 
             for game_packet in game_packets:
-                print(game_packet.__str__())
                 if isinstance(game_packet, MarketDetail):
                     print(f"Received market packet {game_packet.id}.")
                     self._detail_results[game_packet.id] = game_packet
@@ -334,6 +337,8 @@ class NetworkSniffer:
                     print(f"Received market browse packet {game_packet.id}")
                     self._browse_results[game_packet.id] = game_packet
                     self._check_if_item_complete(game_packet.id)
+                elif isinstance(game_packet, ClientMarketBrowse):
+                    print(f"Sending out client market browse packet {game_packet.id}")
                 else:
                     # Might want to handle other packets in the future.
                     pass

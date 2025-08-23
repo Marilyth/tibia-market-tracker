@@ -49,7 +49,7 @@ class TestWiki:
     def test_GenerateGifForAllItems_WhenCalled_DoesntThrow(self):
         # Arrange.
         items = self.wiki.get_marketable_proto_items()
-        fire_sword = items.get(3280)
+
         # Act.
         for item in items.values():
             self.wiki.generate_gif_for_item_id(item.id)

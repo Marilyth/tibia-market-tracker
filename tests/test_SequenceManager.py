@@ -1,5 +1,5 @@
 import pytest
-from utils.extraction.network.SequenceManager import SequenceManager
+from utils.extraction.network.sequence_manager import SequenceManager
 
 
 class TestSequenceManager:

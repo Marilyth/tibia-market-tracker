@@ -1,5 +1,5 @@
 import struct
-from utils.extraction.network.packets.PacketBase import PacketBase
+from utils.extraction.network.packets.packet_base import PacketBase
 
 class TestPacketBase:
     def setup_method(self):

@@ -1,8 +1,8 @@
-from utils.extraction.network.packets.PacketBase import PacketBase
+from utils.extraction.network.packets.packet_base import PacketBase
 from utils.extraction.network.packets.packet_names import ClientCommand, ServerCommand
-from utils.extraction.network.packets.server.MarketDetail import MarketDetail
-from utils.extraction.network.packets.client.MarketBrowse import MarketBrowse as ClientMarketBrowse
-from utils.extraction.network.packets.server.MarketBrowse import MarketBrowse as ServerMarketBrowse
+from utils.extraction.network.packets.server.market_detail import MarketDetail
+from utils.extraction.network.packets.client.market_browse import MarketBrowse as ClientMarketBrowse
+from utils.extraction.network.packets.server.market_browse import MarketBrowse as ServerMarketBrowse
 from utils.data.market_values import ItemMetaData, MarketValues
 from time import time
 
