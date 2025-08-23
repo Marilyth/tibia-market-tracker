@@ -2,10 +2,12 @@ from xtea import *
 from typing import List
 from mitmproxy import ctx, tcp, http, flow
 from mitmproxy.io import FlowReader, FlowWriter
+from utils.extraction.network.SequenceManager import SequenceManager
 from utils.extraction.network.packets.packet_utils import read_packet
 from utils.extraction.network.packets.PacketBase import PacketBase
 from utils.extraction.network.packets.server.MarketDetail import MarketDetail
-from utils.extraction.network.packets.client.MarketBrowse import MarketBrowse
+from utils.extraction.network.packets.server.MarketBrowse import MarketBrowse
+from utils.extraction.network.packets.client.MarketBrowse import MarketBrowse as ClientMarketBrowse
 from utils.extraction.network.xtea_utils import decrypt, encrypt, is_ready
 import time
 import sys
@@ -14,29 +16,6 @@ import os
 import traceback
 from threading import Lock
 
-
-class SequenceManager:
-    def __init__(self):
-        self.next_sequence = 0
-        self.injection_count = 0
-
-    def handle_source_message(self, message: bytes):
-        """Replaces the sequence of the message with the current one."""
-        message_sequence = int.from_bytes(message[2:4], 'little')
-
-        # If the sequence is not the next one, return the message unchanged.
-        if message_sequence != self.next_sequence:
-            return message
-
-        message = bytearray(message)
-        message[2:4] = self.get_next_actual_sequence().to_bytes(2, 'little')
-        self.next_sequence += 1
-
-        return bytes(message)
-
-    def get_next_actual_sequence(self):
-        """Returns the next actual sequence number."""
-        return self.next_sequence + self.injection_count
 
 class NetworkSniffer:
     def __init__(self, record: bool = False):
@@ -54,14 +33,15 @@ class NetworkSniffer:
         self.xtea = None
         self.blocked_src: str = None
         self.incomplete_packets = []
-        self.detail_results: dict[int, MarketDetail] = {}
-        self.browse_results: dict[int, MarketBrowse] = {}
         self.decrompression_stream = bytes()
         self.queue_lock = Lock()
         self.prev = bytes()
         self.flow_file = None
         self.main_flow = None
         self.sequence_numbers: dict[tuple, SequenceManager] = {}
+        self.results: dict[int, tuple[MarketDetail, MarketBrowse]] = {}
+        self._detail_results: dict[int, MarketDetail] = {}
+        self._browse_results: dict[int, MarketBrowse] = {}
 
         if record:
             self.flow_file = open("flow.mitm", "wb")
@@ -140,9 +120,6 @@ class NetworkSniffer:
         Args:
             tcp_flow (tcp.TCPFlow): The TCP flow to handle.
         """
-        if self.main_flow is None:
-            self.main_flow = tcp_flow
-
         message = tcp_flow.messages[-1]
         self._write_flow(tcp_flow)
 
@@ -279,9 +256,10 @@ class NetworkSniffer:
         if is_injected:
             sequence_manager.injection_count += 1
         else:
-            modified_raw_data = sequence_manager.handle_source_message(raw_data)
-            packet.content.replace(raw_data, modified_raw_data)
-            raw_data = modified_raw_data
+            # The sequence number needs to be adjusted if any messages were injected.
+            # Otherwise the connection drops.
+            adjusted_packet_content = sequence_manager.adjust_sequence_number(raw_data)
+            packet.content = packet.content.replace(raw_data, adjusted_packet_content)
 
         # Decrypt the packet.
         decrypted_data = decrypt(raw_data[6:6 + packet_size])
@@ -341,18 +319,40 @@ class NetworkSniffer:
             if not result:
                 return
 
+            # Set main flow for injections.
+            self.main_flow = flow
+
             game_packets, next_data = result
 
             for game_packet in game_packets:
+                print(game_packet.__str__())
                 if isinstance(game_packet, MarketDetail):
-                    self.detail_results[game_packet.id](game_packet)
                     print(f"Received market packet {game_packet.id}.")
+                    self._detail_results[game_packet.id] = game_packet
+                    self._check_if_item_complete(game_packet.id)
                 elif isinstance(game_packet, MarketBrowse):
-                    self.browse_results[game_packet.id](game_packet)
                     print(f"Received market browse packet {game_packet.id}")
+                    self._browse_results[game_packet.id] = game_packet
+                    self._check_if_item_complete(game_packet.id)
                 else:
                     # Might want to handle other packets in the future.
                     pass
+
+    def _check_if_item_complete(self, item_id: int) -> bool:
+        """Checks if we have both a MarketDetail and MarketBrowse packet for the given item ID.
+        If so, adds them to the results.
+
+        Args:
+            item_id (int): The item ID to check.
+
+        Returns:
+            bool: True if we have both packets, False otherwise.
+        """
+        if item_id in self._detail_results and item_id in self._browse_results:
+            self.results[item_id] = (self._detail_results[item_id], self._browse_results[item_id])
+            return True
+
+        return False
 
     def _write_flow(self, flow: flow.Flow):
         """Writes a flow to a file.

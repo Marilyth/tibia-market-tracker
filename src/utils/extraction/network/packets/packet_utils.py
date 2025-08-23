@@ -28,7 +28,7 @@ def read_packet(packet: bytes, from_client: bool) -> PacketBase:
                 packets.append(_read_server_packet(packet))
         except Exception as e:
             print(f"Error reading packet: {e}. Treating as PacketBase.")
-            packets.append(PacketBase(packet, from_client))
+            packets.append(PacketBase(from_client).from_packet(packet))
 
         if type(packets[-1]) is PacketBase:
             # If the packet is a PacketBase, it means we have read the entire packet.

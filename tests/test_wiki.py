@@ -16,7 +16,7 @@ class TestWiki:
 
         # Assert
         assert str(event_data) == "2022.01.01,Event 1"
-        
+
     def test_EventDataToString_WhenGivenMultipleData_ReturnsExpected(self):
         # Assign
         date = datetime(2022, 1, 1)
@@ -45,11 +45,11 @@ class TestWiki:
     def test_GenerateGifForItem_WhenGivenValidItem_DoesntThrow(self):
         # Act
         self.wiki.generate_gif_for_item_id(22118)
-  
+
     def test_GenerateGifForAllItems_WhenCalled_DoesntThrow(self):
         # Arrange.
         items = self.wiki.get_marketable_proto_items()
-
+        fire_sword = items.get(3280)
         # Act.
         for item in items.values():
             self.wiki.generate_gif_for_item_id(item.id)
@@ -68,14 +68,14 @@ class TestWiki:
 
         # Assert
         assert len(loot_stats) > 0
-    
+
     def test_GetMonsters_ReturnsExpected(self):
         # Act
         monsters = self.wiki.get_monsters()
 
         # Assert
         assert len(monsters) > 700
-    
+
     def test_GenerateGifForAllMonsters_WhenCalled_DoesntThrow(self):
         # Arrange.
         monsters = self.wiki.get_monsters()
@@ -83,7 +83,7 @@ class TestWiki:
         # Act.
         for monster in monsters.values():
             self.wiki.generate_gif_for_monster_id(monster["1"])
-    
+
     @pytest.mark.parametrize(
         "color_code, expected_rgb",
         [
@@ -99,7 +99,7 @@ class TestWiki:
 
         # Assert
         assert rgb == expected_rgb
-    
+
     def test_GetEventData_ReturnsExpected(self):
         # Act
         event = self.wiki.get_event_data()

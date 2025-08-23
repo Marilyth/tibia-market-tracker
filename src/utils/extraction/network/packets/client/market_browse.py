@@ -1,6 +1,7 @@
 from utils.data.market_values import ItemMetaData
-from utils.extraction.network.packets.PacketBase import PacketBase
+from utils.extraction.network.packets.packet_base import PacketBase
 from utils.extraction.network.packets.enums import MarketBrowseType
+from utils.extraction.network.packets.packet_names import ClientCommand
 import struct
 
 
@@ -18,33 +19,37 @@ class MarketBrowse(PacketBase):
 
         return self
 
-    def from_data(self, item_id: int, tier: int, browse_type: MarketBrowseType) -> 'MarketBrowse':
+    def from_data(self, item_id: int, browse_type: MarketBrowseType, tier: int = -1) -> 'MarketBrowse':
         """Creates a MarketBrowse packet from given data.
 
         Args:
             id (int): The item ID.
-            tier (int): The item tier.
             browse_type (MarketBrowseType): The type of market browse.
+            tier (int): The item tier. Defaults to -1 (i.e., no tier).
 
         Returns:
             MarketBrowse: The constructed MarketBrowse packet.
         """
-        packet = bytearray()
-        packet.append(browse_type.value)
-        packet.extend(struct.pack('<H', item_id))
+        super().from_packet(bytes([ClientCommand.MarketBrowse.value]))
+
+        self.write_byte(browse_type.value)
+        self.write_short(item_id)
 
         if tier > -1:
-            packet.append(tier)
+            self.write_byte(tier)
 
-        self.packet = bytes(packet)
+        return self
 
     def _read_packet(self):
-        self.browse_type = MarketBrowseType(self._read_byte())
-        self.id = self._read_short()
+        self.browse_type = MarketBrowseType(self.read_byte())
+        self.id = self.read_short()
 
         meta_data = ItemMetaData(id=self.id)
         meta_data.load_from_proto()
-        self.tier = meta_data.tier
+        item_tier = meta_data.tier
 
-        if self.tier > -1:
-            self.tier = self._read_byte()
+        if item_tier > -1:
+            self.tier = self.read_byte()
+        else:
+            # Item can't have a tier, set to -1.
+            self.tier = -1

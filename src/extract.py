@@ -12,7 +12,7 @@ from utils.wiki import Wiki
 from utils.json_helper import object_to_json
 from utils.data.market_values import ItemMetaData
 from utils.schedule import Schedule
-from utils.extraction.network.network_extraction import NetworkExtractor
+from utils.extraction.network.NetworkExtractor import NetworkExtractor
 from utils.extraction.extractor import Extractor
 from utils.client import Client
 

@@ -1,19 +1,18 @@
-import asyncio
 from utils.client import Client
-from utils.data.market_values import MarketValues, MarketBoard, MarketBoardTraderData
-from utils.extraction.network.network_sniffer import NetworkSniffer
+from utils.data.market_values import ItemMetaData, MarketValues, MarketBoard, MarketBoardTraderData
+from utils.extraction.network.NetworkSniffer import NetworkSniffer
 from utils.extraction.network.xtea_utils import setup
-from utils.extraction.network.packets.PacketBase import PacketBase
 from utils.extraction.network.packets.client.MarketBrowse import MarketBrowse
 from utils.extraction.network.packets.enums import MarketBrowseType
 from utils.extraction.network.packets.packet_utils import packet_to_marketvalues
 from utils.extraction.network.debugger import XteaDebugger
 from utils.extraction.extractor import Extractor
-import time
-import traceback
 from utils.human_movement import wait_like_human_async
 from utils.extraction.network.proxy import start_proxy
 from utils.wiki import Wiki
+import time
+import traceback
+import asyncio
 
 
 class NetworkExtractor(Extractor):
@@ -34,7 +33,7 @@ class NetworkExtractor(Extractor):
         while True:
             await asyncio.to_thread(input, 'Enter to inject message')
             # Example message. Request albino armor.
-            self.packet_analyser.inject_tcp_message(PacketBase(b'\x67', True))
+            await self.request_market_values_async(22118)
 
         # Don't actually do anything if this is a manual session.
         while manual_session:
@@ -66,8 +65,8 @@ class NetworkExtractor(Extractor):
 
             # Create MarketBrowse packets for each item in the batch.
             for item in batch:
-                tasks.append(self.request_market_values(item.id, timeout=timeout))
-                wait_like_human_async(interval)
+                tasks.append(self.request_market_values_async(item.id, timeout=timeout))
+                await wait_like_human_async(interval)
 
             results = asyncio.gather(*tasks, return_exceptions=True)
             success_count = 0
@@ -112,7 +111,7 @@ class NetworkExtractor(Extractor):
 
         return market_value_items, market_boards
 
-    async def request_market_values(self, item_id: int, timeout: int = 2) -> tuple[MarketValues, list[MarketValues]]:
+    async def request_market_values_async(self, item_id: int, timeout: int = 2) -> tuple[MarketValues, list[MarketValues]]:
         """ Requests market values for a specific item by its ID.
 
         Args:
@@ -125,19 +124,20 @@ class NetworkExtractor(Extractor):
         Returns:
             tuple[MarketValues, list[MarketValues]]: The market values and historical values for the requested item.
         """
-        market_item = Wiki.get_marketable_proto_items()[item_id]
-        market_browse_packet = MarketBrowse().from_data(item_id, 1 if market_item.tier > -1 else -1, MarketBrowseType.Browse)
+        meta_data = ItemMetaData(id=item_id)
+        meta_data.load_from_proto()
+
+        market_browse_packet = MarketBrowse().from_data(item_id, MarketBrowseType.Browse, min(0, meta_data.tier))
         self.packet_analyser.inject_tcp_message(market_browse_packet)
 
         wait_time = time.time() + timeout
-        while item_id not in self.packet_analyser.browse_results or item_id not in self.packet_analyser.detail_results:
+        while item_id not in self.packet_analyser.results:
             if time.time() > wait_time:
                 raise TimeoutError(f"Timeout while waiting for market browse packet for item {item_id}.")
 
             await asyncio.sleep(0.1)
 
-        market_browse = self.packet_analyser.browse_results[item_id]
-        market_detail = self.packet_analyser.detail_results[item_id]
+        market_detail, market_browse = self.packet_analyser.results.pop(item_id)
 
         return packet_to_marketvalues(market_detail, market_browse)
 
