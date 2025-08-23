@@ -45,7 +45,7 @@ class NetworkExtractor(Extractor):
             await asyncio.sleep(1)
 
         extracted_items: list[tuple[MarketDetail, ServerMarketBrowse]] = []
-        extraction_tasks = [ItemExtractionTask(item.id, 1) for item in Wiki.get_marketable_proto_items().values()]
+        extraction_tasks = [ItemExtractionTask(item.id) for item in Wiki.get_marketable_proto_items().values()]
 
         last_wiggle = 0
 
