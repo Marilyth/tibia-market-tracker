@@ -3,6 +3,11 @@ from utils.extraction.network.packets.packet_names import ClientCommand, ServerC
 from utils.extraction.network.packets.server.market_detail import MarketDetail
 from utils.extraction.network.packets.client.market_browse import MarketBrowse as ClientMarketBrowse
 from utils.extraction.network.packets.server.market_browse import MarketBrowse as ServerMarketBrowse
+from utils.extraction.network.packets.server.ping import Ping as ServerPing
+from utils.extraction.network.packets.client.ping import Ping as ClientPing
+from utils.extraction.network.packets.server.ping_back import PingBack as ServerPingBack
+from utils.extraction.network.packets.client.ping_back import PingBack as ClientPingBack
+from utils.extraction.network.packets.client.connection_ping_back import ConnectionPingBack
 from utils.data.market_values import ItemMetaData, MarketValues
 from time import time
 
@@ -46,6 +51,10 @@ def _read_server_packet(packet: bytes) -> PacketBase:
             return MarketDetail().from_packet(packet)
         case ServerCommand.MarketBrowse.value:
             return ServerMarketBrowse().from_packet(packet)
+        case ServerCommand.Ping.value:
+            return ServerPing().from_packet(packet)
+        case ServerCommand.PingBack.value:
+            return ServerPingBack().from_packet(packet)
         case _:
             return PacketBase(False).from_packet(packet)
 
@@ -55,6 +64,12 @@ def _read_client_packet(packet: bytes) -> PacketBase:
     match packet_code:
         case ClientCommand.MarketBrowse.value:
             return ClientMarketBrowse().from_packet(packet)
+        case ClientCommand.Ping.value:
+            return ClientPing().from_packet(packet)
+        case ClientCommand.PingBack.value:
+            return ClientPingBack().from_packet(packet)
+        case ClientCommand.ConnectionPingBack.value:
+            return ConnectionPingBack().from_packet(packet)
         case _:
             return PacketBase(True).from_packet(packet)
 
