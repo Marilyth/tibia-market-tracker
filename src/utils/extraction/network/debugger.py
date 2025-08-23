@@ -13,16 +13,6 @@ class XteaDebugger:
         """Find the breakpoint address of the XTEA encryption function.
         This is done by finding the magic number 0x61c88647 in the executable.
         """
-        file_location = "/root/.local/share/CipSoft GmbH/Tibia/packages/Tibia/bin/client"
-
-        # Extract the assembly executable of Tibia.
-        command = ["objdump", "-M", "intel", "-Sd", file_location]
-        objdump_process = subprocess.run(command, capture_output=True)
-        stderr = objdump_process.stderr.decode("utf-8")
-
-        if stderr:
-            raise Exception(f"objdump failed: {stderr}")
-
         # Look for the xtea decryption code using the magic number 0x61c88647 in memory.
         # The client used to be in memory with an offset of 0, but that changed since the new client.
         # Now this code needs to be searched.
