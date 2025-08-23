@@ -1,8 +1,10 @@
 from utils.client import Client
 from utils.data.market_values import ItemMetaData, MarketValues, MarketBoard, MarketBoardTraderData
 from utils.extraction.network.network_sniffer import NetworkSniffer
+from utils.extraction.network.packets.server.market_detail import MarketDetail
 from utils.extraction.network.xtea_utils import setup
 from utils.extraction.network.packets.client.market_browse import MarketBrowse
+from utils.extraction.network.packets.server.market_browse import MarketBrowse as ServerMarketBrowse
 from utils.extraction.network.packets.enums import MarketBrowseType
 from utils.extraction.network.packets.packet_utils import packet_to_marketvalues
 from utils.extraction.network.debugger import XteaDebugger
@@ -44,13 +46,13 @@ class NetworkExtractor(Extractor):
         while not self.packet_analyser.is_ready_for_injection():
             await asyncio.sleep(1)
 
-        extracted_items: list[tuple[MarketValues, list[MarketValues]]] = []
-        extraction_tasks = [ItemExtractionTask(item.id, 1) for item in Wiki.get_marketable_proto_items().values()]
+        extracted_items: list[tuple[MarketDetail, ServerMarketBrowse]] = []
+        extraction_tasks = [ItemExtractionTask(item.id, 1) for item in Wiki.get_marketable_proto_items().values()][:10]
 
         last_wiggle = 0
 
         rate_limit_unit = 5 # The base for which rate limiting is calculated.
-        requests_per_unit = 13 # The number of requests allowed per rate limit unit.
+        requests_per_unit = 12 # The number of requests allowed per rate limit unit.
 
         rate_limit = rate_limit_unit / requests_per_unit
 
@@ -115,9 +117,11 @@ class NetworkExtractor(Extractor):
         market_value_items: list[MarketValues] = []
 
         # Convert items to MarketValues objects.
-        for market_values, historical_values in extracted_items:
-            market_sellers = sorted([MarketBoardTraderData(name=seller.name, amount=seller.amount, price=seller.price, time=seller.timestamp) for seller in market_values.sell_offers], key=lambda x: x.price)
-            market_buyers = sorted([MarketBoardTraderData(name=buyer.name, amount=buyer.amount, price=buyer.price, time=buyer.timestamp) for buyer in market_values.buy_offers], key=lambda x: x.price, reverse=True)
+        for market_details, market_browse in extracted_items:
+            market_values, historical_values = packet_to_marketvalues(market_details, market_browse)
+
+            market_sellers = sorted([MarketBoardTraderData(name=seller.name, amount=seller.amount, price=seller.price, time=seller.timestamp) for seller in market_browse.sell_offers], key=lambda x: x.price)
+            market_buyers = sorted([MarketBoardTraderData(name=buyer.name, amount=buyer.amount, price=buyer.price, time=buyer.timestamp) for buyer in market_browse.buy_offers], key=lambda x: x.price, reverse=True)
             market_boards.append(MarketBoard(id=item.id, sellers=market_sellers, buyers=market_buyers, update_time=time.time()))
 
             for historical_value in historical_values[::-1]:
@@ -150,7 +154,7 @@ class ItemExtractionTask:
         self.meta_data.load_from_proto()
 
         self.attempts = 0
-        self.result: tuple[MarketValues, list[MarketValues]] = None
+        self.result: tuple[MarketDetail, ServerMarketBrowse] = None
         self.status: ExtractionTaskStatus = ExtractionTaskStatus.Pending
 
     async def request_market_values_async(self, sniffer: NetworkSniffer):
@@ -186,7 +190,7 @@ class ItemExtractionTask:
 
         market_detail, market_browse = sniffer.results.pop(self.item_id)
 
-        self.result = packet_to_marketvalues(market_detail, market_browse)
+        self.result = (market_detail, market_browse)
         self.status = ExtractionTaskStatus.Completed
 
 

@@ -337,8 +337,6 @@ class NetworkSniffer:
                     print(f"Received market browse packet {game_packet.id}")
                     self._browse_results[game_packet.id] = game_packet
                     self._check_if_item_complete(game_packet.id)
-                elif isinstance(game_packet, ClientMarketBrowse):
-                    print(f"Sending out client market browse packet {game_packet.id}")
                 else:
                     # Might want to handle other packets in the future.
                     pass
