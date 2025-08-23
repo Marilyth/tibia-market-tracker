@@ -6,8 +6,11 @@ import os
 import requests
 import subprocess
 
+master: DumpMaster = None
 
 async def start_proxy(addons: List):
+    global master
+
     options = Options()
     master = DumpMaster(options, with_dumper=False)
     master.addons.add(*addons)
@@ -20,7 +23,7 @@ async def start_proxy(addons: List):
     subprocess.run(["update-ca-certificates"])
 
     os.environ["http_proxy"] = "http://localhost:8080"
-    os.environ["https_proxy"] = "http://localhost:8080"
+    os.environ["https_proxy"] = "https://localhost:8080"
 
     # Wait until the proxy is reachable.
     while True:
@@ -34,6 +37,13 @@ async def start_proxy(addons: List):
 
         print("Waiting for proxy to be reachable...")
         await asyncio.sleep(0.5)
+
+def stop_proxy():
+    os.environ.pop("http_proxy", None)
+    os.environ.pop("https_proxy", None)
+
+    if master:
+        master.shutdown()
 
 if __name__ == "__main__":
     asyncio.run(start_proxy([]))

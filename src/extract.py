@@ -15,7 +15,7 @@ from utils.schedule import Schedule
 from utils.extraction.network.network_extractor import NetworkExtractor
 from utils.extraction.extractor import Extractor
 from utils.client import Client
-
+from utils.extraction.network.proxy import stop_proxy
 dry_run: bool = False
 api_url: str = "https://api.tibiamarket.top"
 config: dict = None
@@ -147,6 +147,7 @@ async def do_market_search(email: str, password: str, char_index: int, virtual_d
             market_values, market_boards = await extractor.extract_market_values_async()
         finally:
             client.exit_tibia()
+            stop_proxy()
 
         await asyncio.to_thread(upload_data, market_values, market_boards, client.character_server)
 
