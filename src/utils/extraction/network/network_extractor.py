@@ -58,7 +58,7 @@ class NetworkExtractor(Extractor):
         progress_bar = tqdm(total=len(extraction_tasks), desc="Extracting market values")
 
         while extraction_tasks:
-            if time.time() - last_wiggle > 60:
+            if time.time() - last_wiggle > 840:
                 self.client.close_market()
                 self.client.wiggle()
 
