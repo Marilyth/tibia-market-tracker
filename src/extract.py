@@ -101,7 +101,7 @@ async def do_market_search(email: str, password: str, char_index: int, virtual_d
         market_values, market_boards = None, None
 
         try:
-            market_values, market_boards = await extractor.extract_market_values()
+            market_values, market_boards = await extractor.extract_market_values_async()
         finally:
             client.exit_tibia()
 
@@ -162,9 +162,6 @@ async def do_market_search(email: str, password: str, char_index: int, virtual_d
 
 async def main():
     global api_url, config, dry_run
-
-    # TODO: Remove testing code.
-    await NetworkExtractor(None).setup(True)
 
     with open(os.path.join(os.path.dirname(__file__), "config", "config.json"), "r") as c:
         config = json.loads(c.read())

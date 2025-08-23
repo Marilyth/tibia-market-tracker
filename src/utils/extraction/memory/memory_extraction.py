@@ -20,11 +20,11 @@ class MemoryExtractor(Extractor):
         super().__init__(client)
         self.ocr_extractor = OCRExtractor(client)
         self.market_reader: MarketMemoryReader = None
-    
+
     def setup(self):
         self.client.start_game()
         self.client.login_to_game()
-        
+
         if not self.client.open_market():
             self.client.exit_tibia()
             raise Exception("Failed to open market.")
@@ -47,27 +47,27 @@ class MemoryExtractor(Extractor):
             for item, id in items:
                 if self.market_reader.has_finished_filtering:
                     break
-                
+
                 # Find the current items values, and search for them in memory.
                 values = self.ocr_extractor.search_item(item, id)
                 self.market_reader.find_current_memory(values.buy_offer, values.sell_offer, values.month_highest_buy, values.month_highest_sell, values.id)
-                
+
                 self.client._add_to_log(len(self.market_reader.sell_offer_reader.addresses))
                 self.client._add_to_log(len(self.market_reader.buy_offer_reader.addresses))
                 self.client._add_to_log(len(self.market_reader.sell_details_reader.addresses))
                 self.client._add_to_log(len(self.market_reader.buy_details_reader.addresses))
                 self.client._add_to_log(len(self.market_reader.item_id_reader.addresses))
-            
+
             iterations += 1
             if iterations > 5:
                 self.market_reader.reset()
                 raise Exception("Failed to find memory addresses after 5 iterations. Aborted.")
-                
+
         # Fill memory with timestamps to know if an offer in memory still belongs to the current item.
         self.ocr_extractor.search_item("tibia coins")
         self.market_reader.get_current_market_values("tibia coins", scan_run=True)
 
-    def extract_market_values(self) -> List[MarketValues]:
+    def extract_market_values_async(self) -> List[MarketValues]:
         self.market_reader = MarketMemoryReader(self.client.tibia_process_id)
         items = []
 
@@ -76,10 +76,10 @@ class MemoryExtractor(Extractor):
                 items.extend(self.crawl_market(category.index))
             except Exception as e:
                 traceback.print_exc()
-                
+
                 print(f"Error while crawling market: {e}")
                 break
-        
+
         return items
 
     def crawl_market(self, category_index: int, starting_index: int = 0) -> List[MarketValues]:
@@ -110,7 +110,7 @@ class MemoryExtractor(Extractor):
                     # Find memory addresses if they haven't been found yet.
                     if not self.market_reader.has_finished_filtering:
                         self._find_memory_addresses()
-                    
+
                     break
                 except Exception as e:
                     self.client._add_to_log(e)
@@ -127,7 +127,7 @@ class MemoryExtractor(Extractor):
 
             # Tab to the item list. This number might have to be changed if the market is updated.
             repeat_like_human(lambda: pyautogui.press("tab"), 10, wait_time=0.1)
-            
+
             # Go through the items quickly, except for the last one.
             # This is to make sure the item's value is fully loaded and we aren't rate limited.
             if starting_index > 1:
@@ -144,7 +144,7 @@ class MemoryExtractor(Extractor):
                         item_fail_count = 0
                         pyautogui.press("down")
                         wait_like_human(0.5)
-                    
+
                     # If the last result failed, reload the item.
                     if item_fail_count > 0:
                         pyautogui.press("up")
@@ -168,7 +168,7 @@ class MemoryExtractor(Extractor):
                     if id == last_item_id:
                         self.client._add_to_log(f"Probably reached end of {category_index=}: {values.id=}")
                         break
-                    
+
                     # If we have failed 10 times in a row, we should probably restart.
                     if was_duplicate and id != last_item_id and\
                         (values.month_sell_offer + values.month_buy_offer != 0) and\

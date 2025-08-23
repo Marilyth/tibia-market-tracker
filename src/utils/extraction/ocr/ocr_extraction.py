@@ -13,7 +13,7 @@ class OCRExtractor(Extractor):
     def __init__(self, client: Client):
         super().__init__(client)
         self.client.market_tab = "offers"
-    
+
     def setup(self):
         self.client.start_game()
         self.client.login_to_game()
@@ -21,7 +21,7 @@ class OCRExtractor(Extractor):
             self.client.exit_tibia()
             raise Exception("Failed to open market.")
 
-    def extract_market_values(self) -> List[MarketValues]:
+    def extract_market_values_async(self) -> List[MarketValues]:
         pass
 
     def search_item(self, name: str, id: Optional[int] = None) -> MarketValues:
@@ -31,10 +31,10 @@ class OCRExtractor(Extractor):
         try:
             pyautogui.hotkey("ctrl", "z")
             pyautogui.typewrite(name, 0.1)
-            
+
             item_position = 1
             repeat_like_human(lambda: pyautogui.press("down"), item_position, 0.5)
-            
+
             def parse_value(value: str) -> int:
                 if value.isnumeric():
                     return int(value)
@@ -76,12 +76,12 @@ class OCRExtractor(Extractor):
 
                 sell_offer = parse_value(interpreted_sell_offer)
                 buy_offer = parse_value(interpreted_buy_offer)
-                
+
                 sellers = 0
                 buyers = 0
 
                 return buy_offer, sell_offer, max([sellers, buyers])
-            
+
             if self.client.market_tab == "offers":
                 buy_offer, sell_offer, approx_offers = scan_offers()
                 self.client._wait_until_find("images/Details.png", timeout=5, click=True, throw_on_timeout=True)
@@ -94,7 +94,7 @@ class OCRExtractor(Extractor):
                 self.client.market_tab = "offers"
 
             values = MarketValues(time.time(), sell_offer, buy_offer, average_sell_offer, average_buy_offer, sell_amount, buy_amount, highest_sell_offer, lowest_buy_offer, approx_offers, -1, -1, lowest_sell_offer, highest_buy_offer, id if id else None)
-            
+
             return values
         except pyautogui.FailSafeException as e:
             exit(1)

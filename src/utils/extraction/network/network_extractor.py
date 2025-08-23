@@ -21,43 +21,36 @@ from enum import Enum
 class NetworkExtractor(Extractor):
     def __init__(self, client: Client):
         super().__init__(client)
-        self.packet_analyser = NetworkSniffer(record=True)
+        self.sniffer = NetworkSniffer(record=True)
         self.xtea_key = None
 
     async def setup(self, manual_session: bool = False):
         """
         Sets up the network extraction by sniffing packets, logging in, extracting the XTEA key, and opening the market.
         """
-        await start_proxy([self.packet_analyser])
-
-        # TODO: Remove test code.
-        await asyncio.to_thread(input, 'Enter to extract key')
-        await asyncio.to_thread(self._extract_key)
-        while True:
-            await asyncio.to_thread(input, 'Enter to inject message')
-            # Example message. Request albino armor.
-            await self.extract_market_values()
+        await start_proxy([self.sniffer])
+        await asyncio.to_thread(self._setup_session)
 
         # Don't actually do anything if this is a manual session.
         while manual_session:
             await asyncio.sleep(1)
 
-    async def extract_market_values(self) -> tuple[list[MarketValues], list[MarketBoard]]:
-        while not self.packet_analyser.is_ready_for_injection():
+    async def extract_market_values_async(self) -> tuple[list[MarketValues], list[MarketBoard]]:
+        """Extracts market values for all marketable items by injecting MarketBrowse packets.
+
+        Returns:
+            tuple[list[MarketValues], list[MarketBoard]]: A tuple containing a list of MarketValues and a list of MarketBoards.
+        """
+        while not self.sniffer.is_ready_for_injection():
             await asyncio.sleep(1)
 
         extracted_items: list[tuple[MarketDetail, ServerMarketBrowse]] = []
-        extraction_tasks = [ItemExtractionTask(item.id, 1) for item in Wiki.get_marketable_proto_items().values()][:10]
+        extraction_tasks = [ItemExtractionTask(item.id, 1) for item in Wiki.get_marketable_proto_items().values()]
 
         last_wiggle = 0
 
-        rate_limit_unit = 5 # The base for which rate limiting is calculated.
-        requests_per_unit = 12 # The number of requests allowed per rate limit unit.
-
-        rate_limit = rate_limit_unit / requests_per_unit
-
-        batch_size = requests_per_unit
-        time_between_items = rate_limit
+        batch_size = 12
+        time_between_items = 0.42
 
         max_retry_count = 3
         current_retry_count = 0
@@ -65,12 +58,12 @@ class NetworkExtractor(Extractor):
         progress_bar = tqdm(total=len(extraction_tasks), desc="Extracting market values")
 
         while extraction_tasks:
-            if False and time.time() - last_wiggle > 60:
+            if time.time() - last_wiggle > 60:
                 self.client.close_market()
                 self.client.wiggle()
 
                 # First request opens the market, but doesn't get any data.
-                await extraction_tasks[0].request_market_values_async(self.packet_analyser)
+                await extraction_tasks[0].request_market_values_async(self.sniffer)
                 last_wiggle = time.time()
 
             # Get the next batch of items.
@@ -79,7 +72,7 @@ class NetworkExtractor(Extractor):
 
             # Create MarketBrowse packets for each item in the batch.
             for item in batch:
-                tasks.append(asyncio.create_task(item.request_market_values_async(self.packet_analyser)))
+                tasks.append(asyncio.create_task(item.request_market_values_async(self.sniffer)))
                 await wait_like_human_async(time_between_items)
 
             await asyncio.gather(*tasks, return_exceptions=True)
@@ -107,7 +100,7 @@ class NetworkExtractor(Extractor):
 
             # If we had a timeout, wait longer to reset the rate limit.
             if any(item.status == ExtractionTaskStatus.TimedOut for item in batch):
-                await wait_like_human_async(rate_limit_unit)
+                await wait_like_human_async(5)
             else:
                 await wait_like_human_async(time_between_items)
 
@@ -122,7 +115,7 @@ class NetworkExtractor(Extractor):
 
             market_sellers = sorted([MarketBoardTraderData(name=seller.name, amount=seller.amount, price=seller.price, time=seller.timestamp) for seller in market_browse.sell_offers], key=lambda x: x.price)
             market_buyers = sorted([MarketBoardTraderData(name=buyer.name, amount=buyer.amount, price=buyer.price, time=buyer.timestamp) for buyer in market_browse.buy_offers], key=lambda x: x.price, reverse=True)
-            market_boards.append(MarketBoard(id=item.id, sellers=market_sellers, buyers=market_buyers, update_time=time.time()))
+            market_boards.append(MarketBoard(id=market_details.id, sellers=market_sellers, buyers=market_buyers, update_time=time.time()))
 
             for historical_value in historical_values[::-1]:
                 market_value_items.append(historical_value)
@@ -137,9 +130,9 @@ class NetworkExtractor(Extractor):
 
         self._extract_key()
 
-        if not self.client.open_market():
+        if not self.client.walk_to_depot():
             self.client.exit_tibia()
-            raise Exception("Failed to open market.")
+            raise Exception("Failed to find depot.")
 
     def _extract_key(self):
         setup(key_segment=XteaDebugger().find_key())
@@ -158,17 +151,10 @@ class ItemExtractionTask:
         self.status: ExtractionTaskStatus = ExtractionTaskStatus.Pending
 
     async def request_market_values_async(self, sniffer: NetworkSniffer):
-        """ Requests market values for a specific item by its ID.
+        """Injects a MarketBrowse packet into the network sniffer, and waits for the response packets.
 
         Args:
-            item_id (int): The ID of the item to request market values for.
-            timeout (int, optional): The maximum time to wait for the response. Defaults to 2 seconds.
-
-        Raises:
-            TimeoutError: Raised if the response is not received within the timeout period.
-
-        Returns:
-            tuple[MarketValues, list[MarketValues]]: The market values and historical values for the requested item.
+            sniffer (NetworkSniffer): The network sniffer to inject the packet into.
         """
         self.status = ExtractionTaskStatus.InProgress
         self.attempts += 1
