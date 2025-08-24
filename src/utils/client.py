@@ -84,7 +84,7 @@ class Client:
         # Tibia is using a default client, no need to use the launcher.
         if self._wait_until_find("images/PasswordField.png", click=False, cache=False, timeout=5)[0] != -1:
             return
-        
+
         # Don't click on the play button yet. We first need to replace the config file after the update.
         if self._wait_until_find("images/PlayButton.png", click=False, cache=False, timeout=5)[0] == -1:
             # No playbutton exists, so Tibia must be updated or running first.
@@ -128,7 +128,7 @@ class Client:
         repeat_like_human(lambda: pyautogui.press("down"), self.char_index)
 
         pyautogui.press("enter")
-        
+
         # Wait until ingame.
         self._wait_until_find("images/Ingame.png", cache=False)
         self._add_to_log("Ingame.")
@@ -156,7 +156,7 @@ class Client:
 
         self._wait_until_find("images/LeaveButton.png", click=True, cache=False, timeout=5)
         self._wait_until_find("images/YesButton.png", click=True, cache=False, timeout=5)
-        
+
         # Can't exit while characters are displayed...
         wait_like_human(2)
         pyautogui.press("escape")
@@ -167,34 +167,48 @@ class Client:
         """
         Searches for an empty depot, and opens the market on it.
         """
-        self._add_to_log("Opening market")
-            
-        def try_open_market() -> bool:
-            x, y = self._wait_until_find("images/SuccessDepotTile.png", timeout=5, cache=False, exact=True)
-            if x >= 0:
-                # We are at a depot, check if already opened.
-                if self._wait_until_find("images/Market.png", click=True, cache=False, timeout=5)[0] == -1:
-                    self._add_to_log("Opening depot")
-
-                    # Needs to be adjusted if the resolution is not 1600x900 fullscreen!
-                    move_mouse_like_human(645, 345)
-                    pyautogui.leftClick()
-
-                    # Tried to open depot, check if it worked.
-                    if self._wait_until_find("images/Market.png", click=True, cache=False, timeout=5)[0] == -1:
-                        return False
-                
-                # Depot and market are open, wait for market to load.
-                self._wait_until_find("images/Details.png", cache=False, timeout=5)
-
-                self._add_to_log("Market open.")
-                return True
-            
+        if not self.walk_to_depot():
             return False
 
-        if pyautogui.locateCenterOnScreen("images/SuccessDepotTile.png") and try_open_market():
+        # We are at a depot, check if already opened.
+        if self._wait_until_find("images/Market.png", click=True, cache=False, timeout=5)[0] == -1:
+            self._add_to_log("Opening depot")
+
+            # Needs to be adjusted if the resolution is not 1600x900 fullscreen!
+            move_mouse_like_human(645, 345)
+            pyautogui.leftClick()
+
+            # Tried to open depot, check if it worked.
+            if self._wait_until_find("images/Market.png", click=True, cache=False, timeout=5)[0] == -1:
+                return False
+
+        # Depot and market are open, wait for market to load.
+        self._wait_until_find("images/Details.png", cache=False, timeout=5)
+        return True
+
+    def is_at_depot(self) -> bool:
+        """
+        Checks if the character is at a depot.
+
+        Returns:
+            bool: True if the character is at a depot, False otherwise.
+        """
+        x, y = self._wait_until_find("images/SuccessDepotTile.png", timeout=5, cache=False, exact=True)
+
+        if x >= 0:
             return True
-        
+
+        return False
+
+    def walk_to_depot(self):
+        """
+        Searches for an empty depot and walks to it.
+        """
+        self._add_to_log("Walking to depot...")
+
+        if self.is_at_depot():
+            return True
+
         found_depots = len(list(pyautogui.locateAllOnScreen("images/DepotTile.png")))
         self._add_to_log(f"Found {found_depots} depots.")
 
@@ -206,7 +220,7 @@ class Client:
             # If we are now obscuring the depot, try the next one.
             if len(depots) < found_depots:
                 depot_index -= 1
-            
+
             depot_index = min(depot_index, len(depots) - 1)
             print(f"Trying depot {i} ({depot_index})...")
 
@@ -217,10 +231,9 @@ class Client:
             move_mouse_like_human(depot_position[0], depot_position[1], 0) # Move to the center of the depot tile.
             pyautogui.leftClick()
 
-            if try_open_market():
+            if self.is_at_depot():
                 return True
 
-        self._add_to_log("Opening market failed!")
         return False
 
     def close_market(self):
@@ -278,17 +291,17 @@ class Client:
                     self._add_to_log(f"Clicking {image}...")
                     move_mouse_like_human(position[0], position[1], coordinate_deviation)
                     pyautogui.leftClick()
-                    
+
                 return position
 
             wait_like_human(0.3)
-        
+
         self._add_to_log(f"Finding {image} failed.")
         if throw_on_timeout:
             raise TimeoutError(f"Finding {image} failed.")
-        
+
         return (-1, -1)
-    
+
     def _add_to_log(self, message: str):
         self.bot_log.append(message)
         print(message)

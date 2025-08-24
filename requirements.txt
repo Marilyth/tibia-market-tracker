@@ -14,10 +14,10 @@ pymongo
 tqdm
 psutil
 PyJWT
-scapy
 xtea
 protobuf==6.30.2
 pydantic
 flask
 lxml
 bbpb
+mitmproxy

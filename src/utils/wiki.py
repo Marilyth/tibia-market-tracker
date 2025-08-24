@@ -209,8 +209,8 @@ class Wiki:
             
             for key in all_proto_items:
                 item = all_proto_items[key]
-                
-                if str(item.flags.market):
+
+                if str(item.flags.market) and item.flags.market.trade_as_object_id == item.id:
                     marketable_proto_items[key] = item
         
         return marketable_proto_items

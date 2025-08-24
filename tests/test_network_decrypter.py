@@ -1,31 +1,24 @@
-from utils.extraction.network.packet_analyser import PacketAnalyser
-from utils.extraction.network.market_packet_reader import MarketPacketValues
-from utils.extraction.network.packet_sniffer import PacketSniffer
-from utils.extraction.network.tcp_reassembler import TCPReassembler
+from utils.extraction.network.network_sniffer import NetworkSniffer
+from utils.extraction.network.xtea_utils import setup
 import os
-import traceback
-import time
 
 
 class TestDebugger:
     def setup_method(self):
-        self.analyzer = PacketAnalyser()
-        self.sniffer = PacketSniffer(interface=None)
-        self.tcp_reassembler = TCPReassembler()
+        self.analyzer = NetworkSniffer()
 
     def test_RecordedTraffic_CanRead(self):
         # Arrange
-        self.tcp_reassembler.set_new_data_callback(self.analyzer.handle_packet)
-        
+
         # Read the xtea key from key.txt.
         with open(os.path.join(os.path.dirname(__file__), "example_traffic_analysis", "key.txt"), "r") as f:
             key = f.read().strip()
             key = key.split(",")
             key = [int(k) for k in key]
-            self.analyzer.set_key(key)
+            setup(key_segment=key)
 
         # Act
-        self.sniffer.sniff(self.tcp_reassembler.add_to_queue, pcap=os.path.join(os.path.dirname(__file__), "example_traffic_analysis", "recording.pcap"), sniff_async=False)
+        self.analyzer.replay(os.path.join(os.path.dirname(__file__), "example_traffic_analysis", "flow.mitm"))
         all_results = [result.convert_to_marketvalues() for result in self.analyzer.results]
         # sort all_results by total_immediate_profit
         all_results.sort(key=lambda x: x[0].total_immediate_profit, reverse=True)
@@ -48,7 +41,7 @@ class TestDebugger:
                     data = packet.split(b"Raw: ")[1]
                     data = eval(data)
                     packages.append([data, packet.split(b" > ")[0].split(b" ")[-1]])
-        
+
         # Act
         decrypted_payloads = []
         for package, sender in packages:

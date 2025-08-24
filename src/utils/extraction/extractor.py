@@ -7,11 +7,11 @@ from typing import *
 class Extractor(metaclass=ABCMeta):
     def __init__(self, client: Client):
         self.client = client
-    
+
     @abstractmethod
     def setup(self):
         pass
 
     @abstractmethod
-    def extract_market_values(self) -> List[MarketValues]:
+    def extract_market_values_async(self) -> List[MarketValues]:
         pass
