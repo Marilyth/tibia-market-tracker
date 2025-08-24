@@ -44,14 +44,22 @@ class NetworkSniffer:
             reader = FlowReader(f)
             flows = list(reader.stream())
 
+            ordered_messages: List[tuple[flow.Flow, tcp.TCPMessage]] = []
+
             for flow_instance in flows:
                 if isinstance(flow_instance, tcp.TCPFlow):
-                    self.tcp_message(flow_instance)
+                    for message in flow_instance.messages:
+                        ordered_messages.append((flow_instance, message))
                 elif isinstance(flow_instance, http.HTTPFlow):
                     if not flow_instance.response:
                         self.request(flow_instance)
                     else:
                         self.response(flow_instance)
+
+            ordered_messages.sort(key=lambda x: x[1].timestamp)
+
+            for flow_instance, message in ordered_messages:
+                self.handle_packet(flow_instance, message)
 
     def request(self, http_flow: http.HTTPFlow):
         """Handles a request packet.
@@ -78,9 +86,6 @@ class NetworkSniffer:
             message (bytes): The TCP message to inject.
             to_client (bool): Whether the message is from the client or server.
         """
-        connection = self.main_flow.client_conn.address if packet.from_client else self.main_flow.server_conn.address
-        sequence_manager = self.sequence_numbers[connection]
-
         # Add a padding length byte to the encrypted message.
         message = packet.packet
 
@@ -91,7 +96,7 @@ class NetworkSniffer:
 
         # Build and prepend header.
         length = len(encrypted_message) // 8
-        sequence_number = sequence_manager.get_next_actual_sequence()
+        sequence_number = 0 # Sequence number is adjusted later.
         compression_flag = 0
 
         message = (
@@ -263,13 +268,10 @@ class NetworkSniffer:
 
         sequence_manager = self.sequence_numbers[sender]
 
-        if is_injected:
-            sequence_manager.injection_count += 1
-        else:
-            # The sequence number needs to be adjusted if any messages were injected.
-            # Otherwise the connection drops.
-            adjusted_packet_content = sequence_manager.adjust_sequence_number(raw_data)
-            packet.content = packet.content.replace(raw_data, adjusted_packet_content)
+        # The sequence number needs to be adjusted if any messages were injected.
+        # Otherwise the connection drops.
+        adjusted_packet_content = sequence_manager.adjust_sequence_number(raw_data, is_injected)
+        packet.content = packet.content.replace(raw_data, adjusted_packet_content)
 
         # Decrypt the packet.
         decrypted_data = decrypt(raw_data[6:6 + packet_size])
