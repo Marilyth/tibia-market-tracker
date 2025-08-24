@@ -18,16 +18,10 @@ from threading import Lock
 
 
 class NetworkSniffer:
-    def __init__(self, record: bool = False):
-        """Initialises an XTeaDecrypter.
-
-        Args:
-            key (List[int]): The key to use for decryption.
-            rounds (int, optional): The number of rounds to use for decryption. Defaults to 64.
-            byte_order (str, optional): The byte order to use for decryption. Defaults to "little".
-        """
+    def __init__(self):
         self.decompressor = {}
         self.queue: list[flow.Flow] = []
+        self.flows: List[flow.Flow] = []
         self.key = None
         self.key_string = None
         self.xtea = None
@@ -42,9 +36,6 @@ class NetworkSniffer:
         self.results: dict[int, tuple[MarketDetail, MarketBrowse]] = {}
         self._detail_results: dict[int, MarketDetail] = {}
         self._browse_results: dict[int, MarketBrowse] = {}
-
-        if record:
-            self.flow_file = open("flow.mitm", "wb")
 
     def replay(self, record_file: str = "flow.mitm"):
         """Replays the flow file that was written by the sniffer.
@@ -69,7 +60,6 @@ class NetworkSniffer:
             http_flow (http.HTTPFlow): The HTTP flow to handle.
         """
         # Ignore requests, we only care about TCP messages.
-        self._write_flow(http_flow)
         print(f"\n -> {http_flow.request.pretty_url}: {http_flow.request.text[:1024]}")
 
     def response(self, http_flow: http.HTTPFlow):
@@ -79,7 +69,6 @@ class NetworkSniffer:
             http_flow (http.HTTPFlow): The HTTP flow to handle.
         """
         # Ignore responses, we only care about TCP messages.
-        self._write_flow(http_flow)
         print(f"\n <- {http_flow.request.pretty_url}: {http_flow.response.text[:1024]}")
 
     def inject_tcp_message(self, packet: PacketBase):
@@ -121,13 +110,30 @@ class NetworkSniffer:
             tcp_flow (tcp.TCPFlow): The TCP flow to handle.
         """
         message = tcp_flow.messages[-1]
-        self._write_flow(tcp_flow)
+
+        if not tcp_flow in self.flows:
+            self.flows.append(tcp_flow)
+            print(f"New TCP flow from {tcp_flow.client_conn.address} to {tcp_flow.server_conn.address}.")
 
         self.handle_packet(tcp_flow, message)
 
     def is_ready_for_injection(self) -> bool:
         """Returns whether the sniffer is ready for injection."""
         return self.main_flow is not None and is_ready()
+
+    def save_flows(self, file_path: str):
+        """Saves the flows to a file for later replay.
+
+        Args:
+            file_path (str): The path to the file to save the flow to.
+        """
+        with open(file_path, "wb") as f:
+            writer = FlowWriter(f)
+
+            for flow_instance in self.flows:
+                writer.add(flow_instance)
+
+        print(f"Saved flow to {file_path}.")
 
     def handle_packet(self, tcp_flow: tcp.TCPFlow, packet: tcp.TCPMessage):
         """Handles a Tibia packet.
@@ -358,15 +364,3 @@ class NetworkSniffer:
             return True
 
         return False
-
-    def _write_flow(self, flow: flow.Flow):
-        """Writes a flow to a file.
-
-        Args:
-            flow: The flow to write.
-        """
-        if self.flow_file is None:
-            return
-
-        writer = FlowWriter(self.flow_file)
-        writer.add(flow)

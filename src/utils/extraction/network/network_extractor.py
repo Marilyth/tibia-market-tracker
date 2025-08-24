@@ -21,7 +21,7 @@ from enum import Enum
 class NetworkExtractor(Extractor):
     def __init__(self, client: Client):
         super().__init__(client)
-        self.sniffer = NetworkSniffer(record=False)
+        self.sniffer = NetworkSniffer()
         self.xtea_key = None
 
     async def setup(self, manual_session: bool = False):

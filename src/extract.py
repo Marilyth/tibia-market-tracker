@@ -145,6 +145,9 @@ async def do_market_search(email: str, password: str, char_index: int, virtual_d
 
         try:
             market_values, market_boards = await extractor.extract_market_values_async()
+        except Exception as e:
+            print(f"Market extraction failed: {e}")
+            extractor.sniffer.save_flows("failed_flows.mitm")
         finally:
             client.exit_tibia()
             stop_proxy()
