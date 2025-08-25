@@ -17,7 +17,7 @@ class MarketBrowse(PacketBase):
         super().__init__(False)
 
         self.id: int
-        self.tier: int = -1
+        self.tier: int = 0
         self.browse_type: MarketBrowseType
         self.buy_offers: list[OfferPacketValue] = []
         self.sell_offers: list[OfferPacketValue] = []
@@ -40,9 +40,8 @@ class MarketBrowse(PacketBase):
 
         meta_data = ItemMetaData(id=self.id)
         meta_data.load_from_proto()
-        self.tier = meta_data.tier
 
-        if self.tier > -1:
+        if meta_data > -1:
             self.tier = self.read_byte()
 
     def _read_offers(self):
