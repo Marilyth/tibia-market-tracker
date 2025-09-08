@@ -41,11 +41,12 @@ app.add_middleware(GZipMiddleware)
 config = {}
 with open(os.path.join(os.path.dirname(__file__), "config", "config.json"), "r") as c:
     config = json.loads(c.read())
-    
+
 # Set up any caches.
 full_scans: Dict[str, Tuple[float, List[MarketValues]]] = {}
 fullscan_lock = asyncio.Lock()
 world_data: List[WorldData] = None
+market_boards: Dict[str, List[MarketBoard]] = {}
 
 jwt_helper = JWTHelper(config["jwtSecret"])
 mongo_manager: MongoManager = MongoManager(config["mongodbConnectionString"])
@@ -84,10 +85,10 @@ def get_ratelimit() -> str:
 
 def bearer_auth(credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     """Checks if the given credentials are valid.
-    
+
     Args:
         credentials (HTTPAuthorizationCredentials, optional): The credentials to check. Defaults to Depends(bearer_scheme).
-        
+
     Raises:
         HTTPException: If the credentials are invalid.
     """
@@ -125,6 +126,22 @@ async def get_fullscan_async(server: str):
         fullscan_lock.release()
 
     return full_scans[server]
+
+def get_cached_market_boards(server: str) -> List[MarketBoard]:
+    """Gets the market board for the given item on the given server.
+
+    Args:
+        server (str): The server to get the market board for.
+
+    Returns:
+        MarketBoard: The market boards for the given server.
+    """
+    global market_boards
+
+    if server not in market_boards:
+        market_boards[server] = mongo_manager.get_market_boards(server)
+
+    return market_boards[server]
 
 def get_cached_world_data() -> List[WorldData]:
     """Gets the world data.
@@ -270,7 +287,7 @@ async def get_batch_market_values(request: Request, response: Response, servers:
     else:
         item_ids = [int(id) for id in item_ids.split(",")]
         filters.append(lambda value: value.id in item_ids)
-        
+
     values = []
     for server in servers.split(","):
         values.append([value for value in await get_fullscan_async(server.strip()) if all([filter(value) for filter in filters])][skip:skip+limit])
@@ -291,7 +308,7 @@ async def get_item_history(request: Request, response: Response, server: str, it
     - **end_days_ago** (int, optional): The number of days ago to end the history at. Defaults to -1 (all).
     """
     values = mongo_manager.get_item_history(item_id, server)
-    
+
     filters = []
 
     if start_days_ago > -1:
@@ -302,7 +319,7 @@ async def get_item_history(request: Request, response: Response, server: str, it
         filters.append(lambda value: value.time <= end_date.timestamp())
 
     values = [value for value in values if all([filter(value) for filter in filters])]
-    
+
     await add_statistic(request, "item_history", server, item_id)
 
     return values
@@ -326,11 +343,11 @@ async def get_batch_item_history(request: Request, response: Response, servers: 
     if end_days_ago > -1:
         end_date = datetime.now() - timedelta(days=end_days_ago)
         filters.append(lambda value: value.time <= end_date.timestamp())
-        
+
     values = []
     for server in servers.split(","):
         values.append([value for value in mongo_manager.get_item_history(item_id, server.strip()) if all([filter(value) for filter in filters])])
-    
+
     await add_statistic(request, "item_history", servers, item_id)
 
     return values
@@ -392,9 +409,30 @@ async def get_market_board(request: Request, response: Response, server: str, it
     - **server** (str): The (case sensitive) server of the item.
     - **item_id** (int): The id of the item.
     """
-    values = mongo_manager.get_market_board(item_id, server)
+    values = get_cached_market_boards(server)
+
+    # For backwards compatibility, return an individual item instead of a list.
+    values = next((board for board in values if board.id == item_id), MarketBoard(id=item_id, sellers=[], buyers=[], update_time=0))
 
     await add_statistic(request, "market_board", server, item_id)
+
+    return values
+
+@app.get("/market_boards", include_in_schema=False, dependencies=[Depends(bearer_auth)])
+@limiter.limit(get_ratelimit)
+async def get_market_boards(request: Request, response: Response, server: str, item_id: int = -1) -> List[MarketBoard]:
+    """Returns the market board for the given item.
+
+    Args:
+    - **server** (str): The (case sensitive) server of the item.
+    - **item_id** (int): The id of the item. Defaults to -1 (all).
+    """
+    values = get_cached_market_boards(server)
+
+    if item_id != -1:
+        values = [next((board for board in values if board.id == item_id), [MarketBoard(id=item_id, sellers=[], buyers=[], update_time=0)])]
+
+    await add_statistic(request, "market_boards", server, item_id)
 
     return values
 
@@ -408,8 +446,12 @@ async def get_batch_market_board(request: Request, response: Response, servers: 
     - **item_id** (int): The id of the item.
     """
     values = []
+
     for server in servers.split(","):
-        values.append(mongo_manager.get_market_board(item_id, server.strip()))
+        server_name = server.strip()
+        server_board = get_cached_market_boards(server_name)
+
+        values.append(next((board for board in server_board if board.id == item_id), MarketBoard(id=item_id, sellers=[], buyers=[], update_time=0)))
 
     await add_statistic(request, "market_board", str(servers), item_id)
 
@@ -492,15 +534,17 @@ async def update_market_boards(request: Request, secret: str, boards: Annotated[
     boards = json_to_object(boards)
     mongo_manager.update_market_boards(boards.server, boards.data)
 
+    # Remove the market boards from the cache.
+    market_boards.pop(boards.server, None)
+
 if __name__ == "__main__":
     log_config = uvicorn.config.LOGGING_CONFIG
     log_config["formatters"]["access"]["fmt"] = "%(asctime)s - %(levelname)s - %(message)s"
     log_config["formatters"]["default"]["fmt"] = "%(asctime)s - %(levelname)s - %(message)s"
-    
+
     domain = config["apiDomain"]
     port = config["apiPort"]
-    #mongo_manager.clean_outliers()
-    
+
     if domain:
         uvicorn.run(app, host="0.0.0.0", port=port, ssl_keyfile=f"/etc/letsencrypt/live/{domain}/privkey.pem", ssl_certfile=f"/etc/letsencrypt/live/{domain}/fullchain.pem")
     else:
