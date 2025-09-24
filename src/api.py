@@ -542,10 +542,6 @@ if __name__ == "__main__":
     log_config["formatters"]["access"]["fmt"] = "%(asctime)s - %(levelname)s - %(message)s"
     log_config["formatters"]["default"]["fmt"] = "%(asctime)s - %(levelname)s - %(message)s"
 
-    domain = config["apiDomain"]
     port = config["apiPort"]
-
-    if domain:
-        uvicorn.run(app, host="0.0.0.0", port=port, ssl_keyfile=f"/etc/letsencrypt/live/{domain}/privkey.pem", ssl_certfile=f"/etc/letsencrypt/live/{domain}/fullchain.pem")
-    else:
-        uvicorn.run(app, host="0.0.0.0", port=port)
+    
+    uvicorn.run(app, host="127.0.0.1", port=port)
