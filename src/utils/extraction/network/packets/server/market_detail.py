@@ -7,7 +7,7 @@ class MarketDetail(PacketBase):
         super().__init__(from_client=False)
 
         self.id: int
-        self.tier: int = -1
+        self.tier: int = 0
         self.details: list[str]
         self.buy_history: list[HistoryPacketValue] = []
         self.sell_history: list[HistoryPacketValue] = []
@@ -32,9 +32,8 @@ class MarketDetail(PacketBase):
 
         meta_data = ItemMetaData(id=self.id)
         meta_data.load_from_proto()
-        self.tier = meta_data.tier
 
-        if self.tier > -1:
+        if meta_data > -1:
             self.tier = self.read_byte()
 
     def _read_details(self):

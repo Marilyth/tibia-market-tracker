@@ -45,7 +45,7 @@ class ItemMetaData(BaseModel):
             bool: True if the item was found in the proto file, False otherwise.
         """
         proto_items = Wiki.get_marketable_proto_items()
-        
+
         if self.id in proto_items:
             self.npc_buy = []
             self.npc_sell = []
@@ -81,6 +81,7 @@ class MarketBoard(BaseModel):
     The sellers, buyers, amounts, prices and time are stored in this class.
     """
     id: int
+    tier: int
     sellers: List[MarketBoardTraderData]
     buyers: List[MarketBoardTraderData]
     update_time: float
@@ -91,6 +92,7 @@ class MarketValues(BaseModel):
     """
     id: int
     time: float
+    tier: int
     is_full_data: bool = False
     buy_offer: int = -1
     sell_offer: int = -1
@@ -122,15 +124,15 @@ class MarketValues(BaseModel):
         # Not used anymore.
         #self.buy_offer: int = max(self.buy_offer, self.month_lowest_buy) if self.month_bought > 0 and self.month_lowest_buy > -1 else self.buy_offer
         #self.sell_offer: int = min(self.sell_offer, self.month_highest_sell) if self.month_sold > 0 and self.month_highest_sell > -1 else self.sell_offer
-        
+
         self.is_full_data = self.is_full_data or self.active_traders != -1
-        
+
         is_before_historical_data = self.time < 1705210000
-        
+
         # If time is before 1705210000, the data can't be full.
         if is_before_historical_data:
             self.is_full_data = False
-        
+
         # Set all default values depending on the is_full_data flag.
         for field in self.model_fields:
             if getattr(self, field) == -1:
@@ -139,7 +141,7 @@ class MarketValues(BaseModel):
                 # If full data is not available, set all fields to -1 except for the daily metrics.
                 elif field.startswith("day_") and not is_before_historical_data:
                     setattr(self, field, 0)
-            
+
 
     def get_metadata(self, load_wiki_name: bool = True) -> ItemMetaData:
         """Returns the metadata of the item.

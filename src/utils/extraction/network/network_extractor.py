@@ -47,6 +47,17 @@ class NetworkExtractor(Extractor):
         extracted_items: list[tuple[MarketDetail, ServerMarketBrowse]] = []
         extraction_tasks = [ItemExtractionTask(item.id) for item in Wiki.get_marketable_proto_items().values()]
 
+        for task in extraction_tasks[:]:
+            if task.meta_data.tier >= 1:
+                extraction_tasks.append(ItemExtractionTask(task.item_id, tier=1))
+            if task.meta_data.tier >= 2:
+                extraction_tasks.append(ItemExtractionTask(task.item_id, tier=2))
+            if task.meta_data.tier >= 3:
+                extraction_tasks.append(ItemExtractionTask(task.item_id, tier=3))
+            if task.meta_data.tier >= 4:
+                extraction_tasks.append(ItemExtractionTask(task.item_id, tier=4))
+                # Could add more here, up to 10.
+
         last_wiggle = 0
 
         batch_size = 12
@@ -115,7 +126,7 @@ class NetworkExtractor(Extractor):
 
             market_sellers = sorted([MarketBoardTraderData(name=seller.name, amount=seller.amount, price=seller.price, time=seller.timestamp) for seller in market_browse.sell_offers], key=lambda x: x.price)
             market_buyers = sorted([MarketBoardTraderData(name=buyer.name, amount=buyer.amount, price=buyer.price, time=buyer.timestamp) for buyer in market_browse.buy_offers], key=lambda x: x.price, reverse=True)
-            market_boards.append(MarketBoard(id=market_details.id, sellers=market_sellers, buyers=market_buyers, update_time=time.time()))
+            market_boards.append(MarketBoard(id=market_details.id, tier=market_details.tier, sellers=market_sellers, buyers=market_buyers, update_time=time.time()))
 
             for historical_value in historical_values[::-1]:
                 market_value_items.append(historical_value)
@@ -139,9 +150,10 @@ class NetworkExtractor(Extractor):
 
 
 class ItemExtractionTask:
-    def __init__(self, item_id: int, timeout: int = 2):
+    def __init__(self, item_id: int, timeout: int = 2, tier: int = 0):
         self.item_id = item_id
         self.timeout = timeout
+        self.tier = tier
 
         self.meta_data = ItemMetaData(id=self.item_id)
         self.meta_data.load_from_proto()
@@ -159,7 +171,7 @@ class ItemExtractionTask:
         self.status = ExtractionTaskStatus.InProgress
         self.attempts += 1
 
-        market_browse_packet = MarketBrowse().from_data(self.item_id, MarketBrowseType.Browse, min(0, self.meta_data.tier))
+        market_browse_packet = MarketBrowse().from_data(self.item_id, MarketBrowseType.Browse, self.tier if self.meta_data.tier > -1 else -1)
         sniffer.inject_tcp_message(market_browse_packet)
 
         wait_time = time.time() + self.timeout
