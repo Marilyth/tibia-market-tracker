@@ -1,7 +1,7 @@
 import pymongo
 from utils.data.market_values import MarketValues, NPCSaleData, ItemMetaData, MarketBoard, MarketBoardTraderData
 from utils.wiki import EventData, Wiki
-from utils.data.world_data import WorldData
+from utils.data.world_data import WorldData, WorldActivity
 from typing import List
 import os
 from tqdm import tqdm
@@ -345,3 +345,24 @@ class MongoManager:
         items = self.item_prices.find(query, projection)
 
         return [WorldData(name=item["server"], last_update=datetime.utcfromtimestamp(item["history"][0]["time"])) for item in items]
+
+    def get_item_activity(self, item_id: int) -> List[WorldActivity]:
+        """Gets world activities based on a certain item.
+
+        Returns:
+            List[WorldActivity]: The world activity for the given item.
+        """
+        pipeline = [
+            {"$match": {"id": item_id}},
+            {"$project": {
+                "world": "$server",
+                "totalTrades": {"$add": [{"$arrayElemAt": ["$history.month_sold", -1]}, {"$arrayElemAt": ["$history.month_bought", -1]}]},
+                "totalOffers": {"$add": [{"$arrayElemAt": ["$history.sell_offers", -1]}, {"$arrayElemAt": ["$history.buy_offers", -1]}]}
+            }}
+        ]
+
+        results = self.item_prices.aggregate(pipeline)
+
+        return [WorldActivity(name=data["world"],
+                              total_trades=data["totalTrades"] if data["totalTrades"] else 0,
+                              total_offers=data["totalOffers"] if data["totalOffers"] else 0) for data in results]

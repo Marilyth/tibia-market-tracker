@@ -16,7 +16,7 @@ import asyncio
 from typing import Dict, Tuple, List, Annotated
 import time
 from utils.jwt_helper import JWTHelper
-from utils.data.world_data import WorldData
+from utils.data.world_data import WorldActivity, WorldData
 from datetime import datetime, timedelta
 from contextvars import ContextVar
 
@@ -384,6 +384,18 @@ async def get_item_metadata(request: Request, response: Response, item_id: int =
 
     return metadata
 
+@app.get("/item_activity", dependencies=[Depends(bearer_auth)])
+@limiter.limit(get_ratelimit)
+async def get_item_activity(request: Request, item_id: int) -> List[WorldActivity]:
+    """Returns the total amount of active offers and verified trades for the given item
+    in the past 28 days per world, sorted by most trades. This is used to determine how active
+    a world is.
+
+    Args:
+        item_id (int): The id of the item.
+    """
+    return sorted(mongo_manager.get_item_activity(item_id), key=lambda x: x.total_trades, reverse=True)
+
 @app.get("/world_data", dependencies=[Depends(bearer_auth)])
 async def get_world_data(servers: str = None) -> List[WorldData]:
     """Returns the world data for all worlds. I.e. the last time the market was scanned.
@@ -543,5 +555,5 @@ if __name__ == "__main__":
     log_config["formatters"]["default"]["fmt"] = "%(asctime)s - %(levelname)s - %(message)s"
 
     port = config["apiPort"]
-    
+
     uvicorn.run(app, host="127.0.0.1", port=port)
