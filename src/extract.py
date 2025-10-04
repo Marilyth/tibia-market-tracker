@@ -182,6 +182,11 @@ def read_schedule():
     with open(os.path.join(os.path.dirname(__file__), "config", "schedule.json"), "r") as s:
         schedule = Schedule(json.loads(s.read()))
 
+        # Convert the character dictionaries to Character objects.
+        for hour in schedule.hours:
+            if schedule.hours[hour] is not None:
+                schedule.hours[hour] = Character(**schedule.hours[hour])
+
 
 def write_schedule():
     # Write updated schedule back to file.
@@ -212,9 +217,6 @@ async def main():
         if character is None:
             print(f"No character found for hour {hour}.")
             sys.exit(0)
-
-        # Character is currently a dictionary. Make it a real object.
-        character = Character(**character)
 
         write_schedule()
     else:
