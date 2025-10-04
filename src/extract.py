@@ -185,7 +185,7 @@ def read_schedule():
         # Convert the character dictionaries to Character objects.
         for hour in schedule.hours:
             if schedule.hours[hour] is not None:
-                schedule.hours[hour] = Character(**schedule.hours[hour])
+                schedule.hours[hour] = [Character(**character_dict) for character_dict in schedule.hours[hour]]
 
 
 def write_schedule():
