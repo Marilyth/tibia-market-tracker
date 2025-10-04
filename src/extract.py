@@ -11,14 +11,16 @@ from install_tibia import download_package, get_tibia_path
 from utils.wiki import Wiki
 from utils.json_helper import object_to_json
 from utils.data.market_values import ItemMetaData
-from utils.schedule import Schedule
+from utils.schedule import Character, Schedule
 from utils.extraction.network.network_extractor import NetworkExtractor
 from utils.extraction.extractor import Extractor
 from utils.client import Client
 from utils.extraction.network.proxy import stop_proxy
+
 dry_run: bool = False
 api_url: str = "https://api.tibiamarket.top"
 config: dict = None
+schedule: Schedule = None
 
 def is_tibia_running(kill: bool = True) -> bool:
     """
@@ -134,12 +136,16 @@ def upload_data(market_values, market_boards, server: str):
         requests.post(f"{api_url}/update_market_boards?secret={config['jwtSecret']}", json=object_to_json({"server": server, "data": batch}),
                     headers={"Content-Type": "application/json", "Content-Encoding": "gzip"})
 
-async def do_market_search(email: str, password: str, char_index: int, virtual_display: bool, virtual_display_visible: bool):
+
+async def do_market_search(character: Character, virtual_display: bool, virtual_display_visible: bool):
     async def market_search():
-        client = Client(get_tibia_path(), email, password, char_index)
+        client = Client(get_tibia_path(), character)
 
         extractor: Extractor = NetworkExtractor(client)
         await extractor.setup()
+
+        # Update the schedule with the server and name of the character slot.
+        write_schedule()
 
         market_values, market_boards = None, None
 
@@ -152,7 +158,7 @@ async def do_market_search(email: str, password: str, char_index: int, virtual_d
             client.exit_tibia()
             stop_proxy()
 
-        await asyncio.to_thread(upload_data, market_values, market_boards, client.character_server)
+        await asyncio.to_thread(upload_data, market_values, market_boards, character.server)
 
     while is_tibia_running():
         print("Tibia is running. Waiting for it to close.")
@@ -169,27 +175,37 @@ async def do_market_search(email: str, password: str, char_index: int, virtual_d
     else:
         await market_search()
 
+
+def read_schedule():
+    global schedule
+
+    with open(os.path.join(os.path.dirname(__file__), "config", "schedule.json"), "r") as s:
+        schedule = Schedule(json.loads(s.read()))
+
+
+def write_schedule():
+    # Write updated schedule back to file.
+    with open(os.path.join(os.path.dirname(__file__), "config", "schedule.json"), "w") as s:
+        s.write(object_to_json(schedule.hours, indent=4))
+
+
 async def main():
-    global api_url, config, dry_run
+    global api_url, config, dry_run, schedule
 
     with open(os.path.join(os.path.dirname(__file__), "config", "config.json"), "r") as c:
         config = json.loads(c.read())
         api_url += f":{config['apiPort']}"
 
-    username = None
-    password = None
-    slot = None
+    character = None
 
     if len(sys.argv) != 4:
-        schedule: Schedule = None
-        with open(os.path.join(os.path.dirname(__file__), "config", "schedule.json"), "r") as s:
-            schedule = Schedule(json.loads(s.read()))
-
         # Get current hour of day.
         if len(sys.argv) == 2:
             hour = int(sys.argv[1])
         else:
             hour = datetime.datetime.now().hour
+
+        read_schedule()
 
         # Pick the character for the current hour.
         character = schedule.pick_character(hour)
@@ -197,25 +213,24 @@ async def main():
             print(f"No character found for hour {hour}.")
             sys.exit(0)
 
-        # Write updated schedule back to file.
-        with open(os.path.join(os.path.dirname(__file__), "config", "schedule.json"), "w") as s:
-            s.write(object_to_json(schedule.hours, indent=4))
+        # Character is currently a dictionary. Make it a real object.
+        character = Character(**character)
 
-        username = character["username"]
-        password = character["password"]
-        slot = character["slot"]
+        write_schedule()
     else:
-        username = sys.argv[1]
-        password = sys.argv[2]
-        slot = int(sys.argv[3])
+        character = Character(
+            username=sys.argv[1],
+            password=sys.argv[2],
+            slot=int(sys.argv[3])
+        )
 
     download_package()
 
     # Ensure that the results location exists.
     os.makedirs("./results", exist_ok=True)
 
-    print(f"Using account {username} on slot {slot}.")
-    await do_market_search(username, password, slot, config["useVirtualDisplay"], config["showVirtualDisplay"])
+    print(f"Using account {character.username} on slot {character.slot}.")
+    await do_market_search(character, config["useVirtualDisplay"], config["showVirtualDisplay"])
 
 
 if __name__ == "__main__":

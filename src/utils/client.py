@@ -7,31 +7,26 @@ import os
 from utils.extraction.memory.memory_reader import MemoryReader
 import shutil
 from utils.human_movement import move_mouse_like_human, wait_like_human, repeat_like_human
+from utils.schedule import Character
 
 
 class Client:
-    def __init__(self, executable_location: str, email: str, password: str, char_index: int):
+    def __init__(self, executable_location: str, character: Character):
         '''
         The Tibia client, and all required functionality.
 
         Args:
             executable_location (str): The location of the Tibia executable.
-            email (str): The email of the account to log in with.
-            password (str): The password of the account to log in with.
-            char_index (int): The 0-based index of the character to log in with.
+            character (Character): The character to log in with.
         '''
         pyautogui.PAUSE = 0.1
         self.tibia_data_location = os.path.join(os.path.expanduser("~"), ".local", "share", "CipSoft GmbH", "Tibia")
         self.tibia_settings_location = os.path.join(self.tibia_data_location, "packages", "Tibia", "conf")
         self.tibia_executable_location = executable_location
-        self.email = email
-        self.password = password
-        self.char_index = char_index
+        self.character = character
 
         self.tibia: subprocess.Popen = None
         self.tibia_process_id = None
-        self.character_name = ""
-        self.character_server = ""
         self.market_tab = "offers"
         self.bot_log = []
         self.game_log = ""
@@ -113,10 +108,10 @@ class Client:
         # In case the client crashed, cancel the error report dialog.
         self._wait_until_find("images/Cancel.png", timeout=5, click=True, cache=False, coordinate_deviation=2)
         self._wait_until_find("images/PasswordField.png", click=False, cache=False, coordinate_deviation=2)
-        pyautogui.typewrite(self.email, 0.1)
+        pyautogui.typewrite(self.character.username, 0.1)
         pyautogui.press("tab")
         wait_like_human(0.2)
-        pyautogui.typewrite(self.password, 0.1)
+        pyautogui.typewrite(self.character.password, 0.1)
         wait_like_human(0.2)
 
         pyautogui.press("enter")
@@ -125,7 +120,7 @@ class Client:
         self._wait_until_find("images/CharacterSlot.png", click=True, cache=False)
 
         # If desired, select another character than the first one.
-        repeat_like_human(lambda: pyautogui.press("down"), self.char_index)
+        repeat_like_human(lambda: pyautogui.press("down"), self.character.slot)
 
         pyautogui.press("enter")
 
@@ -140,10 +135,10 @@ class Client:
         repeat_like_human(lambda: pyautogui.click(), 5)
 
         tibia_output = self.get_tibia_process_output()
-        self.character_name = tibia_output.split("Charakter \"")[-1].split("\"")[0]
-        self.character_server = tibia_output.split("Connected to gameserver ")[-1].split("\" \"")[-1].split("\"")[0]
+        self.character.name = tibia_output.split("Charakter \"")[-1].split("\"")[0]
+        self.character.server = tibia_output.split("Connected to gameserver ")[-1].split("\" \"")[-1].split("\"")[0]
 
-        self._add_to_log(f"Logged in as {self.character_name} in server {self.character_server}.")
+        self._add_to_log(f"Logged in as {self.character.name} in server {self.character.server}.")
 
     def exit_tibia(self):
         """

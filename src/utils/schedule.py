@@ -1,8 +1,10 @@
 class Character:
-    def __init__(self, username: str, password: str, slot: int) -> None:
+    def __init__(self, username: str, password: str, slot: int, server: str = "Unknown", name: str = "Unknown") -> None:
         self.username = username
         self.password = password
         self.slot = slot
+        self.server = server
+        self.name = name
 
 class Schedule:
     def __init__(self, schedule_hours: dict[str, list[Character]] = {}):
