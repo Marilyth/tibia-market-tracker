@@ -410,7 +410,7 @@ async def get_item_metadata(request: Request, response: Response, item_id: int =
 
 @app.get("/item_activity")
 @limiter.limit(get_ratelimit)
-async def get_item_activity(request: Request, item_id: int) -> List[WorldActivity]:
+async def get_item_activity(request: Request, response: Response, item_id: int) -> List[WorldActivity]:
     """Returns the total amount of active offers and verified trades for the given item
     in the past 28 days per world, sorted by most trades. This is used to determine how active
     a world is.
