@@ -99,8 +99,8 @@ def upload_data(market_values, market_boards, server: str):
     if dry_run:
         return
 
-    # Get the last update time of the server. Add  as authorization header.
-    world_data = requests.get(f"{api_url}/world_data?servers={server}", headers={"Authorization": f"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ3ZWJzaXRlIiwiaWF0IjoxNzA2Mzc2MTM1LCJleHAiOjI0ODM5NzYxMzV9.MrRgQJyNb5rlNmdsD3oyzG3ZugVeeeF8uFNElfWUOyI"}).json()
+    # Get the last update time of the server.
+    world_data = requests.get(f"{api_url}/world_data?servers={server}").json()
     last_update = datetime.datetime.fromisoformat("1970-01-01T00:00:00")
 
     if world_data:

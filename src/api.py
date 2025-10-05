@@ -76,11 +76,19 @@ def get_ratelimit() -> str:
         str: The ratelimit for the given request.
     """
     request = request_var.get()
-    username, _ = jwt_helper.verify_token(request.headers["Authorization"].split(" ")[1], verify_expired=False)
+    auth_header = request.headers.get("Authorization", None)
 
+    # Unauthorized requests are limited more heavily.
+    if not auth_header:
+        return "1/5seconds;5/minute;100/hour"
+
+    username, _ = jwt_helper.verify_token(auth_header.split(" ")[1], verify_expired=False)
+
+    # The discord bot is handling requests for many people, so it needs a higher rate limit.
     if username == "discord-bot":
         return "200/5seconds"
 
+    # All other authorized requests are limited normally.
     return "1/5seconds;10/minute"
 
 def bearer_auth(credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
@@ -165,6 +173,18 @@ def log_request_result(request: Request, result: Response):
     """
     mongo_manager.add_access_log(request.client.host, request.url.path, request.url.query, result.status_code)
 
+def normalize_server_name(name: str) -> str:
+    """Normalizes the given server name.
+
+    Args:
+        name (str): The server name to normalize.
+
+    Returns:
+        str: The normalized server name.
+    """
+    name = name.strip()
+    return name[0].upper() + name[1:].lower()
+
 # Middleware.
 @app.middleware("http")
 async def middleware(request: Request, call_next):
@@ -204,7 +224,7 @@ async def add_statistic(request: Request, response: Response, identifier: str, s
     mongo_manager.add_statistic(request.client.host, identifier, sub_identifier, value)
 
 # Set up API endpoints.
-@app.get("/market_values", dependencies=[Depends(bearer_auth)])
+@app.get("/market_values")
 @limiter.limit(get_ratelimit)
 async def get_market_values(request: Request, response: Response, server: str, max_sell_price: int = None, min_buy_price: int = None, max_buy_price: int = None,
                             min_sell_price: int = None, max_flippers: int = None, min_flippers: int = None, skip: int = 0, limit: int = 100,
@@ -212,7 +232,7 @@ async def get_market_values(request: Request, response: Response, server: str, m
     """Returns the market values of the items which match the given criteria.
 
     Args:
-    - **server** (str): The (case sensitive) server of the item.
+    - **server** (str): The server of the item.
     - **item_ids** (List[int]): A comma seperated list of ids of the items. If not provided, all items are returned.
     - **max_sell_price** (int): The maximum sell price of the item.
     - **min_buy_price** (int): The minimum buy price of the item.
@@ -223,6 +243,7 @@ async def get_market_values(request: Request, response: Response, server: str, m
     - **skip** (int): The number of items to skip. Defaults to 0.
     - **limit** (int): The maximum number of items to return. Defaults to 100.
     """
+    server = normalize_server_name(server)
     values = await get_fullscan_async(server)
 
     filters = []
@@ -258,7 +279,7 @@ async def get_batch_market_values(request: Request, response: Response, servers:
     """Returns the market values of the items which match the given criteria.
 
     Args:
-    - **servers** (str): The (case sensitive) comma-seperated servers of the item.
+    - **servers** (str): The comma-seperated servers of the item.
     - **item_ids** (List[int]): A comma seperated list of ids of the items. If not provided, all items are returned.
     - **max_sell_price** (int): The maximum sell price of the item.
     - **min_buy_price** (int): The minimum buy price of the item.
@@ -290,23 +311,25 @@ async def get_batch_market_values(request: Request, response: Response, servers:
 
     values = []
     for server in servers.split(","):
-        values.append([value for value in await get_fullscan_async(server.strip()) if all([filter(value) for filter in filters])][skip:skip+limit])
+        server = normalize_server_name(server)
+        values.append([value for value in await get_fullscan_async(server) if all([filter(value) for filter in filters])][skip:skip+limit])
 
     await add_statistic(request, "market_values", servers, ",".join([str(item_ids), str(max_sell_price), str(min_sell_price), str(max_buy_price), str(min_buy_price), str(max_flippers), str(min_flippers)]))
 
     return values
 
-@app.get("/item_history", dependencies=[Depends(bearer_auth)])
+@app.get("/item_history")
 @limiter.limit(get_ratelimit)
 async def get_item_history(request: Request, response: Response, server: str, item_id: int, start_days_ago: int = 30, end_days_ago: int = -1) -> List[MarketValues]:
     """Returns the history of the given item.
 
     Args:
-    - **server** (str): The (case sensitive) server of the item.
+    - **server** (str): The server of the item.
     - **item_id** (int): The id of the item.
     - **start_days_ago** (int, optional): The number of days ago to start the history from. Defaults to 30.
     - **end_days_ago** (int, optional): The number of days ago to end the history at. Defaults to -1 (all).
     """
+    server = normalize_server_name(server)
     values = mongo_manager.get_item_history(item_id, server)
 
     filters = []
@@ -330,7 +353,7 @@ async def get_batch_item_history(request: Request, response: Response, servers: 
     """Returns the history of the given item.
 
     Args:
-    - **servers** (str): The (case sensitive) comma-seperated servers of the item.
+    - **servers** (str): The comma-seperated servers of the item.
     - **item_id** (int): The id of the item.
     - **start_days_ago** (int, optional): The number of days ago to start the history from. Defaults to 30.
     - **end_days_ago** (int, optional): The number of days ago to end the history at. Defaults to -1 (all).
@@ -346,13 +369,14 @@ async def get_batch_item_history(request: Request, response: Response, servers: 
 
     values = []
     for server in servers.split(","):
-        values.append([value for value in mongo_manager.get_item_history(item_id, server.strip()) if all([filter(value) for filter in filters])])
+        server = normalize_server_name(server)
+        values.append([value for value in mongo_manager.get_item_history(item_id, server) if all([filter(value) for filter in filters])])
 
     await add_statistic(request, "item_history", servers, item_id)
 
     return values
 
-@app.get("/events", dependencies=[Depends(bearer_auth)])
+@app.get("/events")
 @limiter.limit(get_ratelimit)
 async def get_events(request: Request, response: Response, start_days_ago: int = 30, end_days_ago: int = -1) -> List[EventData]:
     """Returns all tracked tibia events so far.
@@ -372,7 +396,7 @@ async def get_events(request: Request, response: Response, start_days_ago: int =
 
     return events
 
-@app.get("/item_metadata", dependencies=[Depends(bearer_auth)])
+@app.get("/item_metadata")
 @limiter.limit(get_ratelimit)
 async def get_item_metadata(request: Request, response: Response, item_id: int = -1) -> List[ItemMetaData]:
     """Returns the metadata for the given item, or all items if no item id is given.
@@ -384,7 +408,7 @@ async def get_item_metadata(request: Request, response: Response, item_id: int =
 
     return metadata
 
-@app.get("/item_activity", dependencies=[Depends(bearer_auth)])
+@app.get("/item_activity")
 @limiter.limit(get_ratelimit)
 async def get_item_activity(request: Request, item_id: int) -> List[WorldActivity]:
     """Returns the total amount of active offers and verified trades for the given item
@@ -396,31 +420,32 @@ async def get_item_activity(request: Request, item_id: int) -> List[WorldActivit
     """
     return sorted(mongo_manager.get_item_activity(item_id), key=lambda x: x.total_trades, reverse=True)
 
-@app.get("/world_data", dependencies=[Depends(bearer_auth)])
+@app.get("/world_data")
 async def get_world_data(servers: str = None) -> List[WorldData]:
     """Returns the world data for all worlds. I.e. the last time the market was scanned.
     Optionally returns only the data for the given server.
 
     Args:
-    - **servers** (str, optional): The (case sensitive) comma-seperated servers to get the world data for. Defaults to None (all).
+    - **servers** (str, optional): The comma-seperated servers to get the world data for. Defaults to None (all).
     """
     world_data = get_cached_world_data()
-    servers_list = [server.strip() for server in servers.split(",")] if servers else None
+    servers_list = [normalize_server_name(server) for server in servers.split(",")] if servers else None
 
     if servers_list:
         world_data = [world for world in world_data if world.name in servers_list]
 
     return world_data
 
-@app.get("/market_board", dependencies=[Depends(bearer_auth)])
+@app.get("/market_board")
 @limiter.limit(get_ratelimit)
 async def get_market_board(request: Request, response: Response, server: str, item_id: int) -> MarketBoard:
     """Returns the market board for the given item.
 
     Args:
-    - **server** (str): The (case sensitive) server of the item.
+    - **server** (str): The server of the item.
     - **item_id** (int): The id of the item.
     """
+    server = normalize_server_name(server)
     values = get_cached_market_boards(server)
 
     # For backwards compatibility, return an individual item instead of a list.
@@ -436,9 +461,10 @@ async def get_market_boards(request: Request, response: Response, server: str, i
     """Returns the market board for the given item.
 
     Args:
-    - **server** (str): The (case sensitive) server of the item.
+    - **server** (str): The server of the item.
     - **item_id** (int): The id of the item. Defaults to -1 (all).
     """
+    server = normalize_server_name(server)
     values = get_cached_market_boards(server)
 
     if item_id != -1:
@@ -454,14 +480,14 @@ async def get_batch_market_board(request: Request, response: Response, servers: 
     """Returns the market board for the given item.
 
     Args:
-    - **servers** (str): The (case sensitive) comma-seperated servers of the item.
+    - **servers** (str): The comma-seperated servers of the item.
     - **item_id** (int): The id of the item.
     """
     values = []
 
     for server in servers.split(","):
-        server_name = server.strip()
-        server_board = get_cached_market_boards(server_name)
+        server = normalize_server_name(server)
+        server_board = get_cached_market_boards(server)
 
         values.append(next((board for board in server_board if board.id == item_id), MarketBoard(id=item_id, sellers=[], buyers=[], update_time=0)))
 
