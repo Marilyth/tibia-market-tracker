@@ -352,17 +352,29 @@ class MongoManager:
         Returns:
             List[WorldActivity]: The world activity for the given item.
         """
+        # This needs 2 projections to first get the last history entry and then sum up the trades and offers.
+        # Otherwise the arrayElemAt will take the last existing property.
         pipeline = [
             {"$match": {"id": item_id}},
             {"$project": {
-                "world": "$server",
-                "totalTrades": {"$add": [{"$arrayElemAt": ["$history.month_sold", -1]}, {"$arrayElemAt": ["$history.month_bought", -1]}]},
-                "totalOffers": {"$add": [{"$arrayElemAt": ["$history.sell_offers", -1]}, {"$arrayElemAt": ["$history.buy_offers", -1]}]}
+                "lastHistory": {"$arrayElemAt": ["$history", -1]},
+                "server": 1
+            }},
+            {"$project": {
+                "totalTrades": {"$add": [
+                    {"$ifNull": ["$lastHistory.month_sold", 0]},
+                    {"$ifNull": ["$lastHistory.month_bought", 0]}
+                ]},
+                "totalOffers": {"$add": [
+                    {"$ifNull": ["$lastHistory.sell_offers", 0]},
+                    {"$ifNull": ["$lastHistory.buy_offers", 0]}
+                ]},
+                "server": 1
             }}
         ]
 
         results = self.item_prices.aggregate(pipeline)
 
-        return [WorldActivity(name=data["world"],
-                              total_trades=data["totalTrades"] if data["totalTrades"] else 0,
-                              total_offers=data["totalOffers"] if data["totalOffers"] else 0) for data in results]
+        return [WorldActivity(name=data["server"],
+                              total_trades=data["totalTrades"],
+                              total_offers=data["totalOffers"]) for data in results]

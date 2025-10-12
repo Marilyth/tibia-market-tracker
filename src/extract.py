@@ -194,6 +194,45 @@ def write_schedule():
         s.write(object_to_json(schedule.hours, indent=4))
 
 
+def reorder_schedule():
+    """Reorders the schedule based on world activity.
+    """
+    read_schedule()
+    buckets = 8
+    slots = 24
+    slots_per_bucket = slots // buckets
+
+    world_activity = requests.get(f"{api_url}/item_activity?item_id=23373").json()
+    characters = {character.server: character for hour in schedule.hours for character in (schedule.hours[hour] or [])}
+
+    # Clear current schedule.
+    for hour in schedule.hours:
+        schedule.hours[hour] = []
+
+    # Hierarchically fill the schedule.
+    # Lower buckets have less capacity than higher buckets.
+    current_slot = 0
+
+    def insert_character(character: Character):
+        nonlocal current_slot
+        schedule.hours[str(current_slot)].append(character)
+
+        slot_length = len(schedule.hours[str(current_slot)])
+        slot_capacity = (current_slot // slots_per_bucket) + 1
+
+        if slot_length >= slot_capacity:
+            current_slot += 1
+
+    for world in world_activity:
+        if world["name"] in characters:
+            character = characters[world["name"]]
+            insert_character(character)
+
+    # This only fills known characters. Unknown will be placed by hand.
+
+    write_schedule()
+
+
 async def main():
     global api_url, config, dry_run, schedule
 
@@ -206,6 +245,10 @@ async def main():
     if len(sys.argv) != 4:
         # Get current hour of day.
         if len(sys.argv) == 2:
+            if sys.argv[1] == "reorder":
+                reorder_schedule()
+                sys.exit(0)
+
             hour = int(sys.argv[1])
         else:
             hour = datetime.datetime.now().hour
