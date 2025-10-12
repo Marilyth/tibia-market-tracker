@@ -223,6 +223,10 @@ def reorder_schedule():
         if slot_length >= slot_capacity:
             current_slot += 1
 
+            # Skip slot 10 for server save.
+            if current_slot == 10:
+                current_slot = 11
+
     for world in world_activity:
         if world["name"] in characters:
             character = characters[world["name"]]
