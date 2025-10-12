@@ -202,7 +202,7 @@ def reorder_schedule():
     slots = 24
     slots_per_bucket = slots // buckets
 
-    world_activity = requests.get(f"{api_url}/item_activity?item_id=23373").json()
+    world_activity = requests.get(f"{api_url}/item_activity?item_id=22516").json()
     characters = {character.server: character for hour in schedule.hours for character in (schedule.hours[hour] or [])}
 
     # Clear current schedule.
