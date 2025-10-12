@@ -202,7 +202,7 @@ def reorder_schedule():
     slots = 24
     slots_per_bucket = slots // buckets
 
-    world_activity = requests.get(f"{api_url}/item_activity?item_id=22516").json()
+    world_activity = requests.get(f"{api_url}/item_activity?item_id=22516").json()[::-1]
     characters = {character.server: character for hour in schedule.hours for character in (schedule.hours[hour] or [])}
 
     # Clear current schedule.
@@ -211,7 +211,7 @@ def reorder_schedule():
 
     # Hierarchically fill the schedule.
     # Lower buckets have less capacity than higher buckets.
-    current_slot = 0
+    current_slot = 23
 
     def insert_character(character: Character):
         nonlocal current_slot
@@ -223,11 +223,11 @@ def reorder_schedule():
         print(f"{character.server} updates at {current_slot}AM German time, every {slot_capacity} days.")
 
         if slot_length >= slot_capacity:
-            current_slot += 1
+            current_slot -= 1
 
             # Skip slot 10 for server save.
             if current_slot == 10:
-                current_slot = 11
+                current_slot = 9
 
     for world in world_activity:
         if world["name"] in characters:
