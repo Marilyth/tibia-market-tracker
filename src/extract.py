@@ -218,7 +218,7 @@ def reorder_schedule():
         schedule.hours[str(current_slot)].append(character)
 
         slot_length = len(schedule.hours[str(current_slot)])
-        slot_capacity = (current_slot // slots_per_bucket) + 1
+        slot_capacity = ((current_slot - (1 if current_slot > 10 else 0)) // slots_per_bucket) + 1
 
         print(f"{character.server} updates at {current_slot}AM German time, every {slot_capacity} days.")
 
