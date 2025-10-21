@@ -44,7 +44,7 @@ class NetworkExtractor(Extractor):
         while not self.sniffer.is_ready_for_injection():
             await asyncio.sleep(1)
 
-        extracted_items: list[tuple[MarketDetail, ServerMarketBrowse]] = []
+        successful_tasks: list[ItemExtractionTask] = []
         extraction_tasks = [ItemExtractionTask(item.id) for item in Wiki.get_marketable_proto_items().values()]
 
         last_wiggle = 0
@@ -71,21 +71,21 @@ class NetworkExtractor(Extractor):
             tasks = []
 
             # Create MarketBrowse packets for each item in the batch.
-            for item in batch:
-                tasks.append(asyncio.create_task(item.request_market_values_async(self.sniffer)))
+            for task in batch:
+                tasks.append(asyncio.create_task(task.request_market_values_async(self.sniffer)))
                 await wait_like_human_async(time_between_items)
 
             await asyncio.gather(*tasks, return_exceptions=True)
 
-            for item in batch:
-                if item.status != ExtractionTaskStatus.Completed:
-                    if item.attempts > max_retry_count:
-                        extraction_tasks.remove(item)
-                        print(f"Failed to extract item {item.item_id} after {item.attempts} attempts.")
+            for task in batch:
+                if task.status != ExtractionTaskStatus.Completed:
+                    if task.attempts > max_retry_count:
+                        extraction_tasks.remove(task)
+                        print(f"Failed to extract item {task.item_id} after {task.attempts} attempts.")
                     continue
 
-                extracted_items.append(item.result)
-                extraction_tasks.remove(item)
+                successful_tasks.append(task)
+                extraction_tasks.remove(task)
 
             progress_bar.update(len([item for item in batch if item.status == ExtractionTaskStatus.Completed]))
 
@@ -110,12 +110,13 @@ class NetworkExtractor(Extractor):
         market_value_items: list[MarketValues] = []
 
         # Convert items to MarketValues objects.
-        for market_details, market_browse in extracted_items:
+        for task in successful_tasks:
+            market_details, market_browse = task.result
             market_values, historical_values = packet_to_marketvalues(market_details, market_browse)
 
             market_sellers = sorted([MarketBoardTraderData(name=seller.name, amount=seller.amount, price=seller.price, time=seller.timestamp) for seller in market_browse.sell_offers], key=lambda x: x.price)
             market_buyers = sorted([MarketBoardTraderData(name=buyer.name, amount=buyer.amount, price=buyer.price, time=buyer.timestamp) for buyer in market_browse.buy_offers], key=lambda x: x.price, reverse=True)
-            market_boards.append(MarketBoard(id=market_details.id, sellers=market_sellers, buyers=market_buyers, update_time=time.time()))
+            market_boards.append(MarketBoard(id=market_details.id, sellers=market_sellers, buyers=market_buyers, update_time=task.extraction_time))
 
             for historical_value in historical_values[::-1]:
                 market_value_items.append(historical_value)
@@ -142,6 +143,7 @@ class ItemExtractionTask:
     def __init__(self, item_id: int, timeout: int = 2):
         self.item_id = item_id
         self.timeout = timeout
+        self.extraction_time = 0
 
         self.meta_data = ItemMetaData(id=self.item_id)
         self.meta_data.load_from_proto()
@@ -175,6 +177,7 @@ class ItemExtractionTask:
             await asyncio.sleep(0.1)
 
         market_detail, market_browse = sniffer.results.pop(self.item_id)
+        self.extraction_time = time.time()
 
         self.result = (market_detail, market_browse)
         self.status = ExtractionTaskStatus.Completed

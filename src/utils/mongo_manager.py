@@ -1,7 +1,7 @@
 import pymongo
 from utils.data.market_values import MarketValues, NPCSaleData, ItemMetaData, MarketBoard, MarketBoardTraderData
 from utils.wiki import EventData, Wiki
-from utils.data.world_data import WorldData
+from utils.data.world_data import WorldData, WorldActivity
 from typing import List
 import os
 from tqdm import tqdm
@@ -345,3 +345,36 @@ class MongoManager:
         items = self.item_prices.find(query, projection)
 
         return [WorldData(name=item["server"], last_update=datetime.utcfromtimestamp(item["history"][0]["time"])) for item in items]
+
+    def get_item_activity(self, item_id: int) -> List[WorldActivity]:
+        """Gets world activities based on a certain item.
+
+        Returns:
+            List[WorldActivity]: The world activity for the given item.
+        """
+        # This needs 2 projections to first get the last history entry and then sum up the trades and offers.
+        # Otherwise the arrayElemAt will take the last existing property.
+        pipeline = [
+            {"$match": {"id": item_id}},
+            {"$project": {
+                "lastHistory": {"$arrayElemAt": ["$history", -1]},
+                "server": 1
+            }},
+            {"$project": {
+                "totalTrades": {"$add": [
+                    {"$ifNull": ["$lastHistory.month_sold", 0]},
+                    {"$ifNull": ["$lastHistory.month_bought", 0]}
+                ]},
+                "totalOffers": {"$add": [
+                    {"$ifNull": ["$lastHistory.sell_offers", 0]},
+                    {"$ifNull": ["$lastHistory.buy_offers", 0]}
+                ]},
+                "server": 1
+            }}
+        ]
+
+        results = self.item_prices.aggregate(pipeline)
+
+        return [WorldActivity(name=data["server"],
+                              total_trades=data["totalTrades"],
+                              total_offers=data["totalOffers"]) for data in results]

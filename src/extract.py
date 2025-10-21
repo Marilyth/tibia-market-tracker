@@ -11,14 +11,16 @@ from install_tibia import download_package, get_tibia_path
 from utils.wiki import Wiki
 from utils.json_helper import object_to_json
 from utils.data.market_values import ItemMetaData
-from utils.schedule import Schedule
+from utils.schedule import Character, Schedule
 from utils.extraction.network.network_extractor import NetworkExtractor
 from utils.extraction.extractor import Extractor
 from utils.client import Client
 from utils.extraction.network.proxy import stop_proxy
+
 dry_run: bool = False
 api_url: str = "https://api.tibiamarket.top"
 config: dict = None
+schedule: Schedule = None
 
 def is_tibia_running(kill: bool = True) -> bool:
     """
@@ -97,8 +99,8 @@ def upload_data(market_values, market_boards, server: str):
     if dry_run:
         return
 
-    # Get the last update time of the server. Add  as authorization header.
-    world_data = requests.get(f"{api_url}/world_data?servers={server}", headers={"Authorization": f"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ3ZWJzaXRlIiwiaWF0IjoxNzA2Mzc2MTM1LCJleHAiOjI0ODM5NzYxMzV9.MrRgQJyNb5rlNmdsD3oyzG3ZugVeeeF8uFNElfWUOyI"}).json()
+    # Get the last update time of the server.
+    world_data = requests.get(f"{api_url}/world_data?servers={server}").json()
     last_update = datetime.datetime.fromisoformat("1970-01-01T00:00:00")
 
     if world_data:
@@ -134,12 +136,16 @@ def upload_data(market_values, market_boards, server: str):
         requests.post(f"{api_url}/update_market_boards?secret={config['jwtSecret']}", json=object_to_json({"server": server, "data": batch}),
                     headers={"Content-Type": "application/json", "Content-Encoding": "gzip"})
 
-async def do_market_search(email: str, password: str, char_index: int, virtual_display: bool, virtual_display_visible: bool):
+
+async def do_market_search(character: Character, virtual_display: bool, virtual_display_visible: bool):
     async def market_search():
-        client = Client(get_tibia_path(), email, password, char_index)
+        client = Client(get_tibia_path(), character)
 
         extractor: Extractor = NetworkExtractor(client)
         await extractor.setup()
+
+        # Update the schedule with the server and name of the character slot.
+        write_schedule()
 
         market_values, market_boards = None, None
 
@@ -152,7 +158,7 @@ async def do_market_search(email: str, password: str, char_index: int, virtual_d
             client.exit_tibia()
             stop_proxy()
 
-        await asyncio.to_thread(upload_data, market_values, market_boards, client.character_server)
+        await asyncio.to_thread(upload_data, market_values, market_boards, character.server)
 
     while is_tibia_running():
         print("Tibia is running. Waiting for it to close.")
@@ -169,27 +175,91 @@ async def do_market_search(email: str, password: str, char_index: int, virtual_d
     else:
         await market_search()
 
+
+def read_schedule():
+    global schedule
+
+    with open(os.path.join(os.path.dirname(__file__), "config", "schedule.json"), "r") as s:
+        schedule = Schedule(json.loads(s.read()))
+
+        # Convert the character dictionaries to Character objects.
+        for hour in schedule.hours:
+            if schedule.hours[hour] is not None:
+                schedule.hours[hour] = [Character(**character_dict) for character_dict in schedule.hours[hour]]
+
+
+def write_schedule():
+    # Write updated schedule back to file.
+    with open(os.path.join(os.path.dirname(__file__), "config", "schedule.json"), "w") as s:
+        s.write(object_to_json(schedule.hours, indent=4))
+
+
+def reorder_schedule():
+    """Reorders the schedule based on world activity.
+    """
+    read_schedule()
+    buckets = 8
+    slots = 24
+    slots_per_bucket = slots // buckets
+
+    world_activity = requests.get(f"{api_url}/item_activity?item_id=22516").json()
+    characters = {character.server: character for hour in schedule.hours for character in (schedule.hours[hour] or [])}
+
+    # Clear current schedule.
+    for hour in schedule.hours:
+        schedule.hours[hour] = []
+
+    # Hierarchically fill the schedule.
+    # Lower buckets have less capacity than higher buckets.
+    current_slot = 0
+
+    def insert_character(character: Character):
+        nonlocal current_slot
+        schedule.hours[str(current_slot)].append(character)
+
+        slot_length = len(schedule.hours[str(current_slot)])
+        slot_capacity = ((current_slot - (1 if current_slot > 10 else 0)) // slots_per_bucket) + 1
+
+        print(f"{character.server} updates at {current_slot}AM German time, every {slot_capacity} days.")
+
+        if slot_length >= slot_capacity:
+            current_slot += 1
+
+            # Skip slot 10 for server save.
+            if current_slot == 10:
+                current_slot = 11
+
+    for world in world_activity:
+        if world["name"] in characters:
+            character = characters[world["name"]]
+            insert_character(character)
+
+    # This only fills known characters. Unknown will be placed by hand.
+
+    write_schedule()
+
+
 async def main():
-    global api_url, config, dry_run
+    global api_url, config, dry_run, schedule
 
     with open(os.path.join(os.path.dirname(__file__), "config", "config.json"), "r") as c:
         config = json.loads(c.read())
         api_url += f":{config['apiPort']}"
 
-    username = None
-    password = None
-    slot = None
+    character = None
 
     if len(sys.argv) != 4:
-        schedule: Schedule = None
-        with open(os.path.join(os.path.dirname(__file__), "config", "schedule.json"), "r") as s:
-            schedule = Schedule(json.loads(s.read()))
-
         # Get current hour of day.
         if len(sys.argv) == 2:
+            if sys.argv[1] == "reorder":
+                reorder_schedule()
+                sys.exit(0)
+
             hour = int(sys.argv[1])
         else:
             hour = datetime.datetime.now().hour
+
+        read_schedule()
 
         # Pick the character for the current hour.
         character = schedule.pick_character(hour)
@@ -197,25 +267,21 @@ async def main():
             print(f"No character found for hour {hour}.")
             sys.exit(0)
 
-        # Write updated schedule back to file.
-        with open(os.path.join(os.path.dirname(__file__), "config", "schedule.json"), "w") as s:
-            s.write(object_to_json(schedule.hours, indent=4))
-
-        username = character["username"]
-        password = character["password"]
-        slot = character["slot"]
+        write_schedule()
     else:
-        username = sys.argv[1]
-        password = sys.argv[2]
-        slot = int(sys.argv[3])
+        character = Character(
+            username=sys.argv[1],
+            password=sys.argv[2],
+            slot=int(sys.argv[3])
+        )
 
     download_package()
 
     # Ensure that the results location exists.
     os.makedirs("./results", exist_ok=True)
 
-    print(f"Using account {username} on slot {slot}.")
-    await do_market_search(username, password, slot, config["useVirtualDisplay"], config["showVirtualDisplay"])
+    print(f"Using account {character.username} on slot {character.slot}.")
+    await do_market_search(character, config["useVirtualDisplay"], config["showVirtualDisplay"])
 
 
 if __name__ == "__main__":
