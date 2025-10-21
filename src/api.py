@@ -47,6 +47,7 @@ full_scans: Dict[str, Tuple[float, List[MarketValues]]] = {}
 fullscan_lock = asyncio.Lock()
 world_data: List[WorldData] = None
 market_boards: Dict[str, List[MarketBoard]] = {}
+server_limit: int = 20
 
 jwt_helper = JWTHelper(config["jwtSecret"])
 mongo_manager: MongoManager = MongoManager(config["mongodbConnectionString"])
@@ -310,7 +311,15 @@ async def get_batch_market_values(request: Request, response: Response, servers:
         filters.append(lambda value: value.id in item_ids)
 
     values = []
-    for server in servers.split(","):
+    split_servers = servers.split(",")
+
+    if len(split_servers) > server_limit:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Too many servers requested. Maximum is {server_limit}."
+        )
+    
+    for server in split_servers:
         server = normalize_server_name(server)
         values.append([value for value in await get_fullscan_async(server) if all([filter(value) for filter in filters])][skip:skip+limit])
 
@@ -368,7 +377,15 @@ async def get_batch_item_history(request: Request, response: Response, servers: 
         filters.append(lambda value: value.time <= end_date.timestamp())
 
     values = []
-    for server in servers.split(","):
+    split_servers = servers.split(",")
+
+    if len(split_servers) > server_limit:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Too many servers requested. Maximum is {server_limit}."
+        )
+    
+    for server in split_servers:
         server = normalize_server_name(server)
         values.append([value for value in mongo_manager.get_item_history(item_id, server) if all([filter(value) for filter in filters])])
 
