@@ -85,7 +85,7 @@ class DataCache:
             WorldDataResponse: The world data.
         """
         try:
-            self.world_data_lock.acquire()
+            await self.world_data_lock.acquire()
 
             if not self.world_data:
                 self.world_data = await self.mongo_manager.get_world_data()

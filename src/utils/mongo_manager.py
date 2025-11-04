@@ -86,7 +86,7 @@ class MongoManager:
         # Remove all items from item_prices which have no id.
         await self.item_prices.delete_many({"id": {"$exists": False}})
 
-        item_ids = [item["id"] for item in await self.item_prices.find({}, {"id": 1}).to_list(length=None)]
+        item_ids = [item["id"] for item in await self.item_prices.find({}, {"id": 1}).to_list()]
         to_delete = [id for id in item_ids if not id in Wiki.get_marketable_proto_items()]
 
         # Remove all items from item_prices whose id is not in the wiki.
@@ -253,7 +253,7 @@ class MongoManager:
             MarketBoard: The market board of the item on the given server.
         """
         query = {"server": server}
-        boards = await self.market_boards.find(query)
+        boards = await self.market_boards.find(query).to_list()
 
         return [MarketBoard(**board) for board in boards]
 
@@ -290,7 +290,7 @@ class MongoManager:
         # Only retrieve the last entry of the history's history. Don't include the rest of the history.
         projection = {"history": {"$slice": -1}, "id": 1}
 
-        items = await self.item_prices.find(query, projection)
+        items = await self.item_prices.find(query, projection).to_list()
 
         if items:
             items = list(items)
@@ -310,7 +310,7 @@ class MongoManager:
         Returns:
             List[EventData]: The events from the database.
         """
-        events = list(await self.events.find({}, {"_id": 0}))
+        events = await self.events.find({}, {"_id": 0}).to_list()
         events = [EventData(events=event["events"], date=datetime.strptime(event["date"], "%Y.%m.%d")) for event in events]
 
         return events
@@ -325,7 +325,7 @@ class MongoManager:
             dict: The item metadata from the database.
         """
         if item_id == -1:
-            meta_datas = list(await self.item_meta_data.find({}, {"_id": 0}))
+            meta_datas = await self.item_meta_data.find({}, {"_id": 0}).to_list()
         else:
             meta_datas = [await self.item_meta_data.find_one({"id": item_id}, {"_id": 0})]
 
@@ -342,7 +342,7 @@ class MongoManager:
         query = {"id": 22118, "server": {"$exists": True}}
         projection = {"server": 1, "history": {"$slice": -1}}
 
-        items = await self.item_prices.find(query, projection)
+        items = await self.item_prices.find(query, projection).to_list()
 
         return [WorldData(name=item["server"], last_update=datetime.utcfromtimestamp(item["history"][0]["time"])) for item in items]
 
@@ -373,7 +373,7 @@ class MongoManager:
             }}
         ]
 
-        results = await self.item_prices.aggregate(pipeline)
+        results = await (await self.item_prices.aggregate(pipeline)).to_list()
 
         return [WorldActivity(name=data["server"],
                               total_trades=data["totalTrades"],

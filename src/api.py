@@ -257,7 +257,7 @@ async def get_batch_market_values(request: Request, response: Response, servers:
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Too many servers requested. Maximum is {server_limit}."
         )
-    
+
     for server in split_servers:
         server = normalize_server_name(server)
         values.append([value for value in await data_cache.get_market_values(server) if all([filter(value) for filter in filters])][skip:skip+limit])
@@ -323,7 +323,7 @@ async def get_batch_item_history(request: Request, response: Response, servers: 
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Too many servers requested. Maximum is {server_limit}."
         )
-    
+
     for server in split_servers:
         server = normalize_server_name(server)
         values.append([value for value in await mongo_manager.get_item_history(item_id, server) if all([filter(value) for filter in filters])])
