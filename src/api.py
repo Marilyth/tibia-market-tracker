@@ -1,6 +1,7 @@
-from utils.data.market_values import MarketValues, ItemMetaData, MarketBoard, MarketBoardTraderData
+from utils.data.market_values import MarketValues, ItemMetaData, MarketBoard
 from utils.wiki import EventData
 from utils.mongo_manager import MongoManager
+from utils.api_cache import DataCache
 from utils.json_helper import json_to_object
 import uvicorn
 from fastapi import FastAPI, Response, Request, Depends, HTTPException, status, Body
@@ -12,8 +13,7 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 import json
 import os
-import asyncio
-from typing import Dict, Tuple, List, Annotated
+from typing import List, Annotated
 import time
 from utils.jwt_helper import JWTHelper
 from utils.data.world_data import WorldActivity, WorldData
@@ -42,15 +42,11 @@ config = {}
 with open(os.path.join(os.path.dirname(__file__), "config", "config.json"), "r") as c:
     config = json.loads(c.read())
 
-# Set up any caches.
-full_scans: Dict[str, Tuple[float, List[MarketValues]]] = {}
-fullscan_lock = asyncio.Lock()
-world_data: List[WorldData] = None
-market_boards: Dict[str, List[MarketBoard]] = {}
 server_limit: int = 20
 
 jwt_helper = JWTHelper(config["jwtSecret"])
 mongo_manager: MongoManager = MongoManager(config["mongodbConnectionString"])
+data_cache: DataCache = DataCache(mongo_manager)
 
 request_var: ContextVar[str] = ContextVar("request_user", default=None)
 
@@ -108,71 +104,14 @@ def bearer_auth(credentials: HTTPAuthorizationCredentials = Depends(bearer_schem
             detail=reason
         )
 
-async def get_fullscan_async(server: str):
-    """Gets the fullscan for the given server.
-
-    Args:
-        server (str): The server to get the fullscan for.
-
-    Returns:
-        list: The fullscan for the given server.
-    """
-    # Check if the fullscan is cached and not old. If not, read it from mongodb.
-    try:
-        await fullscan_lock.acquire()
-
-        if server not in full_scans:
-            values = mongo_manager.get_latest_market_values(server)
-
-            if not values:
-                return None, []
-
-            values = sorted(values, key=lambda x: (x.sell_offers + x.buy_offers), reverse=True)
-            full_scans[server] = values
-    except Exception as e:
-        print(f"Error while reading fullscan: {e}")
-    finally:
-        fullscan_lock.release()
-
-    return full_scans[server]
-
-def get_cached_market_boards(server: str) -> List[MarketBoard]:
-    """Gets the market board for the given item on the given server.
-
-    Args:
-        server (str): The server to get the market board for.
-
-    Returns:
-        MarketBoard: The market boards for the given server.
-    """
-    global market_boards
-
-    if server not in market_boards:
-        market_boards[server] = mongo_manager.get_market_boards(server)
-
-    return market_boards[server]
-
-def get_cached_world_data() -> List[WorldData]:
-    """Gets the world data.
-
-    Returns:
-        WorldDataResponse: The world data.
-    """
-    global world_data
-
-    if not world_data:
-        world_data = mongo_manager.get_world_data()
-
-    return world_data
-
-def log_request_result(request: Request, result: Response):
+async def log_request_result(request: Request, result: Response):
     """Logs the result of the request being made.
 
     Args:
         request (fastapi.Request): The request being made.
         result (fastapi.Response): The result of the request.
     """
-    mongo_manager.add_access_log(request.client.host, request.url.path, request.url.query, result.status_code)
+    await mongo_manager.add_access_log(request.client.host, request.url.path, request.url.query, result.status_code)
 
 def normalize_server_name(name: str) -> str:
     """Normalizes the given server name.
@@ -207,7 +146,7 @@ async def middleware(request: Request, call_next):
     request_var.reset(token)
 
     # After.
-    log_request_result(request, response)
+    await log_request_result(request, response)
     process_time = time.time() - start_time
     response.headers["X-Process-Time"] = str(process_time)
 
@@ -222,7 +161,7 @@ async def add_statistic(request: Request, response: Response, identifier: str, s
         sub_identifier (str, optional): The sub identifier of the statistic. Defaults to None.
         value (str, optional): The value of the statistic. Defaults to None.
     """
-    mongo_manager.add_statistic(request.client.host, identifier, sub_identifier, value)
+    await mongo_manager.add_statistic(request.client.host, identifier, sub_identifier, value)
 
 # Set up API endpoints.
 @app.get("/market_values")
@@ -245,7 +184,7 @@ async def get_market_values(request: Request, response: Response, server: str, m
     - **limit** (int): The maximum number of items to return. Defaults to 100.
     """
     server = normalize_server_name(server)
-    values = await get_fullscan_async(server)
+    values = await data_cache.get_market_values(server)
 
     filters = []
 
@@ -321,7 +260,7 @@ async def get_batch_market_values(request: Request, response: Response, servers:
     
     for server in split_servers:
         server = normalize_server_name(server)
-        values.append([value for value in await get_fullscan_async(server) if all([filter(value) for filter in filters])][skip:skip+limit])
+        values.append([value for value in await data_cache.get_market_values(server) if all([filter(value) for filter in filters])][skip:skip+limit])
 
     await add_statistic(request, "market_values", servers, ",".join([str(item_ids), str(max_sell_price), str(min_sell_price), str(max_buy_price), str(min_buy_price), str(max_flippers), str(min_flippers)]))
 
@@ -339,7 +278,7 @@ async def get_item_history(request: Request, response: Response, server: str, it
     - **end_days_ago** (int, optional): The number of days ago to end the history at. Defaults to -1 (all).
     """
     server = normalize_server_name(server)
-    values = mongo_manager.get_item_history(item_id, server)
+    values = await mongo_manager.get_item_history(item_id, server)
 
     filters = []
 
@@ -387,7 +326,7 @@ async def get_batch_item_history(request: Request, response: Response, servers: 
     
     for server in split_servers:
         server = normalize_server_name(server)
-        values.append([value for value in mongo_manager.get_item_history(item_id, server) if all([filter(value) for filter in filters])])
+        values.append([value for value in await mongo_manager.get_item_history(item_id, server) if all([filter(value) for filter in filters])])
 
     await add_statistic(request, "item_history", servers, item_id)
 
@@ -402,7 +341,7 @@ async def get_events(request: Request, response: Response, start_days_ago: int =
     - **start_days_ago** (int, optional): The number of days ago to start the history from. Defaults to 30.
     - **end_days_ago** (int, optional): The number of days ago to end the history at. Defaults to -1 (all).
     """
-    events = mongo_manager.get_events()
+    events = await mongo_manager.get_events()
 
     if start_days_ago > -1:
         start_date = datetime.now() - timedelta(days=start_days_ago)
@@ -421,7 +360,7 @@ async def get_item_metadata(request: Request, response: Response, item_id: int =
     Args:
     - **item_id** (int, optional): The id of the item to get the metadata for. Defaults to -1 (all).
     """
-    metadata = mongo_manager.get_item_metadata(item_id)
+    metadata = await mongo_manager.get_item_metadata(item_id)
 
     return metadata
 
@@ -435,7 +374,7 @@ async def get_item_activity(request: Request, response: Response, item_id: int) 
     Args:
         item_id (int): The id of the item.
     """
-    return sorted(mongo_manager.get_item_activity(item_id), key=lambda x: x.total_trades, reverse=True)
+    return sorted(await mongo_manager.get_item_activity(item_id), key=lambda x: x.total_trades, reverse=True)
 
 @app.get("/world_data")
 async def get_world_data(servers: str = None) -> List[WorldData]:
@@ -445,7 +384,7 @@ async def get_world_data(servers: str = None) -> List[WorldData]:
     Args:
     - **servers** (str, optional): The comma-seperated servers to get the world data for. Defaults to None (all).
     """
-    world_data = get_cached_world_data()
+    world_data = await data_cache.get_world_data()
     servers_list = [normalize_server_name(server) for server in servers.split(",")] if servers else None
 
     if servers_list:
@@ -463,7 +402,7 @@ async def get_market_board(request: Request, response: Response, server: str, it
     - **item_id** (int): The id of the item.
     """
     server = normalize_server_name(server)
-    values = get_cached_market_boards(server)
+    values = await data_cache.get_market_boards(server)
 
     # For backwards compatibility, return an individual item instead of a list.
     values = next((board for board in values if board.id == item_id), MarketBoard(id=item_id, sellers=[], buyers=[], update_time=0))
@@ -482,7 +421,7 @@ async def get_market_boards(request: Request, response: Response, server: str, i
     - **item_id** (int): The id of the item. Defaults to -1 (all).
     """
     server = normalize_server_name(server)
-    values = get_cached_market_boards(server)
+    values = await data_cache.get_market_boards(server)
 
     if item_id != -1:
         values = [next((board for board in values if board.id == item_id), [MarketBoard(id=item_id, sellers=[], buyers=[], update_time=0)])]
@@ -504,7 +443,7 @@ async def get_batch_market_board(request: Request, response: Response, servers: 
 
     for server in servers.split(","):
         server = normalize_server_name(server)
-        server_board = get_cached_market_boards(server)
+        server_board = await data_cache.get_market_boards(server)
 
         values.append(next((board for board in server_board if board.id == item_id), MarketBoard(id=item_id, sellers=[], buyers=[], update_time=0)))
 
@@ -541,7 +480,7 @@ async def add_event(request: Request, secret: str, event: Annotated[str, Body()]
     event = json_to_object(event)
     event.date = datetime.strptime(event.date, "%Y-%m-%d %H:%M:%S")
 
-    mongo_manager.add_event(event)
+    await mongo_manager.add_event(event)
 
 @app.post("/add_market_values", include_in_schema=False)
 async def add_market_values(request: Request, secret: str, values: Annotated[str, Body()]):
@@ -556,10 +495,10 @@ async def add_market_values(request: Request, secret: str, values: Annotated[str
 
     # Convert the values to an object.
     values = json_to_object(values)
-    mongo_manager.add_market_values(values.server, values.data)
+    await mongo_manager.add_market_values(values.server, values.data)
 
-    # Remove the fullscan from the cache.
-    full_scans.pop(values.server, None)
+    # Remove the server from the cache.
+    data_cache.invalidate_server_cache(values.server)
 
     world_data = None
 
@@ -574,7 +513,7 @@ async def update_item_metadata(request: Request, secret: str, metadata: Annotate
 
     # Convert the metadata to an object.
     metadata = json_to_object(metadata)
-    mongo_manager.update_item_metadata(metadata)
+    await mongo_manager.update_item_metadata(metadata)
 
 @app.post("/update_market_boards", include_in_schema=False)
 async def update_market_boards(request: Request, secret: str, boards: Annotated[str, Body()]):
@@ -587,10 +526,10 @@ async def update_market_boards(request: Request, secret: str, boards: Annotated[
 
     # Convert the boards to an object.
     boards = json_to_object(boards)
-    mongo_manager.update_market_boards(boards.server, boards.data)
+    await mongo_manager.update_market_boards(boards.server, boards.data)
 
     # Remove the market boards from the cache.
-    market_boards.pop(boards.server, None)
+    data_cache.invalidate_server_cache(boards.server)
 
 if __name__ == "__main__":
     log_config = uvicorn.config.LOGGING_CONFIG

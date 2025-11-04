@@ -72,7 +72,7 @@ class ItemPricesCollection:
 
 class MongoManager:
     def __init__(self, connection_string: str, database_name: str = "TibiaMarketTracker_Dev"):
-        self.client = pymongo.MongoClient(connection_string)
+        self.client = pymongo.AsyncMongoClient(connection_string)
         self.database = self.client[database_name]
         self.item_prices = self.database["ItemPrices"]
         self.item_meta_data = self.database["ItemMetaData"]
@@ -82,38 +82,38 @@ class MongoManager:
         self.events = self.database["Events"]
         self.market_boards = self.database["MarketBoards"]
 
-    def update_schema(self):
+    async def update_schema(self):
         # Remove all items from item_prices which have no id.
-        self.item_prices.delete_many({"id": {"$exists": False}})
+        await self.item_prices.delete_many({"id": {"$exists": False}})
 
-        item_ids = [item["id"] for item in self.item_prices.find({}, {"id": 1})]
+        item_ids = [item["id"] for item in await self.item_prices.find({}, {"id": 1}).to_list(length=None)]
         to_delete = [id for id in item_ids if not id in Wiki.get_marketable_proto_items()]
 
         # Remove all items from item_prices whose id is not in the wiki.
-        self.item_prices.delete_many({"id": {"$in": to_delete}})
+        await self.item_prices.delete_many({"id": {"$in": to_delete}})
 
         # Remove the name field from all items in item_prices.
-        self.item_prices.update_many({}, {"$unset": {"name": ""}})
+        await self.item_prices.update_many({}, {"$unset": {"name": ""}})
 
         # Remove the pretty_name field from all items in item_prices.
-        self.item_prices.update_many({}, {"$unset": {"pretty_name": ""}})
+        await self.item_prices.update_many({}, {"$unset": {"pretty_name": ""}})
 
         # Remove the category field from all items in item_prices.
-        self.item_prices.update_many({}, {"$unset": {"category": ""}})
+        await self.item_prices.update_many({}, {"$unset": {"category": ""}})
 
         # Remove the is_upgradeable field from all items in item_prices.
-        self.item_prices.update_many({}, {"$unset": {"is_upgradeable": ""}})
+        await self.item_prices.update_many({}, {"$unset": {"is_upgradeable": ""}})
 
         # Remove the internal_name field from all items in item_prices.
-        self.item_prices.update_many({}, {"$unset": {"internal_name": ""}})
+        await self.item_prices.update_many({}, {"$unset": {"internal_name": ""}})
 
         # Remove the npc_sell field from all items in item_prices.
-        self.item_prices.update_many({}, {"$unset": {"npc_sell": ""}})
+        await self.item_prices.update_many({}, {"$unset": {"npc_sell": ""}})
 
         # Remove the npc_buy field from all items in item_prices.
-        self.item_prices.update_many({}, {"$unset": {"npc_buy": ""}})
+        await self.item_prices.update_many({}, {"$unset": {"npc_buy": ""}})
 
-    def add_event(self, event_data: EventData):
+    async def add_event(self, event_data: EventData):
         """Adds the given event to the database.
 
         Args:
@@ -124,14 +124,14 @@ class MongoManager:
 
         if event_data.events:
             date = event_data.date.strftime('%Y.%m.%d')
-            event = self.events.find_one({"date": date})
+            event = await self.events.find_one({"date": date})
 
             if not event:
-                self.events.insert_one({"date": date, "events": event_data.events})
+                await self.events.insert_one({"date": date, "events": event_data.events})
             else:
-                self.events.update_one({"date": date}, {"$set": {"events": event_data.events}})
+                await self.events.update_one({"date": date}, {"$set": {"events": event_data.events}})
 
-    def add_access_log(self, ip: str, endpoint: str, parameters: str, status: int):
+    async def add_access_log(self, ip: str, endpoint: str, parameters: str, status: int):
         """Adds the given access log to the database.
 
         Args:
@@ -140,9 +140,9 @@ class MongoManager:
             param (str): The param of the request.
             status (int): The status code of the request.
         """
-        self.access_logs.insert_one({"ip": ip, "time": datetime.now().isoformat(), "endpoint": endpoint, "parameters": parameters, "status": status})
+        await self.access_logs.insert_one({"ip": ip, "time": datetime.now().isoformat(), "endpoint": endpoint, "parameters": parameters, "status": status})
 
-    def add_statistic(self, ip: str, identifier: str, sub_identifier: str, value: str):
+    async def add_statistic(self, ip: str, identifier: str, sub_identifier: str, value: str):
         """Adds the given statistic log to the database.
 
         Args:
@@ -151,9 +151,9 @@ class MongoManager:
             sub_identifier (str): The sub identifier of the request. E.g. "buy_price"
             value (str): The value of the request. E.g. "1"
         """
-        self.statistics.insert_one({"ip": ip, "time": datetime.utcnow(), "identifier": identifier, "sub_identifier": sub_identifier, "value": value})
+        await self.statistics.insert_one({"ip": ip, "time": datetime.utcnow(), "identifier": identifier, "sub_identifier": sub_identifier, "value": value})
 
-    def update_item_metadata(self, items: List[ItemMetaData]):
+    async def update_item_metadata(self, items: List[ItemMetaData]):
         """Used to update the item metadata in the database.
         """
         requests: List[pymongo.UpdateOne] = []
@@ -170,9 +170,9 @@ class MongoManager:
             # Add or update the fields.
             requests.append(pymongo.UpdateOne({"id": item_id}, {"$set": item_dict}, upsert=True))
 
-        self.item_meta_data.bulk_write(requests)
+        await self.item_meta_data.bulk_write(requests)
 
-    def add_market_values(self, server: str, market_values: List[MarketValues]):
+    async def add_market_values(self, server: str, market_values: List[MarketValues]):
         """Adds the market values to the database.
 
         Args:
@@ -194,7 +194,7 @@ class MongoManager:
             if item_id in item_cache:
                 item = item_cache[item_id]
             else:
-                item = self.item_prices.find_one({"id": item_id, "server": server}, {"id": 1})
+                item = await self.item_prices.find_one({"id": item_id, "server": server}, {"id": 1})
                 item_cache[item_id] = item if item else 1
 
             if item:
@@ -209,10 +209,10 @@ class MongoManager:
 
         # Keep bulk write requests under 10000.
         while requests:
-            self.item_prices.bulk_write(requests[:10000])
+            await self.item_prices.bulk_write(requests[:10000])
             requests = requests[10000:]
 
-    def update_market_boards(self, server: str, market_boards: List[MarketBoard]):
+    async def update_market_boards(self, server: str, market_boards: List[MarketBoard]):
         """Updates the market boards for the given items.
 
         Args:
@@ -223,7 +223,7 @@ class MongoManager:
 
         for board in market_boards:
             # Check if the item already exists in the database.
-            item = self.market_boards.find_one({"id": board.id, "server": server}, {"id": 1})
+            item = await self.market_boards.find_one({"id": board.id, "server": server}, {"id": 1})
             board.buyers = [buyer.__dict__ for buyer in board.buyers if buyer]
             board.sellers = [seller.__dict__ for seller in board.sellers if seller]
             board_dict = board.__dict__
@@ -240,10 +240,10 @@ class MongoManager:
 
         # Keep bulk write requests under 10000.
         while requests:
-            self.market_boards.bulk_write(requests[:10000])
+            await self.market_boards.bulk_write(requests[:10000])
             requests = requests[10000:]
 
-    def get_market_boards(self, server: str) -> List[MarketBoard]:
+    async def get_market_boards(self, server: str) -> List[MarketBoard]:
         """Gets the market boards on the given server.
 
         Args:
@@ -253,11 +253,11 @@ class MongoManager:
             MarketBoard: The market board of the item on the given server.
         """
         query = {"server": server}
-        boards = self.market_boards.find(query)
+        boards = await self.market_boards.find(query)
 
         return [MarketBoard(**board) for board in boards]
 
-    def get_item_history(self, id: int, server: str) -> List[MarketValues]:
+    async def get_item_history(self, id: int, server: str) -> List[MarketValues]:
         """Gets the history of the item on the given server.
 
         Args:
@@ -268,7 +268,7 @@ class MongoManager:
             List[MarketValues]: The history of the item on the given server.
         """
         # Load only the requested server's history.
-        item = self.item_prices.find_one({"id": id, "server": server}, {"history": 1})
+        item = await self.item_prices.find_one({"id": id, "server": server}, {"history": 1})
 
         if item:
             items = item["history"]
@@ -276,7 +276,7 @@ class MongoManager:
         else:
             return []
 
-    def get_latest_market_values(self, server: str) -> List[MarketValues]:
+    async def get_latest_market_values(self, server: str) -> List[MarketValues]:
         """Gets the market values of the items which match the given criteria.
 
         Args:
@@ -290,7 +290,7 @@ class MongoManager:
         # Only retrieve the last entry of the history's history. Don't include the rest of the history.
         projection = {"history": {"$slice": -1}, "id": 1}
 
-        items = self.item_prices.find(query, projection)
+        items = await self.item_prices.find(query, projection)
 
         if items:
             items = list(items)
@@ -304,18 +304,18 @@ class MongoManager:
         else:
             return []
 
-    def get_events(self) -> List[EventData]:
+    async def get_events(self) -> List[EventData]:
         """Gets all events from the database.
 
         Returns:
             List[EventData]: The events from the database.
         """
-        events = list(self.events.find({}, {"_id": 0}))
+        events = list(await self.events.find({}, {"_id": 0}))
         events = [EventData(events=event["events"], date=datetime.strptime(event["date"], "%Y.%m.%d")) for event in events]
 
         return events
 
-    def get_item_metadata(self, item_id: int = -1) -> List[ItemMetaData]:
+    async def get_item_metadata(self, item_id: int = -1) -> List[ItemMetaData]:
         """Gets the item metadata from the database.
 
         Args:
@@ -325,15 +325,15 @@ class MongoManager:
             dict: The item metadata from the database.
         """
         if item_id == -1:
-            meta_datas = list(self.item_meta_data.find({}, {"_id": 0}))
+            meta_datas = list(await self.item_meta_data.find({}, {"_id": 0}))
         else:
-            meta_datas = [self.item_meta_data.find_one({"id": item_id}, {"_id": 0})]
+            meta_datas = [await self.item_meta_data.find_one({"id": item_id}, {"_id": 0})]
 
         meta_datas = [ItemMetaData(**meta_data) for meta_data in meta_datas if meta_data]
 
         return meta_datas
 
-    def get_world_data(self) -> List[WorldData]:
+    async def get_world_data(self) -> List[WorldData]:
         """Gets the latest item update time for each server for the item 22118 (tibia coin).
 
         Returns:
@@ -342,11 +342,11 @@ class MongoManager:
         query = {"id": 22118, "server": {"$exists": True}}
         projection = {"server": 1, "history": {"$slice": -1}}
 
-        items = self.item_prices.find(query, projection)
+        items = await self.item_prices.find(query, projection)
 
         return [WorldData(name=item["server"], last_update=datetime.utcfromtimestamp(item["history"][0]["time"])) for item in items]
 
-    def get_item_activity(self, item_id: int) -> List[WorldActivity]:
+    async def get_item_activity(self, item_id: int) -> List[WorldActivity]:
         """Gets world activities based on a certain item.
 
         Returns:
@@ -373,7 +373,7 @@ class MongoManager:
             }}
         ]
 
-        results = self.item_prices.aggregate(pipeline)
+        results = await self.item_prices.aggregate(pipeline)
 
         return [WorldActivity(name=data["server"],
                               total_trades=data["totalTrades"],
