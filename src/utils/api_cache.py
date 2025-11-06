@@ -29,6 +29,8 @@ class DataCache:
         if server in self.market_boards_cache:
             del self.market_boards_cache[server]
 
+        self.world_data = None
+
     async def get_market_values(self, server: str):
         """Gets the market values for the given server.
 
