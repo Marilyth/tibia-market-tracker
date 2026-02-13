@@ -226,7 +226,6 @@ class Client:
         self._add_to_log(f"Found {found_depots} depots.")
 
         for i in range(found_depots):
-            move_mouse_like_human(20, 20)
             depots = list(pyautogui.locateAllOnScreen("images/DepotTile.png"))
             depot_index = i
 
@@ -243,6 +242,8 @@ class Client:
             depot_position = pyautogui.center(depots[depot_index])
             move_mouse_like_human(depot_position[0], depot_position[1], 0) # Move to the center of the depot tile.
             pyautogui.leftClick()
+
+            move_mouse_like_human(20, 20)
 
             if self.is_at_depot():
                 return True
@@ -269,6 +270,8 @@ class Client:
 
         move_mouse_like_human(found_coordinate[0], found_coordinate[1], 2)
         pyautogui.leftClick()
+
+        move_mouse_like_human(20, 20)
 
         # Wait until the icon stop moving.
         while True:
