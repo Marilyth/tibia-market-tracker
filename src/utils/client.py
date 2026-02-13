@@ -130,10 +130,6 @@ class Client:
         self._update_kick_timer()
         self.tibia_process_id = MemoryReader.get_process_id("client")[-1]
 
-        # Scroll into minimap.
-        self._wait_until_find("images/ZoomMinimap.png", cache=False, click=True, exact=True, coordinate_deviation=2)
-        repeat_like_human(lambda: pyautogui.click(), 5)
-
         tibia_output = self.get_tibia_process_output()
         self.character.name = tibia_output.split("Charakter \"")[-1].split("\"")[0]
         self.character.server = tibia_output.split("Connected to gameserver ")[-1].split("\" \"")[-1].split("\"")[0]
@@ -195,11 +191,33 @@ class Client:
 
         return False
 
-    def walk_to_depot(self):
+    def walk_to_depot(self) -> bool:
         """
-        Searches for an empty depot and walks to it.
+        Tries to find a depot and walks to it.
+
+        Returns:
+            bool: True if the character successfully walked to the depot, False otherwise.
+        """
+        if self.walk_to_nearby_depot():
+            return True
+
+        if self.walk_to_far_depot():
+            return self.walk_to_nearby_depot()
+
+        return False
+
+    def walk_to_nearby_depot(self) -> bool:
+        """
+        Searches for an empty depot tile and walks to it.
+
+        Returns:
+            bool: True if the character successfully walked to the depot, False otherwise.
         """
         self._add_to_log("Walking to depot...")
+
+        # Scroll into minimap.
+        self._wait_until_find("images/ZoomMinimap.png", cache=False, click=True, exact=True, coordinate_deviation=2)
+        repeat_like_human(lambda: pyautogui.click(), 5)
 
         if self.is_at_depot():
             return True
@@ -208,7 +226,6 @@ class Client:
         self._add_to_log(f"Found {found_depots} depots.")
 
         for i in range(found_depots):
-            move_mouse_like_human(20, 20)
             depots = list(pyautogui.locateAllOnScreen("images/DepotTile.png"))
             depot_index = i
 
@@ -226,10 +243,50 @@ class Client:
             move_mouse_like_human(depot_position[0], depot_position[1], 0) # Move to the center of the depot tile.
             pyautogui.leftClick()
 
+            move_mouse_like_human(20, 20)
+
             if self.is_at_depot():
                 return True
 
         return False
+
+    def walk_to_far_depot(self) -> bool:
+        """
+        Searches for the depot icon in the max zoomed out minimap and walks to it.
+
+        Returns:
+            bool: True if the character successfully walked to the depot, False otherwise.
+        """
+        self._add_to_log("Checking if depot icon is visible in the minimap.")
+
+        self._wait_until_find("images/ZoomOutMinimap.png", cache=False, click=True, exact=True, coordinate_deviation=2)
+        repeat_like_human(lambda: pyautogui.click(), 5)
+
+        found_coordinate = pyautogui.locateCenterOnScreen("images/DepotIcon.png")
+
+        if not found_coordinate:
+            self._add_to_log("No depot icon found.")
+            return False
+
+        move_mouse_like_human(found_coordinate[0], found_coordinate[1], 2)
+        pyautogui.leftClick()
+
+        move_mouse_like_human(20, 20)
+
+        # Wait until the icon stop moving.
+        while True:
+            pyautogui.sleep(2)
+            new_coordinate = pyautogui.locateCenterOnScreen("images/DepotIcon.png")
+
+            # If the icon stopped moving, or disappeared, consider it reached.
+            if not new_coordinate or \
+                (new_coordinate[0] == found_coordinate[0] and \
+                 new_coordinate[1] == found_coordinate[1]):
+                break
+
+            found_coordinate = new_coordinate
+
+        return True
 
     def close_market(self):
         """
