@@ -10,6 +10,8 @@ from utils.human_movement import move_mouse_like_human, wait_like_human, repeat_
 from utils.schedule import Character
 
 
+depot_tile_orientations = ["West", "North", "South"]
+
 class Client:
     def __init__(self, executable_location: str, character: Character):
         '''
@@ -184,10 +186,11 @@ class Client:
         Returns:
             bool: True if the character is at a depot, False otherwise.
         """
-        x, y = self._wait_until_find("images/SuccessDepotTile.png", timeout=5, cache=False, exact=True)
+        for orientation in depot_tile_orientations:
+            x, y = self._wait_until_find(f"images/SuccessDepotTile{orientation}.png", timeout=1, cache=False, exact=True)
 
-        if x >= 0:
-            return True
+            if x >= 0:
+                return True
 
         return False
 
@@ -222,11 +225,11 @@ class Client:
         if self.is_at_depot():
             return True
 
-        found_depots = len(list(pyautogui.locateAllOnScreen("images/DepotTile.png")))
+        found_depots = len(self._find_all_depots())
         self._add_to_log(f"Found {found_depots} depots.")
 
         for i in range(found_depots):
-            depots = list(pyautogui.locateAllOnScreen("images/DepotTile.png"))
+            depots = self._find_all_depots()
             depot_index = i
 
             # If we are now obscuring the depot, try the next one.
@@ -236,8 +239,8 @@ class Client:
             depot_index = min(depot_index, len(depots) - 1)
             print(f"Trying depot {i} ({depot_index})...")
 
-            # Order by x and then y coordinate, so we click the top left depot first.
-            depots = sorted(depots, key=lambda x: (x[0], x[1]))
+            # Order by y and then x coordinate, so we go horizontally through all before switching levels.
+            depots = sorted(depots, key=lambda x: (x[1], x[0]))
 
             depot_position = pyautogui.center(depots[depot_index])
             move_mouse_like_human(depot_position[0], depot_position[1], 0) # Move to the center of the depot tile.
@@ -319,6 +322,14 @@ class Client:
         wait_like_human(0.5)
         self.market_tab = "offers"
         self._update_kick_timer()
+
+    def _find_all_depots(self):
+        found_depots = []
+
+        for orientation in depot_tile_orientations:
+            found_depots += list(pyautogui.locateAllOnScreen(f"images/DepotTile{orientation}.png"))
+
+        return found_depots
 
     def _wait_until_find(self, image: str, timeout: int = 60, click: bool = False, cache: bool = True, exact: bool = False, throw_on_timeout: bool = False, coordinate_deviation: int = 5) -> Tuple[int, int]:
         start_time = time.time()
