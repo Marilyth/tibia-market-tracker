@@ -1,3 +1,5 @@
+import json
+
 import pymongo
 from utils.data.market_values import MarketValues, NPCSaleData, ItemMetaData, MarketBoard, MarketBoardTraderData
 from utils.wiki import EventData, Wiki
@@ -183,6 +185,9 @@ class MongoManager:
         item_group = {}
 
         for values_item in market_values:
+            if not self._is_valid(values_item):
+                continue
+
             if values_item.id not in item_group:
                 item_group[values_item.id] = []
             item_group[values_item.id].append(values_item)
@@ -378,3 +383,37 @@ class MongoManager:
         return [WorldActivity(name=data["server"],
                               total_trades=data["totalTrades"],
                               total_offers=data["totalOffers"]) for data in results]
+
+    def _is_valid(self, market_value: MarketValues) -> bool:
+        """Checks if the given market value is valid.
+
+        Args:
+            market_value (MarketValues): The market value to check.
+        Returns:
+            bool: True if the market value is valid, False otherwise.
+        """
+        big_values_to_check = [
+            market_value.sell_offer, market_value.buy_offer,
+            market_value.month_average_sell, market_value.month_average_buy,
+            market_value.month_highest_sell, market_value.month_highest_buy,
+            market_value.month_lowest_sell, market_value.month_lowest_buy,
+            market_value.day_average_sell, market_value.day_average_buy,
+            market_value.day_highest_sell, market_value.day_highest_buy,
+            market_value.day_lowest_sell, market_value.day_lowest_buy
+        ]
+
+        small_values_to_check = [
+            market_value.sell_offers, market_value.buy_offers,
+            market_value.month_sold, market_value.month_bought,
+            market_value.day_sold, market_value.day_bought
+        ]
+
+        for value in big_values_to_check:
+            if value < -1 or value >= 20_000_000_000:
+                return False
+        
+        for value in small_values_to_check:
+            if value < -1 or value >= 1_000_000:
+                return False
+        
+        return True
