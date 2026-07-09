@@ -13,12 +13,12 @@ import sys
 import traceback
 from threading import Lock
 
-from utils.extraction.network.decompressors import PyDecompressor
+from utils.extraction.network.decompressors import Decompressor
 
 
 class NetworkSniffer:
     def __init__(self):
-        self.decompressor = PyDecompressor()
+        self.decompressor = Decompressor()
         self.queue: list[flow.Flow] = []
         self.flows: List[flow.Flow] = []
         self.key = None
