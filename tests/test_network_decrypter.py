@@ -21,6 +21,8 @@ class TestDebugger:
         self.analyzer.replay(os.path.join(os.path.dirname(__file__), "example_traffic_analysis", "flow.mitm"))
 
         # Assert
+        assert len(self.analyzer.results) > 4000
+
         for market_detail, market_browse in self.analyzer.results.values():
             market_values = packet_to_marketvalues(market_detail, market_browse)
             assert market_values

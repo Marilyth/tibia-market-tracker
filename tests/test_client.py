@@ -1,3 +1,8 @@
+
+import os
+
+
+os.environ["DISPLAY"] = ":0"
 import pytest
 from utils.client import Client
 

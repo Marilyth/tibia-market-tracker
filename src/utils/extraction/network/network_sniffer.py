@@ -9,17 +9,16 @@ from utils.extraction.network.packets.server.market_detail import MarketDetail
 from utils.extraction.network.packets.server.market_browse import MarketBrowse
 from utils.extraction.network.packets.client.market_browse import MarketBrowse as ClientMarketBrowse
 from utils.extraction.network.xtea_utils import decrypt, encrypt, is_ready
-import time
 import sys
-import subprocess
-import os
 import traceback
 from threading import Lock
+
+from utils.extraction.network.decompressors import Decompressor
 
 
 class NetworkSniffer:
     def __init__(self):
-        self.decompressor = {}
+        self.decompressor = Decompressor()
         self.queue: list[flow.Flow] = []
         self.flows: List[flow.Flow] = []
         self.key = None
@@ -172,53 +171,6 @@ class NetworkSniffer:
         else:
             return None
 
-    def decompress_bytes(self, data: bytes, sender: str) -> bytes:
-        """Decompresses a bytes object.
-
-        Args:
-            data (bytes): The bytes object to decompress.
-            sender (str): The sender of the packet.
-
-        Returns:
-            bytes: The decompressed bytes object.
-        """
-        data_str = NetworkSniffer.bytes_to_readable_string(data)
-
-        # zlib does not work with Tibia packets, so use the zlib.net C# library.
-        if not sender in self.decompressor:
-            decompressor_location = os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "decompressor", "bin", "Debug", "net8.0", "decompressor.dll")
-            self.decompressor[sender] = subprocess.Popen(["dotnet", decompressor_location, data_str], stderr=subprocess.PIPE, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
-            os.set_blocking(self.decompressor[sender].stdout.fileno(), False)
-            os.set_blocking(self.decompressor[sender].stderr.fileno(), False)
-
-        # Send data to decompressor.
-        response = self.decompressor[sender].stdin.write(data_str.encode() + b"\n")
-        self.decompressor[sender].stdin.flush()
-
-        response = b''
-        while len(response) == 0 or response[-1] != 10:
-            new_response = self.decompressor[sender].stdout.read()
-
-            if new_response:
-                response += new_response
-
-            time.sleep(0.01)
-
-        response = response.decode().strip()
-
-        if "Exception" in response:
-            raise Exception(response)
-
-        byte_expressions = response.split(" ")
-
-        # Convert e.g. ['1B', 'A2'] to [0x1B, 0xA2].
-        byte_expressions = [int(byte_expression, 16) for byte_expression in byte_expressions]
-
-        # Convert byte_expressions to bytes.
-        response = bytes(byte_expressions)
-
-        return response
-
     def _decrypt_packet(self, tcp_flow: tcp.TCPFlow, packet: tcp.TCPMessage, raw_data: bytes) -> tuple[list[PacketBase], bytes] | None:
         """ Decrypts a client packet using the XTEA algorithm.
         """
@@ -293,7 +245,7 @@ class NetworkSniffer:
 
         if is_compressed:
             # First 2 bytes are the size of the decompressed data.
-            payload = self.decompress_bytes(payload, sender)[2:]
+            payload = self.decompressor.decompress(payload, sender)[2:]
 
         return read_packet(payload, packet.from_client), next_data
 

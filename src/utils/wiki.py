@@ -52,7 +52,7 @@ class Wiki:
         """
         # If on linux:
         if os.name == "posix":
-            return os.path.expanduser("/root/.local/share/CipSoft GmbH/Tibia/packages/Tibia/assets")
+            return os.path.expanduser("~/.local/share/CipSoft GmbH/Tibia/packages/Tibia/assets")
         else:
             return os.path.expanduser("~\\AppData\\Local\\Tibia\\packages\\Tibia\\assets")
 
