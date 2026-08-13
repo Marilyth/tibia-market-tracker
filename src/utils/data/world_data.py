@@ -1,6 +1,8 @@
 from datetime import datetime
 from pydantic import BaseModel
 
+from utils.data.market_values import MarketValues
+
 
 class WorldData(BaseModel):
     """A data class containing information about a Tibia server, and it's last update time.
@@ -19,3 +21,11 @@ class WorldActivity(BaseModel):
     total_trades: int
     """The number of offers for this item."""
     total_offers: int
+
+class WorldComparison(BaseModel):
+    """A data class containing information about a Tibia server's comparison, and it's last update time.
+    """
+    """The name of the world."""
+    name: str
+    """The latest market values of the world."""
+    values: MarketValues

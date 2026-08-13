@@ -16,7 +16,7 @@ import os
 from typing import List, Annotated
 import time
 from utils.jwt_helper import JWTHelper
-from utils.data.world_data import WorldActivity, WorldData
+from utils.data.world_data import WorldActivity, WorldComparison, WorldData
 from datetime import datetime, timedelta
 from contextvars import ContextVar
 
@@ -375,6 +375,19 @@ async def get_item_activity(request: Request, response: Response, item_id: int) 
         item_id (int): The id of the item.
     """
     return sorted(await mongo_manager.get_item_activity(item_id), key=lambda x: x.total_trades, reverse=True)
+
+@app.get("/item_comparison")
+@limiter.limit(get_ratelimit)
+async def get_item_comparison(request: Request, response: Response, item_id: int) -> List[WorldComparison]:
+    """Returns the current market values for 1 item across all tracked servers.
+
+    Args:
+    - **item_id** (int): The id of the item.
+    """
+    values = await mongo_manager.get_item_comparison(item_id)
+    await add_statistic(request, "item_comparison", item_id)
+
+    return sorted(values, key=lambda x: x.values.time, reverse=True)
 
 @app.get("/world_data")
 async def get_world_data(servers: str = None) -> List[WorldData]:

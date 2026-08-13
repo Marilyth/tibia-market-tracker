@@ -7,6 +7,7 @@ requests
 mem-edit
 pyvirtualdisplay
 pytest
+pytest-asyncio
 fastapi
 uvicorn
 slowapi
