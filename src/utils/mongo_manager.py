@@ -3,7 +3,7 @@ import json
 import pymongo
 from utils.data.market_values import MarketValues, NPCSaleData, ItemMetaData, MarketBoard, MarketBoardTraderData
 from utils.wiki import EventData, Wiki
-from utils.data.world_data import WorldData, WorldActivity
+from utils.data.world_data import WorldComparison, WorldData, WorldActivity
 from typing import List
 import os
 from tqdm import tqdm
@@ -344,12 +344,22 @@ class MongoManager:
         Returns:
             dict: The world data from the database.
         """
-        query = {"id": 22118, "server": {"$exists": True}}
+        items = await self.get_item_comparison(22118)
+
+        return [WorldData(name=item.name, last_update=datetime.utcfromtimestamp(item.values.time)) for item in items]
+
+    async def get_item_comparison(self, item_id: int) -> List[WorldComparison]:
+        """Gets the latest market values for the given item across all servers.
+
+        Returns:
+            List[WorldActivity]: The world activity for the given item.
+        """
+        query = {"id": item_id, "server": {"$exists": True}}
         projection = {"server": 1, "history": {"$slice": -1}}
 
         items = await self.item_prices.find(query, projection).to_list()
 
-        return [WorldData(name=item["server"], last_update=datetime.utcfromtimestamp(item["history"][0]["time"])) for item in items]
+        return [WorldComparison(name=item["server"], values=MarketValues(**item["history"][0], id=item_id)) for item in items]
 
     async def get_item_activity(self, item_id: int) -> List[WorldActivity]:
         """Gets world activities based on a certain item.
