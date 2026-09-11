@@ -57,7 +57,7 @@ class NetworkExtractor(Extractor):
         # Order items to be closer to how they are displayed in the client.
         proto_items = Wiki.get_marketable_proto_items().values()
         proto_items = sorted(proto_items, key=lambda item: (item.flags.market.category, item.name))
-        
+
         extraction_tasks = [ItemExtractionTask(item.id) for item in proto_items]
 
         last_wiggle = 0
@@ -74,6 +74,7 @@ class NetworkExtractor(Extractor):
             if time.time() - last_wiggle > 840:
                 self.client.close_market()
                 self.client.wiggle()
+                self.client.open_market()
 
                 # First request opens the market, but doesn't get any data.
                 await extraction_tasks[0].request_market_values_async(self.sniffer)

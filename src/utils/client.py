@@ -170,8 +170,22 @@ class Client:
         if self._wait_until_find("images/Market.png", click=True, cache=False, timeout=5)[0] == -1:
             self._add_to_log("Opening depot")
 
-            # Needs to be adjusted if the resolution is not 1600x900 fullscreen!
-            move_mouse_like_human(645, 345)
+            # Needs to be adjusted if the resolution is not 1600x900 fullscreen or playspace is shifted.
+            character_coordinate = (700, 345)
+            orientation = self.is_at_depot()
+
+            # Approximate depot screen position.
+            # ToDo: Adjust to real values.
+            if orientation == "North":
+                depot_coordinate = (character_coordinate[0], character_coordinate[1] + 64)
+            elif orientation == "South":
+                depot_coordinate = (character_coordinate[0], character_coordinate[1] - 64)
+            elif orientation == "East":
+                depot_coordinate = (character_coordinate[0] + 64, character_coordinate[1])
+            elif orientation == "West":
+                depot_coordinate = (character_coordinate[0] - 64, character_coordinate[1])
+
+            move_mouse_like_human(*depot_coordinate)
             pyautogui.leftClick()
 
             # Tried to open depot, check if it worked.
@@ -182,7 +196,7 @@ class Client:
         self._wait_until_find("images/Details.png", cache=False, timeout=5)
         return True
 
-    def is_at_depot(self) -> bool:
+    def is_at_depot(self) -> str:
         """
         Checks if the character is at a depot.
 
@@ -193,9 +207,9 @@ class Client:
             x, y = self._wait_until_find(f"images/SuccessDepotTile{orientation}.png", timeout=1, cache=False, exact=True)
 
             if x >= 0:
-                return True
+                return orientation
 
-        return False
+        return None
 
     def walk_to_depot(self) -> bool:
         """
