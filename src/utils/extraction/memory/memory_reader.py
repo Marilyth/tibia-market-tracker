@@ -1,7 +1,11 @@
 from mem_edit import Process
 import ctypes
+import logging
 from typing import *
 import psutil
+
+
+logger = logging.getLogger(__name__)
 
 
 class MemoryReader:
@@ -58,8 +62,8 @@ class MemoryReader:
         if type(value) == str:
             b = bytearray()
             b.extend(value.encode("ascii"))
-            # Print the bytearray as a string of hex values.
-            print(" ".join("{:02x}".format(x) for x in b))
+            # Log the bytearray as a string of hex values.
+            logger.debug(" ".join("{:02x}".format(x) for x in b))
 
             return (ctypes.c_char * len(b)).from_buffer(b)
         elif type(value) == bytearray:

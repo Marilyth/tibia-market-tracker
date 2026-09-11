@@ -1,7 +1,11 @@
 import asyncio
+import logging
 from utils.data.market_values import MarketBoard, MarketValues
 from utils.data.world_data import WorldData
 from utils.mongo_manager import MongoManager
+
+
+logger = logging.getLogger(__name__)
 
 
 class DataCache:
@@ -53,7 +57,7 @@ class DataCache:
                 values = sorted(values, key=lambda x: (x.sell_offers + x.buy_offers), reverse=True)
                 self.market_values_cache[server] = values
         except Exception as e:
-            print(f"Error while reading fullscan: {e}")
+            logger.exception(f"Error while reading fullscan: {e}")
         finally:
             self.market_values_lock.release()
 
@@ -74,7 +78,7 @@ class DataCache:
             if server not in self.market_boards_cache:
                 self.market_boards_cache[server] = await self.mongo_manager.get_market_boards(server)
         except Exception as e:
-            print(f"Error while reading market boards: {e}")
+            logger.exception(f"Error while reading market boards: {e}")
         finally:
             self.market_boards_lock.release()
 

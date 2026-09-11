@@ -19,6 +19,9 @@ from utils.jwt_helper import JWTHelper
 from utils.data.world_data import WorldActivity, WorldComparison, WorldData
 from datetime import datetime, timedelta
 from contextvars import ContextVar
+from dotenv import load_dotenv
+from utils.observability import setup
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 
 
 # Set up the API.
@@ -545,9 +548,16 @@ async def update_market_boards(request: Request, secret: str, boards: Annotated[
     data_cache.invalidate_server_cache(boards.server)
 
 if __name__ == "__main__":
+    load_dotenv()
+    setup("tibia-market-tracker-api")
+    FastAPIInstrumentor.instrument_app(app)
+
     log_config = uvicorn.config.LOGGING_CONFIG
     log_config["formatters"]["access"]["fmt"] = "%(asctime)s - %(levelname)s - %(message)s"
     log_config["formatters"]["default"]["fmt"] = "%(asctime)s - %(levelname)s - %(message)s"
+    log_config["loggers"]["uvicorn"]["propagate"] = True
+    log_config["loggers"]["uvicorn.error"]["propagate"] = True
+    log_config["loggers"]["uvicorn.access"]["propagate"] = True
 
     port = config["apiPort"]
 

@@ -10,6 +10,10 @@ from utils.extraction.network.packets.client.ping_back import PingBack as Client
 from utils.extraction.network.packets.client.connection_ping_back import ConnectionPingBack
 from utils.data.market_values import ItemMetaData, MarketValues
 from time import time
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 def read_packet(packet: bytes, from_client: bool) -> PacketBase:
@@ -32,7 +36,7 @@ def read_packet(packet: bytes, from_client: bool) -> PacketBase:
             else:
                 packets.append(_read_server_packet(packet))
         except Exception as e:
-            print(f"Error reading packet: {e}. Treating as PacketBase.")
+            logger.debug(f"Error reading packet: {e}. Treating as PacketBase.")
             packets.append(PacketBase(from_client).from_packet(packet))
 
         if type(packets[-1]) is PacketBase:

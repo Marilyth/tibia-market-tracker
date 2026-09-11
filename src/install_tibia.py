@@ -1,8 +1,13 @@
 import requests
 import tarfile
 import os
+import logging
 from pyvirtualdisplay import Display
 import Xlib.display
+
+
+logger = logging.getLogger(__name__)
+
 
 def get_tibia_path():
     """Checks if Tibia is installed.
@@ -21,22 +26,22 @@ def download_package():
     """
     # Check if Tibia is already downloaded.
     if get_tibia_path():
-        print("Tibia is already downloaded.")
+        logger.info("Tibia is already downloaded.")
         return
 
     package_url = "https://static.tibia.com/download/tibia.x64.tar.gz"
 
-    print("Downloading Tibia package...")
+    logger.info("Downloading Tibia package...")
     r = requests.get(package_url, stream=True)
 
     with open("tibia.tar.gz", "wb") as f:
         for chunk in r.iter_content(chunk_size=1024):
             f.write(chunk)
 
-    print("Download complete.")
+    logger.info("Download complete.")
 
     # Extract the package
-    print("Extracting Tibia package...")
+    logger.info("Extracting Tibia package...")
     
     tar = tarfile.open("tibia.tar.gz")
     tar.extractall()
@@ -45,7 +50,7 @@ def download_package():
     # Delete the package
     os.remove("tibia.tar.gz")
 
-    print("Extraction complete.")
+    logger.info("Extraction complete.")
 
     if not get_tibia_path():
         raise Exception("Tibia downloading failed.")

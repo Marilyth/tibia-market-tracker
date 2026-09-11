@@ -10,10 +10,13 @@ from utils.extraction.network.packets.server.market_browse import MarketBrowse
 from utils.extraction.network.packets.client.market_browse import MarketBrowse as ClientMarketBrowse
 from utils.extraction.network.xtea_utils import decrypt, encrypt, is_ready
 import sys
-import traceback
+import logging
 from threading import Lock
 
 from utils.extraction.network.decompressors import Decompressor
+
+
+logger = logging.getLogger(__name__)
 
 
 class NetworkSniffer:
@@ -67,7 +70,7 @@ class NetworkSniffer:
             http_flow (http.HTTPFlow): The HTTP flow to handle.
         """
         # Ignore requests, we only care about TCP messages.
-        print(f"\n -> {http_flow.request.pretty_url}: {http_flow.request.text[:1024]}")
+        logger.debug(f"\n -> {http_flow.request.pretty_url}: {http_flow.request.text[:1024]}")
 
     def response(self, http_flow: http.HTTPFlow):
         """Handles a response packet.
@@ -76,7 +79,7 @@ class NetworkSniffer:
             http_flow (http.HTTPFlow): The HTTP flow to handle.
         """
         # Ignore responses, we only care about TCP messages.
-        print(f"\n <- {http_flow.request.pretty_url}: {http_flow.response.text[:1024]}")
+        logger.debug(f"\n <- {http_flow.request.pretty_url}: {http_flow.response.text[:1024]}")
 
     def inject_tcp_message(self, packet: PacketBase):
         """Injects a TCP message into the sniffer.
@@ -117,7 +120,7 @@ class NetworkSniffer:
 
         if not tcp_flow in self.flows:
             self.flows.append(tcp_flow)
-            print(f"New TCP flow from {tcp_flow.client_conn.address} to {tcp_flow.server_conn.address}.")
+            logger.info(f"New TCP flow from {tcp_flow.client_conn.address} to {tcp_flow.server_conn.address}.")
 
         self.handle_packet(tcp_flow, message)
 
@@ -137,7 +140,7 @@ class NetworkSniffer:
             for flow_instance in self.flows:
                 writer.add(flow_instance)
 
-        print(f"Saved flow to {file_path}.")
+        logger.info(f"Saved flow to {file_path}.")
 
     def handle_packet(self, tcp_flow: tcp.TCPFlow, packet: tcp.TCPMessage):
         """Handles a Tibia packet.
@@ -231,7 +234,7 @@ class NetworkSniffer:
 
         if not is_valid:
             if packet.from_client:
-                print(f"Invalid compression flag: {compression_flag}")
+                logger.warning(f"Invalid compression flag: {compression_flag}")
                 return None
             else:
                 raise Exception(f"Invalid compression flag: {compression_flag}")
@@ -275,10 +278,9 @@ class NetworkSniffer:
             except Exception as e:
                 if not self.blocked_src:
                     self.blocked_src = packet_srv
-                    print(f"Blocked {packet_srv} due to error: {e}")
+                    logger.warning(f"Blocked {packet_srv} due to error: {e}")
 
-                traceback.print_exc()
-                print(f"Error while reading market packet {packet.content}: {e}")
+                logger.exception(f"Error while reading market packet {packet.content}: {e}")
 
             if not result:
                 return
@@ -290,15 +292,15 @@ class NetworkSniffer:
 
             for game_packet in game_packets:
                 if isinstance(game_packet, MarketDetail):
-                    print(f"Received market packet {game_packet.id}.")
+                    logger.info(f"Received market packet {game_packet.id}.")
                     self._detail_results[game_packet.id] = game_packet
                     self._check_if_item_complete(game_packet.id)
                 elif isinstance(game_packet, MarketBrowse):
-                    print(f"Received market browse packet {game_packet.id}")
+                    logger.info(f"Received market browse packet {game_packet.id}")
                     self._browse_results[game_packet.id] = game_packet
                     self._check_if_item_complete(game_packet.id)
                 elif isinstance(game_packet, ClientMarketBrowse):
-                    print(f"Sending out client market browse packet {game_packet.id}")
+                    logger.info(f"Sending out client market browse packet {game_packet.id}")
                 else:
                     # Might want to handle other packets in the future.
                     pass

@@ -5,6 +5,10 @@ import asyncio
 import os
 import requests
 import subprocess
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 master: DumpMaster = None
 
@@ -30,12 +34,12 @@ async def start_proxy(addons: List):
         try:
             response = await asyncio.to_thread(requests.get, "http://www.google.com")
             if response.status_code == 200:
-                print("Proxy is running and reachable.")
+                logger.info("Proxy is running and reachable.")
                 return
         except Exception as e:
             pass
 
-        print("Waiting for proxy to be reachable...")
+        logger.debug("Waiting for proxy to be reachable...")
         await asyncio.sleep(0.5)
 
 def stop_proxy():

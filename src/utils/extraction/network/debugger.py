@@ -1,7 +1,11 @@
 import subprocess
 import os
+import logging
 from typing import List
 from utils.extraction.memory.memory_reader import MemoryReader
+
+
+logger = logging.getLogger(__name__)
 
 
 class XteaDebugger:
@@ -37,7 +41,7 @@ class XteaDebugger:
         if not self.breakpoint_address:
             self.find_breakpoint_address()
 
-        print(self.breakpoint_address)
+        logger.debug(self.breakpoint_address)
 
         file_dir = os.path.dirname(os.path.realpath(__file__))
         gdb_file_directory = os.path.join(file_dir, "gdb_find_xtea")
@@ -47,7 +51,7 @@ class XteaDebugger:
                          "-x", f"{gdb_file_directory}"]
 
         gdb_output = subprocess.check_output(command).decode("utf-8")
-        print(f"{gdb_output=}")
+        logger.debug(f"{gdb_output=}")
         keys = [key for key in gdb_output.split(":\t")[1].split("\n")[0].split("\t") if key]
 
         # Keys are in 0x00 format, convert to bytes.

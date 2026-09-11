@@ -15,7 +15,13 @@ from utils.wiki import Wiki
 from tqdm import tqdm
 import time
 import asyncio
+import logging
 from enum import Enum
+from opentelemetry import trace
+
+
+logger = logging.getLogger(__name__)
+tracer = trace.get_tracer(__name__)
 
 
 class NetworkExtractor(Extractor):
@@ -23,13 +29,15 @@ class NetworkExtractor(Extractor):
         super().__init__(client)
         self.sniffer = NetworkSniffer()
         self.xtea_key = None
+        self.failed_item_ids: list[int] = []
 
     async def setup(self, manual_session: bool = False):
         """
         Sets up the network extraction by sniffing packets, logging in, extracting the XTEA key, and opening the market.
         """
-        await start_proxy([self.sniffer])
-        await asyncio.to_thread(self._setup_session)
+        with tracer.start_as_current_span("network_extractor.setup"):
+            await start_proxy([self.sniffer])
+            await asyncio.to_thread(self._setup_session)
 
         # Don't actually do anything if this is a manual session.
         while manual_session:
@@ -81,7 +89,8 @@ class NetworkExtractor(Extractor):
                 if task.status != ExtractionTaskStatus.Completed:
                     if task.attempts > max_retry_count:
                         extraction_tasks.remove(task)
-                        print(f"Failed to extract item {task.item_id} after {task.attempts} attempts.")
+                        self.failed_item_ids.append(task.item_id)
+                        logger.warning(f"Failed to extract item {task.item_id} after {task.attempts} attempts.")
                     continue
 
                 successful_tasks.append(task)
@@ -93,7 +102,7 @@ class NetworkExtractor(Extractor):
                 if current_retry_count >= max_retry_count:
                     raise Exception("Failed to extract any market values after multiple retries.")
 
-                print(f"Entire batch failed. {current_retry_count=}")
+                logger.warning(f"Entire batch failed. {current_retry_count=}")
                 current_retry_count += 1
             else:
                 current_retry_count = 0
@@ -126,14 +135,19 @@ class NetworkExtractor(Extractor):
         return market_value_items, market_boards
 
     def _setup_session(self):
-        self.client.start_game()
-        self.client.login_to_game()
+        with tracer.start_as_current_span("network_extractor.start_game"):
+            self.client.start_game()
 
-        self._extract_key()
+        with tracer.start_as_current_span("network_extractor.login"):
+            self.client.login_to_game()
 
-        if not self.client.walk_to_depot():
-            self.client.exit_tibia()
-            raise Exception("Failed to find depot.")
+        with tracer.start_as_current_span("network_extractor.extract_key"):
+            self._extract_key()
+
+        with tracer.start_as_current_span("network_extractor.walk_to_depot"):
+            if not self.client.walk_to_depot():
+                self.client.exit_tibia()
+                raise Exception("Failed to find depot.")
 
     def _extract_key(self):
         setup(key_segment=XteaDebugger().find_key())

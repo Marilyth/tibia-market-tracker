@@ -1,6 +1,7 @@
 import pyautogui
 import subprocess
 import time
+import logging
 from random import uniform
 from typing import *
 import os
@@ -9,6 +10,8 @@ import shutil
 from utils.human_movement import move_mouse_like_human, wait_like_human, repeat_like_human
 from utils.schedule import Character
 
+
+logger = logging.getLogger(__name__)
 
 depot_tile_orientations = ["West", "North", "South"]
 
@@ -237,7 +240,7 @@ class Client:
                 depot_index -= 1
 
             depot_index = min(depot_index, len(depots) - 1)
-            print(f"Trying depot {i} ({depot_index})...")
+            logger.info(f"Trying depot {i} ({depot_index})...")
 
             # Order by y and then x coordinate, so we go horizontally through all before switching levels.
             depots = sorted(depots, key=lambda x: (x[1], x[0]))
@@ -367,4 +370,4 @@ class Client:
 
     def _add_to_log(self, message: str):
         self.bot_log.append(message)
-        print(message)
+        logger.info(message)

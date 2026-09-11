@@ -3,6 +3,10 @@ from PIL import ImageGrab, Image, ImageDraw
 from typing import *
 import cv2
 import numpy as np
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 def take_screenshot(left, top, width, height) -> Image.Image:
@@ -54,5 +58,5 @@ def read_image_text(image: Image.Image, psm: int = 3, oem: int = 3, char_white_l
     try:
         return pytesseract.image_to_string(image, config=config)
     except pytesseract.TesseractNotFoundError as e:
-        print(e)
+        logger.error(f"Tesseract is not available: {e}")
         exit(1)
