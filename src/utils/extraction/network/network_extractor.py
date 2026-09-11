@@ -53,7 +53,12 @@ class NetworkExtractor(Extractor):
             await asyncio.sleep(1)
 
         successful_tasks: list[ItemExtractionTask] = []
-        extraction_tasks = [ItemExtractionTask(item.id) for item in Wiki.get_marketable_proto_items().values()]
+
+        # Order items to be closer to how they are displayed in the client.
+        proto_items = Wiki.get_marketable_proto_items().values()
+        proto_items = sorted(proto_items, key=lambda item: (item.flags.market.category, item.name))
+        
+        extraction_tasks = [ItemExtractionTask(item.id) for item in proto_items]
 
         last_wiggle = 0
 
