@@ -26,13 +26,11 @@ async def start_proxy(addons: List):
     subprocess.run(["cp", certificate_path, "/usr/local/share/ca-certificates/mitmproxy.crt"])
     subprocess.run(["update-ca-certificates"])
 
-    os.environ["http_proxy"] = "http://localhost:8080"
-    os.environ["https_proxy"] = "https://localhost:8080"
-
     # Wait until the proxy is reachable.
+    proxies = get_proxy_env()
     while True:
         try:
-            response = await asyncio.to_thread(requests.get, "http://www.google.com")
+            response = await asyncio.to_thread(requests.get, "http://www.google.com", proxies=proxies)
             if response.status_code == 200:
                 logger.info("Proxy is running and reachable.")
                 return
@@ -42,10 +40,15 @@ async def start_proxy(addons: List):
         logger.debug("Waiting for proxy to be reachable...")
         await asyncio.sleep(0.5)
 
-def stop_proxy():
-    os.environ.pop("http_proxy", None)
-    os.environ.pop("https_proxy", None)
+def get_proxy_env() -> dict:
+    """Returns the environment variables that route traffic through the proxy.
+    """
+    return {
+        "http_proxy": "http://localhost:8080",
+        "https_proxy": "https://localhost:8080",
+    }
 
+def stop_proxy():
     if master:
         master.shutdown()
 

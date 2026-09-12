@@ -10,7 +10,7 @@ from utils.extraction.network.packets.packet_utils import packet_to_marketvalues
 from utils.extraction.network.debugger import XteaDebugger
 from utils.extraction.extractor import Extractor
 from utils.human_movement import wait_like_human_async
-from utils.extraction.network.proxy import start_proxy
+from utils.extraction.network.proxy import start_proxy, get_proxy_env
 from utils.wiki import Wiki
 from tqdm import tqdm
 import time
@@ -37,6 +37,7 @@ class NetworkExtractor(Extractor):
         """
         with tracer.start_as_current_span("network_extractor.setup"):
             await start_proxy([self.sniffer])
+            self.client.env.update(get_proxy_env())
             await asyncio.to_thread(self._setup_session)
 
         # Don't actually do anything if this is a manual session.

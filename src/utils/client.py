@@ -30,6 +30,7 @@ class Client:
         self.tibia_settings_location = os.path.join(self.tibia_data_location, "packages", "Tibia", "conf")
         self.tibia_executable_location = executable_location
         self.character = character
+        self.env = {}
 
         self.tibia: subprocess.Popen = None
         self.tibia_process_id = None
@@ -50,7 +51,7 @@ class Client:
                 os.remove(os.path.join("/tmp", file))
 
         # Start Tibia.
-        self.tibia: subprocess.Popen = subprocess.Popen([self.tibia_executable_location], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        self.tibia: subprocess.Popen = subprocess.Popen([self.tibia_executable_location], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env={**os.environ, **self.env})
         os.set_blocking(self.tibia.stdout.fileno(), False)
 
         time.sleep(5)
