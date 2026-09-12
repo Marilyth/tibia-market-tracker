@@ -323,7 +323,7 @@ class NetworkSniffer:
                     self._browse_results[game_packet.id] = game_packet
                     self._check_if_item_complete(game_packet.id)
                 elif isinstance(game_packet, ClientMarketBrowse):
-                    logger.debug(f"Sending out client market browse packet {game_packet.id}")
+                    logger.info(f"Sending out client market browse packet {game_packet.id}")
                 else:
                     # Might want to handle other packets in the future.
                     pass
