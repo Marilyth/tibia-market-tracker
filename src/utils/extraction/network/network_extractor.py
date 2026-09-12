@@ -74,7 +74,9 @@ class NetworkExtractor(Extractor):
             if time.time() - last_wiggle > 840:
                 self.client.close_market()
                 self.client.wiggle()
-                self.client.open_market()
+                
+                if not self.client.open_market():
+                    raise Exception("Failed to open market after wiggle.")
 
                 # First request opens the market, but doesn't get any data.
                 await extraction_tasks[0].request_market_values_async(self.sniffer)
