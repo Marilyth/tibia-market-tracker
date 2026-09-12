@@ -25,6 +25,8 @@ from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 
 
 # Set up the API.
+load_dotenv()
+
 limiter = Limiter(key_func=get_remote_address, default_limits=["1/2seconds"], headers_enabled=True)
 bearer_scheme = HTTPBearer()
 app = FastAPI()
@@ -47,8 +49,8 @@ with open(os.path.join(os.path.dirname(__file__), "config", "config.json"), "r")
 
 server_limit: int = 20
 
-jwt_helper = JWTHelper(config["jwtSecret"])
-mongo_manager: MongoManager = MongoManager(config["mongodbConnectionString"])
+jwt_helper = JWTHelper(os.getenv["JWT_SECRET"])
+mongo_manager: MongoManager = MongoManager(os.getenv["MONGODB_CONNECTION_STRING"])
 data_cache: DataCache = DataCache(mongo_manager)
 
 request_var: ContextVar[str] = ContextVar("request_user", default=None)
@@ -548,7 +550,6 @@ async def update_market_boards(request: Request, secret: str, boards: Annotated[
     data_cache.invalidate_server_cache(boards.server)
 
 if __name__ == "__main__":
-    load_dotenv()
     setup("tibia-market-tracker-api")
     FastAPIInstrumentor.instrument_app(app)
 
