@@ -116,7 +116,7 @@ class Client:
         """
         # In case the client crashed, cancel the error report dialog.
         self._wait_until_find("images/Cancel.png", timeout=5, click=True, cache=False, coordinate_deviation=2)
-        self._wait_until_find("images/PasswordField.png", click=False, cache=False, coordinate_deviation=2)
+        self._wait_until_find("images/PasswordField.png", click=False, cache=False, coordinate_deviation=2, throw_on_timeout=True)
         pyautogui.typewrite(self.character.username, 0.1)
         pyautogui.press("tab")
         wait_like_human(0.2)
@@ -126,7 +126,7 @@ class Client:
         pyautogui.press("enter")
 
         # Go ingame.
-        self._wait_until_find("images/CharacterSlot.png", click=True, cache=False)
+        self._wait_until_find("images/CharacterSlot.png", click=True, cache=False, throw_on_timeout=True)
 
         # If desired, select another character than the first one.
         repeat_like_human(lambda: pyautogui.press("down"), self.character.slot)
@@ -134,7 +134,7 @@ class Client:
         pyautogui.press("enter")
 
         # Wait until ingame.
-        self._wait_until_find("images/Ingame.png", cache=False)
+        self._wait_until_find("images/Ingame.png", cache=False, throw_on_timeout=True)
         self._add_to_log("Ingame.")
         self.playspace = find_playspace()
 
@@ -197,8 +197,7 @@ class Client:
                 return False
 
         # Depot and market are open, wait for market to load.
-        self._wait_until_find("images/Details.png", cache=False, timeout=5)
-        return True
+        return self._wait_until_find("images/Details.png", cache=False, timeout=5) != -1
 
     def is_at_depot(self) -> str:
         """
@@ -240,7 +239,7 @@ class Client:
         self._add_to_log("Walking to depot...")
 
         # Scroll into minimap.
-        self._wait_until_find("images/ZoomMinimap.png", cache=False, click=True, exact=True, coordinate_deviation=2)
+        self._wait_until_find("images/ZoomMinimap.png", cache=False, click=True, exact=True, coordinate_deviation=2, throw_on_timeout=True)
         repeat_like_human(lambda: pyautogui.click(), 5)
 
         if self.is_at_depot():
@@ -283,7 +282,7 @@ class Client:
         """
         self._add_to_log("Checking if depot icon is visible in the minimap.")
 
-        self._wait_until_find("images/ZoomOutMinimap.png", cache=False, click=True, exact=True, coordinate_deviation=2)
+        self._wait_until_find("images/ZoomOutMinimap.png", cache=False, click=True, exact=True, coordinate_deviation=2, throw_on_timeout=True)
         repeat_like_human(lambda: pyautogui.click(), 5)
 
         found_coordinate = pyautogui.locateCenterOnScreen("images/DepotIcon.png")

@@ -87,12 +87,12 @@ class OCRExtractor(Extractor):
 
             if self.client.market_tab == "offers":
                 buy_offer, sell_offer, approx_offers = scan_offers()
-                self.client._wait_until_find("images/Details.png", timeout=5, click=True, throw_on_timeout=True)
+                self.client._wait_until_find("images/Details.png", timeout=5, click=True, throw_on_timeout=True, throw_on_timeout=True)
                 buy_amount, highest_buy_offer, average_buy_offer, lowest_buy_offer, sell_amount, highest_sell_offer, average_sell_offer, lowest_sell_offer = scan_details()
                 self.client.market_tab = "details"
             else:
                 buy_amount, highest_buy_offer, average_buy_offer, lowest_buy_offer, sell_amount, highest_sell_offer, average_sell_offer, lowest_sell_offer = scan_details()
-                self.client._wait_until_find("images/OffersButton.png", timeout=5, click=True, throw_on_timeout=True)
+                self.client._wait_until_find("images/OffersButton.png", timeout=5, click=True, throw_on_timeout=True, throw_on_timeout=True)
                 buy_offer, sell_offer, approx_offers = scan_offers()
                 self.client.market_tab = "offers"
 

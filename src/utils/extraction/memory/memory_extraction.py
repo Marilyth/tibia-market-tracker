@@ -126,7 +126,7 @@ class MemoryExtractor(Extractor):
                     if memory_fail_count >= 5:
                         raise e
 
-            self.client._wait_until_find("images/Category.png", click=True, cache=False, coordinate_deviation=1)
+            self.client._wait_until_find("images/Category.png", click=True, cache=False, coordinate_deviation=1, throw_on_timeout=True)
 
             # Go to the correct category.
             repeat_like_human(lambda: pyautogui.press("down"), category_index, wait_time=0.1)
