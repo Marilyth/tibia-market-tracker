@@ -49,8 +49,8 @@ with open(os.path.join(os.path.dirname(__file__), "config", "config.json"), "r")
 
 server_limit: int = 20
 
-jwt_helper = JWTHelper(os.getenv["JWT_SECRET"])
-mongo_manager: MongoManager = MongoManager(os.getenv["MONGODB_CONNECTION_STRING"])
+jwt_helper = JWTHelper(os.getenv("JWT_SECRET"))
+mongo_manager: MongoManager = MongoManager(os.getenv("MONGODB_CONNECTION_STRING"))
 data_cache: DataCache = DataCache(mongo_manager)
 
 request_var: ContextVar[str] = ContextVar("request_user", default=None)
