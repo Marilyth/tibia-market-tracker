@@ -1,5 +1,5 @@
 from utils.client import Client
-import utils.extraction.ocr.ocr as screenshot
+import utils.extraction.ocr.image_processing as screenshot
 from utils.data.market_values import MarketValues
 from utils.extraction.extractor import Extractor
 from utils.human_movement import wait_like_human, repeat_like_human

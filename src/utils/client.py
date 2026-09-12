@@ -9,6 +9,7 @@ from utils.extraction.memory.memory_reader import MemoryReader
 import shutil
 from utils.human_movement import move_mouse_like_human, wait_like_human, repeat_like_human
 from utils.schedule import Character
+from utils.extraction.ocr.image_processing import find_playspace
 
 
 logger = logging.getLogger(__name__)
@@ -38,6 +39,7 @@ class Client:
 
         self.position_cache = {}
         self.kick_time = time.time() + 60 * 13
+        self.playspace = None
 
     def start_game(self):
         """Starts Tibia and updates it if necessary.
@@ -132,6 +134,8 @@ class Client:
         # Wait until ingame.
         self._wait_until_find("images/Ingame.png", cache=False)
         self._add_to_log("Ingame.")
+        self.playspace = find_playspace()
+
         self._update_kick_timer()
         self.tibia_process_id = MemoryReader.get_process_id("client")[-1]
 
@@ -170,22 +174,20 @@ class Client:
         if self._wait_until_find("images/Market.png", click=True, cache=False, timeout=5)[0] == -1:
             self._add_to_log("Opening depot")
 
-            # Needs to be adjusted if the resolution is not 1600x900 fullscreen or playspace is shifted.
-            character_coordinate = (700, 345)
-            orientation = self.is_at_depot()
-
             # Approximate depot screen position.
-            # ToDo: Adjust to real values.
-            if orientation == "North":
-                depot_coordinate = (character_coordinate[0], character_coordinate[1] + 64)
-            elif orientation == "South":
-                depot_coordinate = (character_coordinate[0], character_coordinate[1] - 64)
-            elif orientation == "East":
-                depot_coordinate = (character_coordinate[0] + 64, character_coordinate[1])
-            elif orientation == "West":
-                depot_coordinate = (character_coordinate[0] - 64, character_coordinate[1])
+            orientation = self.is_at_depot()
+            x, y = 8, 5
 
-            move_mouse_like_human(*depot_coordinate)
+            if orientation == "North":
+                y -= 1
+            elif orientation == "South":
+                y += 1
+            elif orientation == "East":
+                x += 1
+            elif orientation == "West":
+                x -= 1
+
+            move_mouse_like_human(*self._get_playspace_tile_coordinate(x, y))
             pyautogui.leftClick()
 
             # Tried to open depot, check if it worked.
@@ -385,3 +387,23 @@ class Client:
     def _add_to_log(self, message: str):
         self.bot_log.append(message)
         logger.info(message)
+
+    def _get_playspace_tile_coordinate(self, x, y) -> Tuple[int, int]:
+        """
+        Returns the screen coordinates of the given tile in the playspace.
+        """
+        if self.playspace is None:
+            raise ValueError("Playspace not found.")
+        
+        if x < 0 or x >= 15 or y < 0 or y >= 11:
+            raise ValueError("Invalid tile coordinate.")
+        
+        x_p, y_p, w, h = self.playspace
+        tile_width = w / 15
+        tile_height = h / 11
+
+        # The playspace isn't 100% accurate, so this aims for the center.
+        x_delta = tile_width * x + tile_width / 2
+        y_delta = tile_height * y + tile_height / 2
+
+        return (x_p + x_delta, y_p + y_delta)

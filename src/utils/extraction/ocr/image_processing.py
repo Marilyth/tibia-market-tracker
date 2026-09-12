@@ -15,6 +15,30 @@ def take_screenshot(left, top, width, height) -> Image.Image:
     """
     return ImageGrab.grab((left, top, left + width, top + height))
 
+def find_playspace(screenshot: Image.Image = None) -> cv2.typing.Rect:
+    """
+    Finds the playspace on the screen. Returns the coordinates of the playspace.
+    """
+    if screenshot is None:
+        screenshot = ImageGrab.grab()
+
+    image = np.array(screenshot)
+
+    # Make screenshot black & white binary.
+    # 90 used as threshold because it captures the lower and right bounds of the playspace.
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    image = cv2.threshold(image, 90, 255, cv2.THRESH_BINARY)[1]
+
+    contours, hierarchy = cv2.findContours(image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    # Tibia has 15x11 tiles in the playspace. Return the best matching contour over 10000 pixels large.
+    goal_ratio = 15 / 11
+    rects = [cv2.boundingRect(contour) for contour in contours]
+    rects = [rect for rect in rects if rect[2] * rect[3] > 10000]
+    rects = sorted(rects, key=lambda rect: abs((rect[2] / rect[3]) - goal_ratio))
+
+    return rects[0]
+
 def process_image(image: Image.Image, relative_box: Tuple[int, int, int, int] = None, invert = True, rescale_factor: int = 1) -> Image.Image:
     """
     Converts the image into a more AI readable format. The endresult can be seen under selection_showcase.png and ai_image_input.png.
