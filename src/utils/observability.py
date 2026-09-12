@@ -17,6 +17,27 @@ from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
 from opentelemetry.exporter.otlp.proto.http._log_exporter import OTLPLogExporter
 
 
+_STANDARD_LOG_RECORD_ATTRS = frozenset(
+    vars(logging.LogRecord(name="", level=0, pathname="", lineno=0, msg="", args=(), exc_info=None))
+)
+
+
+class HomogeneousLogAttributes(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        for key, value in vars(record).items():
+            if key in _STANDARD_LOG_RECORD_ATTRS:
+                continue
+        
+            # mitmproxy causes mixed type warnings to pop up all the time.
+            # Make them all string.
+            if isinstance(value, (list, tuple)) and value:
+                element_types = {type(element) for element in value if element is not None}
+                if len(element_types) > 1:
+                    record.__dict__[key] = str(value)
+
+        return True
+
+
 def setup(service_name: str):
     resource = Resource.create({
         "service.name": service_name,
@@ -44,6 +65,7 @@ def setup(service_name: str):
 
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.DEBUG)
-    root_logger.addHandler(
-        LoggingHandler(level=logging.INFO, logger_provider=log_provider)
-    )
+
+    log_handler = LoggingHandler(level=logging.INFO, logger_provider=log_provider)
+    log_handler.addFilter(HomogeneousLogAttributes())
+    root_logger.addHandler(log_handler)
