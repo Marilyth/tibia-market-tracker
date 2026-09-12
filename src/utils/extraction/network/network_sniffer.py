@@ -1,7 +1,8 @@
 from xtea import *
 from typing import List
-from mitmproxy import ctx, tcp, http, flow
+from mitmproxy import tcp, http, flow
 from mitmproxy.io import FlowReader, FlowWriter
+from utils.extraction.network.proxy import inject_tcp
 from utils.extraction.network.sequence_manager import SequenceManager
 from utils.extraction.network.packets.packet_utils import read_packet
 from utils.extraction.network.packets.packet_base import PacketBase
@@ -108,7 +109,7 @@ class NetworkSniffer:
             encrypted_message
         )
 
-        ctx.master.commands.call("inject.tcp", self.main_flow, not packet.from_client, b"injected" + message)
+        inject_tcp(self.main_flow, not packet.from_client, b"injected" + message)
 
     def tcp_message(self, tcp_flow: tcp.TCPFlow):
         """Handles a TCP message packet.
@@ -118,9 +119,14 @@ class NetworkSniffer:
         """
         message = tcp_flow.messages[-1]
 
-        if not tcp_flow in self.flows:
-            self.flows.append(tcp_flow)
-            logger.info(f"New TCP flow from {tcp_flow.client_conn.address} to {tcp_flow.server_conn.address}.")
+        # The proxy runs on its own thread. The flow list is shared with the
+        # application thread (e.g. save_flows), so guard it.
+        with self.queue_lock:
+            is_new_flow = tcp_flow not in self.flows
+
+            if is_new_flow:
+                self.flows.append(tcp_flow)
+                logger.info(f"New TCP flow from {tcp_flow.client_conn.address} to {tcp_flow.server_conn.address}.")
 
         self.handle_packet(tcp_flow, message)
 
@@ -128,16 +134,35 @@ class NetworkSniffer:
         """Returns whether the sniffer is ready for injection."""
         return self.main_flow is not None and is_ready()
 
+    def has_result(self, item_id: int) -> bool:
+        """Returns whether a complete result is available for the given item."""
+        with self.queue_lock:
+            return item_id in self.results
+
+    def pop_result(self, item_id: int) -> tuple[MarketDetail, MarketBrowse]:
+        """Returns and removes the complete result for the given item."""
+        with self.queue_lock:
+            return self.results.pop(item_id)
+
+    def has_partial_result(self, item_id: int) -> bool:
+        """Returns whether only part of the result is available for the given item."""
+        with self.queue_lock:
+            return item_id in self._browse_results or item_id in self._detail_results
+
     def save_flows(self, file_path: str):
         """Saves the flows to a file for later replay.
 
         Args:
             file_path (str): The path to the file to save the flow to.
         """
+        # Snapshot under the lock. the proxy thread may still be appending flows.
+        with self.queue_lock:
+            flows = list(self.flows)
+
         with open(file_path, "wb") as f:
             writer = FlowWriter(f)
 
-            for flow_instance in self.flows:
+            for flow_instance in flows:
                 writer.add(flow_instance)
 
         logger.info(f"Saved flow to {file_path}.")
@@ -149,15 +174,13 @@ class NetworkSniffer:
             tcp_flow (tcp.TCPFlow): The TCP flow to handle.
             packet (tcp.TCPMessage): The packet to handle.
         """
-        self.queue_lock.acquire()
-        self.queue.append((tcp_flow, packet))
+        with self.queue_lock:
+            self.queue.append((tcp_flow, packet))
 
-        if is_ready():
-            for tcp_flow, packet in list(self.queue):
-                self.queue.pop()
-                self._handle_packet(tcp_flow, packet)
-
-        self.queue_lock.release()
+            if is_ready():
+                for tcp_flow, packet in list(self.queue):
+                    self.queue.pop()
+                    self._handle_packet(tcp_flow, packet)
 
     @staticmethod
     def bytes_to_readable_string(data: bytes) -> str:

@@ -188,18 +188,18 @@ class ItemExtractionTask:
         sniffer.inject_tcp_message(market_browse_packet)
 
         wait_time = time.time() + self.timeout
-        while self.item_id not in sniffer.results:
+        while not sniffer.has_result(self.item_id):
             if time.time() > wait_time:
                 self.status = ExtractionTaskStatus.TimedOut
 
-                if self.item_id in sniffer._browse_results or self.item_id in sniffer._detail_results:
+                if sniffer.has_partial_result(self.item_id):
                     self.status = ExtractionTaskStatus.MissedPackage
 
                 return
 
             await asyncio.sleep(0.1)
 
-        market_detail, market_browse = sniffer.results.pop(self.item_id)
+        market_detail, market_browse = sniffer.pop_result(self.item_id)
         self.extraction_time = time.time()
 
         self.result = (market_detail, market_browse)
