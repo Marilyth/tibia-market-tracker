@@ -176,7 +176,7 @@ class Client:
 
             # Approximate depot screen position.
             orientation = self.is_at_depot()
-            x, y = 8, 5
+            x, y = 7, 5
 
             if orientation == "North":
                 y -= 1
