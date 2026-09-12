@@ -315,15 +315,15 @@ class NetworkSniffer:
 
             for game_packet in game_packets:
                 if isinstance(game_packet, MarketDetail):
-                    logger.info(f"Received market packet {game_packet.id}.")
+                    logger.debug(f"Received market packet {game_packet.id}.")
                     self._detail_results[game_packet.id] = game_packet
                     self._check_if_item_complete(game_packet.id)
                 elif isinstance(game_packet, MarketBrowse):
-                    logger.info(f"Received market browse packet {game_packet.id}")
+                    logger.debug(f"Received market browse packet {game_packet.id}")
                     self._browse_results[game_packet.id] = game_packet
                     self._check_if_item_complete(game_packet.id)
                 elif isinstance(game_packet, ClientMarketBrowse):
-                    logger.info(f"Sending out client market browse packet {game_packet.id}")
+                    logger.debug(f"Sending out client market browse packet {game_packet.id}")
                 else:
                     # Might want to handle other packets in the future.
                     pass
