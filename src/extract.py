@@ -76,7 +76,7 @@ def update_events():
         event = Wiki.get_event_data()
 
         if not dry_run:
-            requests.post(f"{api_url}/add_event?secret={os.getenv("JWT_SECRET")}", json=object_to_json(event),
+            requests.post(f"{api_url}/add_event?secret={os.getenv('JWT_SECRET')}", json=object_to_json(event),
                           headers={"Content-Type": "application/json", "Content-Encoding": "gzip"})
     except Exception as e:
         logger.exception(f"Writing events failed: {e}")
@@ -92,7 +92,7 @@ def update_metadata():
             item.load_from_proto()
 
         if not dry_run:
-            requests.post(f"{api_url}/update_item_metadata?secret={os.getenv("JWT_SECRET")}", json=object_to_json(meta_data),
+            requests.post(f"{api_url}/update_item_metadata?secret={os.getenv('JWT_SECRET')}", json=object_to_json(meta_data),
                           headers={"Content-Type": "application/json", "Content-Encoding": "gzip"})
     except Exception as e:
         logger.exception(f"Writing metadata failed: {e}")
@@ -138,7 +138,7 @@ def upload_data(market_values, market_boards, server: str):
                 batch = market_values[:4000]
                 market_values = market_values[4000:]
 
-                requests.post(f"{api_url}/add_market_values?secret={os.getenv("JWT_SECRET")}", json=object_to_json({"server": server, "data": batch}),
+                requests.post(f"{api_url}/add_market_values?secret={os.getenv('JWT_SECRET')}", json=object_to_json({"server": server, "data": batch}),
                             headers={"Content-Type": "application/json", "Content-Encoding": "gzip"})
 
         with tracer.start_as_current_span("upload_data.push_market_boards"):
@@ -147,7 +147,7 @@ def upload_data(market_values, market_boards, server: str):
                 batch = market_boards[:4000]
                 market_boards = market_boards[4000:]
 
-                requests.post(f"{api_url}/update_market_boards?secret={os.getenv("JWT_SECRET")}", json=object_to_json({"server": server, "data": batch}),
+                requests.post(f"{api_url}/update_market_boards?secret={os.getenv('JWT_SECRET')}", json=object_to_json({"server": server, "data": batch}),
                             headers={"Content-Type": "application/json", "Content-Encoding": "gzip"})
 
 
