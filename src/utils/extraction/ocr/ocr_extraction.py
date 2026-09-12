@@ -1,12 +1,15 @@
 from utils.client import Client
-import utils.extraction.ocr.ocr as screenshot
+import utils.extraction.ocr.image_processing as screenshot
 from utils.data.market_values import MarketValues
 from utils.extraction.extractor import Extractor
 from utils.human_movement import wait_like_human, repeat_like_human
 from typing import *
 import pyautogui
 import time
-import traceback
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 class OCRExtractor(Extractor):
@@ -100,6 +103,6 @@ class OCRExtractor(Extractor):
             exit(1)
         except Exception as e:
             self.client._add_to_log(f"Market search failed for {name}: {e}")
-            traceback.print_exc()
+            logger.exception(f"Market search failed for {name}: {e}")
 
             return MarketValues(time.time(), -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1)

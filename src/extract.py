@@ -1,8 +1,8 @@
 import asyncio
+import logging
 import os
 import time
 import sys
-import traceback
 import datetime
 import json
 import requests
@@ -16,6 +16,12 @@ from utils.extraction.network.network_extractor import NetworkExtractor
 from utils.extraction.extractor import Extractor
 from utils.client import Client
 from utils.extraction.network.proxy import stop_proxy
+from utils.observability import setup
+from dotenv import load_dotenv
+from opentelemetry import trace
+
+logger = logging.getLogger(__name__)
+tracer = trace.get_tracer(__name__)
 
 dry_run: bool = False
 api_url: str = "https://api.tibiamarket.top"
@@ -70,11 +76,10 @@ def update_events():
         event = Wiki.get_event_data()
 
         if not dry_run:
-            requests.post(f"{api_url}/add_event?secret={config['jwtSecret']}", json=object_to_json(event),
+            requests.post(f"{api_url}/add_event?secret={os.getenv('JWT_SECRET')}", json=object_to_json(event),
                           headers={"Content-Type": "application/json", "Content-Encoding": "gzip"})
     except Exception as e:
-        traceback.print_exc()
-        print(f"Writing events failed: {e}")
+        logger.exception(f"Writing events failed: {e}")
 
 def update_metadata():
     """
@@ -87,54 +92,63 @@ def update_metadata():
             item.load_from_proto()
 
         if not dry_run:
-            requests.post(f"{api_url}/update_item_metadata?secret={config['jwtSecret']}", json=object_to_json(meta_data),
+            requests.post(f"{api_url}/update_item_metadata?secret={os.getenv('JWT_SECRET')}", json=object_to_json(meta_data),
                           headers={"Content-Type": "application/json", "Content-Encoding": "gzip"})
     except Exception as e:
-        traceback.print_exc()
-        print(f"Writing metadata failed: {e}")
+        logger.exception(f"Writing metadata failed: {e}")
 
 def upload_data(market_values, market_boards, server: str):
-    print(f"Market values: {len(market_values)}")
+    logger.info(f"Market values: {len(market_values)}")
 
     if dry_run:
         return
 
-    # Get the last update time of the server.
-    world_data = requests.get(f"{api_url}/world_data?servers={server}").json()
-    last_update = datetime.datetime.fromisoformat("1970-01-01T00:00:00")
+    with tracer.start_as_current_span("upload_data") as span:
+        span.set_attribute("server", server)
+        span.set_attribute("market_values.count", len(market_values))
+        span.set_attribute("market_boards.count", len(market_boards))
 
-    if world_data:
-        last_update = datetime.datetime.fromisoformat(world_data[0]["last_update"])
-        last_update = last_update.replace(hour=0, minute=0, second=0, microsecond=0) + datetime.timedelta(days=1)
+        # Get the last update time of the server.
+        world_data = requests.get(f"{api_url}/world_data?servers={server}").json()
+        last_update = datetime.datetime.fromisoformat("1970-01-01T00:00:00")
 
-    last_timestamp = last_update.timestamp()
+        if world_data:
+            last_update = datetime.datetime.fromisoformat(world_data[0]["last_update"])
+            last_update = last_update.replace(hour=0, minute=0, second=0, microsecond=0) + datetime.timedelta(days=1)
 
-    # Filter out market_values that are older than the last update time.
-    market_values = [value for value in market_values if value.time > last_timestamp]
+        last_timestamp = last_update.timestamp()
 
-    print(f"Filtered market values: {len(market_values)}")
+        # Filter out market_values that are older than the last update time.
+        market_values = [value for value in market_values if value.time > last_timestamp]
+        span.set_attribute("market_values.filtered_count", len(market_values))
 
-    print("Updating meta data...")
-    update_metadata()
+        logger.info(f"Filtered market values: {len(market_values)}")
 
-    print("Updating events...")
-    update_events()
+        with tracer.start_as_current_span("upload_data.update_metadata"):
+            logger.info("Updating meta data...")
+            update_metadata()
 
-    print("Updating market values...")
-    while market_values:
-        batch = market_values[:4000]
-        market_values = market_values[4000:]
+        with tracer.start_as_current_span("upload_data.update_events"):
+            logger.info("Updating events...")
+            update_events()
 
-        requests.post(f"{api_url}/add_market_values?secret={config['jwtSecret']}", json=object_to_json({"server": server, "data": batch}),
-                    headers={"Content-Type": "application/json", "Content-Encoding": "gzip"})
+        with tracer.start_as_current_span("upload_data.push_market_values"):
+            logger.info("Updating market values...")
+            while market_values:
+                batch = market_values[:4000]
+                market_values = market_values[4000:]
 
-    print("Updating market boards...")
-    while market_boards:
-        batch = market_boards[:4000]
-        market_boards = market_boards[4000:]
+                requests.post(f"{api_url}/add_market_values?secret={os.getenv('JWT_SECRET')}", json=object_to_json({"server": server, "data": batch}),
+                            headers={"Content-Type": "application/json", "Content-Encoding": "gzip"})
 
-        requests.post(f"{api_url}/update_market_boards?secret={config['jwtSecret']}", json=object_to_json({"server": server, "data": batch}),
-                    headers={"Content-Type": "application/json", "Content-Encoding": "gzip"})
+        with tracer.start_as_current_span("upload_data.push_market_boards"):
+            logger.info("Updating market boards...")
+            while market_boards:
+                batch = market_boards[:4000]
+                market_boards = market_boards[4000:]
+
+                requests.post(f"{api_url}/update_market_boards?secret={os.getenv('JWT_SECRET')}", json=object_to_json({"server": server, "data": batch}),
+                            headers={"Content-Type": "application/json", "Content-Encoding": "gzip"})
 
 
 async def do_market_search(character: Character, virtual_display: bool, virtual_display_visible: bool):
@@ -150,18 +164,25 @@ async def do_market_search(character: Character, virtual_display: bool, virtual_
         market_values, market_boards = None, None
 
         try:
-            market_values, market_boards = await extractor.extract_market_values_async()
+            with tracer.start_as_current_span("extract_market_values") as span:
+                span.set_attribute("server", character.server)
+                span.set_attribute("character", character.name or character.username)
+                market_values, market_boards = await extractor.extract_market_values_async()
+                span.set_attribute("market_values.count", len(market_values))
+                span.set_attribute("market_boards.count", len(market_boards))
+                span.set_attribute("extraction.failed_items", getattr(extractor, "failed_item_ids", []))
         except Exception as e:
-            print(f"Market extraction failed: {e}")
+            logger.exception(f"Market extraction failed: {e}")
             extractor.sniffer.save_flows("failed_flows.mitm")
         finally:
             client.exit_tibia()
             stop_proxy()
 
-        await asyncio.to_thread(upload_data, market_values, market_boards, character.server)
+        with tracer.start_as_current_span("upload_results"):
+            await asyncio.to_thread(upload_data, market_values, market_boards, character.server)
 
     while is_tibia_running():
-        print("Tibia is running. Waiting for it to close.")
+        logger.info("Tibia is running. Waiting for it to close.")
         time.sleep(60)
 
     if virtual_display:
@@ -220,7 +241,7 @@ def reorder_schedule():
         slot_length = len(schedule.hours[str(current_slot)])
         slot_capacity = ((current_slot - (1 if current_slot > 10 else 0)) // slots_per_bucket) + 1
 
-        print(f"{character.server} updates at {current_slot}AM German time, every {slot_capacity} days.")
+        logger.info(f"{character.server} updates at {current_slot}AM German time, every {slot_capacity} days.")
 
         if slot_length >= slot_capacity:
             current_slot += 1
@@ -242,46 +263,57 @@ def reorder_schedule():
 async def main():
     global api_url, config, dry_run, schedule
 
-    with open(os.path.join(os.path.dirname(__file__), "config", "config.json"), "r") as c:
-        config = json.loads(c.read())
-        api_url += f":{config['apiPort']}"
+    load_dotenv()
+    setup("tibia-market-tracker-client")
 
-    character = None
+    with tracer.start_as_current_span("tracking") as span:
+        with open(os.path.join(os.path.dirname(__file__), "config", "config.json"), "r") as c:
+            config = json.loads(c.read())
+            api_url += f":{config['apiPort']}"
 
-    if len(sys.argv) != 4:
-        # Get current hour of day.
-        if len(sys.argv) == 2:
-            if sys.argv[1] == "reorder":
-                reorder_schedule()
+        character = None
+
+        if len(sys.argv) != 4:
+            # Get current hour of day.
+            if len(sys.argv) == 2:
+                if sys.argv[1] == "reorder":
+                    reorder_schedule()
+                    sys.exit(0)
+
+                hour = int(sys.argv[1])
+            else:
+                hour = datetime.datetime.now().hour
+
+            read_schedule()
+
+            # Pick the character for the current hour.
+            character = schedule.pick_character(hour)
+            if character is None:
+                logger.warning(f"No character found for hour {hour}.")
                 sys.exit(0)
 
-            hour = int(sys.argv[1])
+            write_schedule()
         else:
-            hour = datetime.datetime.now().hour
+            character = Character(
+                username=sys.argv[1],
+                password=sys.argv[2],
+                slot=int(sys.argv[3])
+            )
 
-        read_schedule()
+        span.set_attributes({
+            "character.username": character.username,
+            "character.slot": character.slot,
+            "character.server": character.server
+        })
 
-        # Pick the character for the current hour.
-        character = schedule.pick_character(hour)
-        if character is None:
-            print(f"No character found for hour {hour}.")
-            sys.exit(0)
+        with tracer.start_as_current_span("download_package"):
+            download_package()
 
-        write_schedule()
-    else:
-        character = Character(
-            username=sys.argv[1],
-            password=sys.argv[2],
-            slot=int(sys.argv[3])
-        )
+        # Ensure that the results location exists.
+        os.makedirs("./results", exist_ok=True)
 
-    download_package()
-
-    # Ensure that the results location exists.
-    os.makedirs("./results", exist_ok=True)
-
-    print(f"Using account {character.username} on slot {character.slot}.")
-    await do_market_search(character, config["useVirtualDisplay"], config["showVirtualDisplay"])
+        logger.info(f"Using account {character.username} on slot {character.slot}.")
+        await do_market_search(character, config["useVirtualDisplay"], config["showVirtualDisplay"])
 
 
 if __name__ == "__main__":

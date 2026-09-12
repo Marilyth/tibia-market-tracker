@@ -1,6 +1,9 @@
 import sys
+import logging
 from xtea import new, MODE_ECB, XTEACipher
 
+
+logger = logging.getLogger(__name__)
 
 _rounds: int = 64
 _byte_order: str = sys.byteorder
@@ -24,7 +27,7 @@ def setup(rounds: int = 64, byte_order: str = sys.byteorder, key_segment: list[i
         _key_string += key_segment.to_bytes(4, byteorder=_byte_order, signed=False)
 
     _xtea = new(_key_string, mode=MODE_ECB, rounds=_rounds, endian="<" if _byte_order == "little" else ">")
-    print(f"Key set to {_key}.")
+    logger.info("XTEA key set.")
 
 def pad_data(data: bytes, length: int = 8) -> bytes:
     """Pads the data to the specified length.

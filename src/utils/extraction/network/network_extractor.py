@@ -10,12 +10,18 @@ from utils.extraction.network.packets.packet_utils import packet_to_marketvalues
 from utils.extraction.network.debugger import XteaDebugger
 from utils.extraction.extractor import Extractor
 from utils.human_movement import wait_like_human_async
-from utils.extraction.network.proxy import start_proxy
+from utils.extraction.network.proxy import start_proxy, get_proxy_env
 from utils.wiki import Wiki
 from tqdm import tqdm
 import time
 import asyncio
+import logging
 from enum import Enum
+from opentelemetry import trace
+
+
+logger = logging.getLogger(__name__)
+tracer = trace.get_tracer(__name__)
 
 
 class NetworkExtractor(Extractor):
@@ -23,13 +29,16 @@ class NetworkExtractor(Extractor):
         super().__init__(client)
         self.sniffer = NetworkSniffer()
         self.xtea_key = None
+        self.failed_item_ids: list[int] = []
 
     async def setup(self, manual_session: bool = False):
         """
         Sets up the network extraction by sniffing packets, logging in, extracting the XTEA key, and opening the market.
         """
-        await start_proxy([self.sniffer])
-        await asyncio.to_thread(self._setup_session)
+        with tracer.start_as_current_span("network_extractor.setup"):
+            await start_proxy([self.sniffer])
+            self.client.env.update(get_proxy_env())
+            await asyncio.to_thread(self._setup_session)
 
         # Don't actually do anything if this is a manual session.
         while manual_session:
@@ -45,7 +54,12 @@ class NetworkExtractor(Extractor):
             await asyncio.sleep(1)
 
         successful_tasks: list[ItemExtractionTask] = []
-        extraction_tasks = [ItemExtractionTask(item.id) for item in Wiki.get_marketable_proto_items().values()]
+
+        # Order items to be closer to how they are displayed in the client.
+        proto_items = Wiki.get_marketable_proto_items().values()
+        proto_items = sorted(proto_items, key=lambda item: (item.flags.market.category, item.name))
+
+        extraction_tasks = [ItemExtractionTask(item.id) for item in proto_items]
 
         last_wiggle = 0
 
@@ -61,6 +75,9 @@ class NetworkExtractor(Extractor):
             if time.time() - last_wiggle > 840:
                 self.client.close_market()
                 self.client.wiggle()
+                
+                if not self.client.open_market():
+                    raise Exception("Failed to open market after wiggle.")
 
                 # First request opens the market, but doesn't get any data.
                 await extraction_tasks[0].request_market_values_async(self.sniffer)
@@ -81,7 +98,8 @@ class NetworkExtractor(Extractor):
                 if task.status != ExtractionTaskStatus.Completed:
                     if task.attempts > max_retry_count:
                         extraction_tasks.remove(task)
-                        print(f"Failed to extract item {task.item_id} after {task.attempts} attempts.")
+                        self.failed_item_ids.append(task.item_id)
+                        logger.warning(f"Failed to extract item {task.item_id} after {task.attempts} attempts.")
                     continue
 
                 successful_tasks.append(task)
@@ -93,7 +111,7 @@ class NetworkExtractor(Extractor):
                 if current_retry_count >= max_retry_count:
                     raise Exception("Failed to extract any market values after multiple retries.")
 
-                print(f"Entire batch failed. {current_retry_count=}")
+                logger.warning(f"Entire batch failed. {current_retry_count=}")
                 current_retry_count += 1
             else:
                 current_retry_count = 0
@@ -126,14 +144,19 @@ class NetworkExtractor(Extractor):
         return market_value_items, market_boards
 
     def _setup_session(self):
-        self.client.start_game()
-        self.client.login_to_game()
+        with tracer.start_as_current_span("network_extractor.start_game"):
+            self.client.start_game()
 
-        self._extract_key()
+        with tracer.start_as_current_span("network_extractor.login"):
+            self.client.login_to_game()
 
-        if not self.client.walk_to_depot():
-            self.client.exit_tibia()
-            raise Exception("Failed to find depot.")
+        with tracer.start_as_current_span("network_extractor.extract_key"):
+            self._extract_key()
+
+        with tracer.start_as_current_span("network_extractor.walk_to_depot"):
+            if not self.client.walk_to_depot():
+                self.client.exit_tibia()
+                raise Exception("Failed to find depot.")
 
     def _extract_key(self):
         setup(key_segment=XteaDebugger().find_key())
@@ -165,18 +188,18 @@ class ItemExtractionTask:
         sniffer.inject_tcp_message(market_browse_packet)
 
         wait_time = time.time() + self.timeout
-        while self.item_id not in sniffer.results:
+        while not sniffer.has_result(self.item_id):
             if time.time() > wait_time:
                 self.status = ExtractionTaskStatus.TimedOut
 
-                if self.item_id in sniffer._browse_results or self.item_id in sniffer._detail_results:
+                if sniffer.has_partial_result(self.item_id):
                     self.status = ExtractionTaskStatus.MissedPackage
 
                 return
 
             await asyncio.sleep(0.1)
 
-        market_detail, market_browse = sniffer.results.pop(self.item_id)
+        market_detail, market_browse = sniffer.pop_result(self.item_id)
         self.extraction_time = time.time()
 
         self.result = (market_detail, market_browse)

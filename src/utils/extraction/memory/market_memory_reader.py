@@ -1,9 +1,13 @@
 import time
+import logging
 from typing import *
 from datetime import datetime, timedelta
 from utils.extraction.memory.memory_reader import MemoryReader
 import ctypes
 from utils.data.market_values import MarketValues
+
+
+logger = logging.getLogger(__name__)
 
 
 class MarketMemoryReader:
@@ -45,7 +49,7 @@ class MarketMemoryReader:
             avg_sell_offer (int): The current maximum sell offer.
             item_id (int): The current item id.
         """
-        print(f"Filtering memory... {buy_offer=}, {sell_offer=}, {max_buy_offer=}, {max_sell_offer=}, {item_id=}")
+        logger.debug(f"Filtering memory... {buy_offer=}, {sell_offer=}, {max_buy_offer=}, {max_sell_offer=}, {item_id=}")
 
         if len(self.buy_offer_reader.addresses) != 1 and buy_offer >= 100:
             self.buy_offer_reader.filter_value(0, ctypes.c_long(buy_offer))
@@ -131,7 +135,7 @@ class MarketMemoryReader:
         amount_sold = amount_sold & 0xFFFFFFFF
         average_sold = (total_sold_gold // amount_sold) if amount_sold > 0 else 0
         item_ids = self.item_id_reader.read_values()[-3:]
-        print(item_ids)
+        logger.debug(item_ids)
 
         # Get the most commonly occuring id in item_ids.
         item_id = max(set(item_ids), key=item_ids.count)
@@ -148,7 +152,7 @@ class MarketMemoryReader:
             if throw_on_duplicate:
                 raise Exception("The current memory is a duplicate of the previous item.")
             else:
-                print(f"The current memory is a duplicate of the previous item. {current_expression}")
+                logger.debug(f"The current memory is a duplicate of the previous item. {current_expression}")
                 was_duplicate = True
         
         self.last_expression = current_expression
@@ -211,5 +215,5 @@ class MarketMemoryReader:
 
         self.last_id = item_id
 
-        print(f"Finished reading memory: {item_id=}, {buy_offer=}, {sell_offer=}, {average_bought=}, {average_sold=}, {amount_bought=}, {amount_sold=}, {max_bought=}, {min_sold=}, {offers_within_24h=}, {sell_offers=}, {buy_offers=}, {max_sold=}, {min_bought=}")
+        logger.debug(f"Finished reading memory: {item_id=}, {buy_offer=}, {sell_offer=}, {average_bought=}, {average_sold=}, {amount_bought=}, {amount_sold=}, {max_bought=}, {min_sold=}, {offers_within_24h=}, {sell_offers=}, {buy_offers=}, {max_sold=}, {min_bought=}")
         return MarketValues(time.time(), sell_offer, buy_offer, average_sold, average_bought, amount_sold, amount_bought, max_sold, min_bought, max(offers_within_24h), sell_offers, buy_offers, min_sold, max_bought, item_id), was_duplicate

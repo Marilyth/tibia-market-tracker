@@ -10,9 +10,14 @@ from typing import *
 import pyautogui
 from tqdm import tqdm
 import random
-import traceback
+import logging
 from utils.human_movement import wait_like_human, repeat_like_human
 import os
+from opentelemetry import trace
+
+
+logger = logging.getLogger(__name__)
+tracer = trace.get_tracer(__name__)
 
 
 class MemoryExtractor(Extractor):
@@ -73,11 +78,12 @@ class MemoryExtractor(Extractor):
 
         for category in tqdm(market_categories[:-1], desc=f"Category"):
             try:
-                items.extend(self.crawl_market(category.index))
+                with tracer.start_as_current_span("memory_extractor.crawl_category") as span:
+                    span.set_attribute("category.index", category.index)
+                    span.set_attribute("category.name", category.name)
+                    items.extend(self.crawl_market(category.index))
             except Exception as e:
-                traceback.print_exc()
-
-                print(f"Error while crawling market: {e}")
+                logger.exception(f"Error while crawling market: {e}")
                 break
 
         return items

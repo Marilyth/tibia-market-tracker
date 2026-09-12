@@ -1,6 +1,7 @@
 import pyautogui
 import subprocess
 import time
+import logging
 from random import uniform
 from typing import *
 import os
@@ -8,7 +9,10 @@ from utils.extraction.memory.memory_reader import MemoryReader
 import shutil
 from utils.human_movement import move_mouse_like_human, wait_like_human, repeat_like_human
 from utils.schedule import Character
+from utils.extraction.ocr.image_processing import find_playspace
 
+
+logger = logging.getLogger(__name__)
 
 depot_tile_orientations = ["West", "North", "South"]
 
@@ -26,6 +30,7 @@ class Client:
         self.tibia_settings_location = os.path.join(self.tibia_data_location, "packages", "Tibia", "conf")
         self.tibia_executable_location = executable_location
         self.character = character
+        self.env = {}
 
         self.tibia: subprocess.Popen = None
         self.tibia_process_id = None
@@ -35,6 +40,7 @@ class Client:
 
         self.position_cache = {}
         self.kick_time = time.time() + 60 * 13
+        self.playspace = None
 
     def start_game(self):
         """Starts Tibia and updates it if necessary.
@@ -45,7 +51,7 @@ class Client:
                 os.remove(os.path.join("/tmp", file))
 
         # Start Tibia.
-        self.tibia: subprocess.Popen = subprocess.Popen([self.tibia_executable_location], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        self.tibia: subprocess.Popen = subprocess.Popen([self.tibia_executable_location], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env={**os.environ, **self.env})
         os.set_blocking(self.tibia.stdout.fileno(), False)
 
         time.sleep(5)
@@ -79,7 +85,8 @@ class Client:
         Checks if the update or install button exists, and if so, installs or updates and starts Tibia.
         """
         # Tibia is using a default client, no need to use the launcher.
-        if self._wait_until_find("images/PasswordField.png", click=False, cache=False, timeout=5)[0] != -1:
+        if self._wait_until_find("images/PasswordField.png", click=False, cache=False, timeout=5)[0] != -1 or \
+            self._wait_until_find("images/Cancel.png", click=False, cache=False, timeout=5)[0] != -1:
             return
 
         # Don't click on the play button yet. We first need to replace the config file after the update.
@@ -129,6 +136,8 @@ class Client:
         # Wait until ingame.
         self._wait_until_find("images/Ingame.png", cache=False)
         self._add_to_log("Ingame.")
+        self.playspace = find_playspace()
+
         self._update_kick_timer()
         self.tibia_process_id = MemoryReader.get_process_id("client")[-1]
 
@@ -167,8 +176,20 @@ class Client:
         if self._wait_until_find("images/Market.png", click=True, cache=False, timeout=5)[0] == -1:
             self._add_to_log("Opening depot")
 
-            # Needs to be adjusted if the resolution is not 1600x900 fullscreen!
-            move_mouse_like_human(645, 345)
+            # Approximate depot screen position.
+            orientation = self.is_at_depot()
+            x, y = 7, 5
+
+            if orientation == "North":
+                y -= 1
+            elif orientation == "South":
+                y += 1
+            elif orientation == "East":
+                x += 1
+            elif orientation == "West":
+                x -= 1
+
+            move_mouse_like_human(*self._get_playspace_tile_coordinate(x, y))
             pyautogui.leftClick()
 
             # Tried to open depot, check if it worked.
@@ -179,7 +200,7 @@ class Client:
         self._wait_until_find("images/Details.png", cache=False, timeout=5)
         return True
 
-    def is_at_depot(self) -> bool:
+    def is_at_depot(self) -> str:
         """
         Checks if the character is at a depot.
 
@@ -190,9 +211,9 @@ class Client:
             x, y = self._wait_until_find(f"images/SuccessDepotTile{orientation}.png", timeout=1, cache=False, exact=True)
 
             if x >= 0:
-                return True
+                return orientation
 
-        return False
+        return None
 
     def walk_to_depot(self) -> bool:
         """
@@ -237,7 +258,7 @@ class Client:
                 depot_index -= 1
 
             depot_index = min(depot_index, len(depots) - 1)
-            print(f"Trying depot {i} ({depot_index})...")
+            logger.info(f"Trying depot {i} ({depot_index})...")
 
             # Order by y and then x coordinate, so we go horizontally through all before switching levels.
             depots = sorted(depots, key=lambda x: (x[1], x[0]))
@@ -367,4 +388,24 @@ class Client:
 
     def _add_to_log(self, message: str):
         self.bot_log.append(message)
-        print(message)
+        logger.info(message)
+
+    def _get_playspace_tile_coordinate(self, x, y) -> Tuple[int, int]:
+        """
+        Returns the screen coordinates of the given tile in the playspace.
+        """
+        if self.playspace is None:
+            raise ValueError("Playspace not found.")
+        
+        if x < 0 or x >= 15 or y < 0 or y >= 11:
+            raise ValueError("Invalid tile coordinate.")
+        
+        x_p, y_p, w, h = self.playspace
+        tile_width = w / 15
+        tile_height = h / 11
+
+        # The playspace isn't 100% accurate, so this aims for the center.
+        x_delta = tile_width * x + tile_width / 2
+        y_delta = tile_height * y + tile_height / 2
+
+        return (x_p + x_delta, y_p + y_delta)

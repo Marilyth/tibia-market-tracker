@@ -22,3 +22,7 @@ flask
 lxml
 bbpb
 mitmproxy
+python-dotenv
+opentelemetry-api
+opentelemetry-sdk
+opentelemetry-exporter-otlp

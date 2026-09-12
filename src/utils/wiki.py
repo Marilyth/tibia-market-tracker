@@ -1,6 +1,7 @@
 import re
 import sys
 import os
+import logging
 from datetime import datetime
 from typing import Dict, List, Tuple
 import requests
@@ -18,6 +19,9 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "data", "proto"))
 
 from utils.data.proto import appearances_pb2
 from utils.data.proto import shared_pb2
+
+
+logger = logging.getLogger(__name__)
 
 
 class EventData(BaseModel):
@@ -171,7 +175,7 @@ class Wiki:
                 for key, value in pretty_name_to_id.items():
                     f.write(f"{key},{value}\n")
         except Exception as e:
-            print(f"Failed to get item ids from wiki. {e}")
+            logger.warning(f"Failed to get item ids from wiki. {e}", exc_info=True)
         
         return id_to_pretty_name
 
@@ -349,7 +353,7 @@ class Wiki:
         """
         appearance = Wiki.get_monsters()[monster_id]
         if "1" not in appearance["3"]:
-            print("wtf")
+            logger.debug("Monster appearance has no outfit id; skipping gif generation.")
             return
         Wiki.generate_gif_for_outfit_id(appearance["3"]["1"])
     

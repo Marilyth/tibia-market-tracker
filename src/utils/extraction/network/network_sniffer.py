@@ -1,7 +1,8 @@
 from xtea import *
 from typing import List
-from mitmproxy import ctx, tcp, http, flow
+from mitmproxy import tcp, http, flow
 from mitmproxy.io import FlowReader, FlowWriter
+from utils.extraction.network.proxy import inject_tcp
 from utils.extraction.network.sequence_manager import SequenceManager
 from utils.extraction.network.packets.packet_utils import read_packet
 from utils.extraction.network.packets.packet_base import PacketBase
@@ -10,10 +11,13 @@ from utils.extraction.network.packets.server.market_browse import MarketBrowse
 from utils.extraction.network.packets.client.market_browse import MarketBrowse as ClientMarketBrowse
 from utils.extraction.network.xtea_utils import decrypt, encrypt, is_ready
 import sys
-import traceback
+import logging
 from threading import Lock
 
 from utils.extraction.network.decompressors import Decompressor
+
+
+logger = logging.getLogger(__name__)
 
 
 class NetworkSniffer:
@@ -67,7 +71,7 @@ class NetworkSniffer:
             http_flow (http.HTTPFlow): The HTTP flow to handle.
         """
         # Ignore requests, we only care about TCP messages.
-        print(f"\n -> {http_flow.request.pretty_url}: {http_flow.request.text[:1024]}")
+        logger.debug(f"\n -> {http_flow.request.pretty_url}: {http_flow.request.text[:1024]}")
 
     def response(self, http_flow: http.HTTPFlow):
         """Handles a response packet.
@@ -76,7 +80,7 @@ class NetworkSniffer:
             http_flow (http.HTTPFlow): The HTTP flow to handle.
         """
         # Ignore responses, we only care about TCP messages.
-        print(f"\n <- {http_flow.request.pretty_url}: {http_flow.response.text[:1024]}")
+        logger.debug(f"\n <- {http_flow.request.pretty_url}: {http_flow.response.text[:1024]}")
 
     def inject_tcp_message(self, packet: PacketBase):
         """Injects a TCP message into the sniffer.
@@ -105,7 +109,7 @@ class NetworkSniffer:
             encrypted_message
         )
 
-        ctx.master.commands.call("inject.tcp", self.main_flow, not packet.from_client, b"injected" + message)
+        inject_tcp(self.main_flow, not packet.from_client, b"injected" + message)
 
     def tcp_message(self, tcp_flow: tcp.TCPFlow):
         """Handles a TCP message packet.
@@ -115,9 +119,14 @@ class NetworkSniffer:
         """
         message = tcp_flow.messages[-1]
 
-        if not tcp_flow in self.flows:
-            self.flows.append(tcp_flow)
-            print(f"New TCP flow from {tcp_flow.client_conn.address} to {tcp_flow.server_conn.address}.")
+        # The proxy runs on its own thread. The flow list is shared with the
+        # application thread (e.g. save_flows), so guard it.
+        with self.queue_lock:
+            is_new_flow = tcp_flow not in self.flows
+
+            if is_new_flow:
+                self.flows.append(tcp_flow)
+                logger.info(f"New TCP flow from {tcp_flow.client_conn.address} to {tcp_flow.server_conn.address}.")
 
         self.handle_packet(tcp_flow, message)
 
@@ -125,19 +134,38 @@ class NetworkSniffer:
         """Returns whether the sniffer is ready for injection."""
         return self.main_flow is not None and is_ready()
 
+    def has_result(self, item_id: int) -> bool:
+        """Returns whether a complete result is available for the given item."""
+        with self.queue_lock:
+            return item_id in self.results
+
+    def pop_result(self, item_id: int) -> tuple[MarketDetail, MarketBrowse]:
+        """Returns and removes the complete result for the given item."""
+        with self.queue_lock:
+            return self.results.pop(item_id)
+
+    def has_partial_result(self, item_id: int) -> bool:
+        """Returns whether only part of the result is available for the given item."""
+        with self.queue_lock:
+            return item_id in self._browse_results or item_id in self._detail_results
+
     def save_flows(self, file_path: str):
         """Saves the flows to a file for later replay.
 
         Args:
             file_path (str): The path to the file to save the flow to.
         """
+        # Snapshot under the lock. the proxy thread may still be appending flows.
+        with self.queue_lock:
+            flows = list(self.flows)
+
         with open(file_path, "wb") as f:
             writer = FlowWriter(f)
 
-            for flow_instance in self.flows:
+            for flow_instance in flows:
                 writer.add(flow_instance)
 
-        print(f"Saved flow to {file_path}.")
+        logger.info(f"Saved flow to {file_path}.")
 
     def handle_packet(self, tcp_flow: tcp.TCPFlow, packet: tcp.TCPMessage):
         """Handles a Tibia packet.
@@ -146,15 +174,13 @@ class NetworkSniffer:
             tcp_flow (tcp.TCPFlow): The TCP flow to handle.
             packet (tcp.TCPMessage): The packet to handle.
         """
-        self.queue_lock.acquire()
-        self.queue.append((tcp_flow, packet))
+        with self.queue_lock:
+            self.queue.append((tcp_flow, packet))
 
-        if is_ready():
-            for tcp_flow, packet in list(self.queue):
-                self.queue.pop()
-                self._handle_packet(tcp_flow, packet)
-
-        self.queue_lock.release()
+            if is_ready():
+                for tcp_flow, packet in list(self.queue):
+                    self.queue.pop()
+                    self._handle_packet(tcp_flow, packet)
 
     @staticmethod
     def bytes_to_readable_string(data: bytes) -> str:
@@ -231,7 +257,7 @@ class NetworkSniffer:
 
         if not is_valid:
             if packet.from_client:
-                print(f"Invalid compression flag: {compression_flag}")
+                logger.warning(f"Invalid compression flag: {compression_flag}")
                 return None
             else:
                 raise Exception(f"Invalid compression flag: {compression_flag}")
@@ -275,10 +301,9 @@ class NetworkSniffer:
             except Exception as e:
                 if not self.blocked_src:
                     self.blocked_src = packet_srv
-                    print(f"Blocked {packet_srv} due to error: {e}")
+                    logger.warning(f"Blocked {packet_srv} due to error: {e}")
 
-                traceback.print_exc()
-                print(f"Error while reading market packet {packet.content}: {e}")
+                logger.exception(f"Error while reading market packet {packet.content}: {e}")
 
             if not result:
                 return
@@ -290,15 +315,15 @@ class NetworkSniffer:
 
             for game_packet in game_packets:
                 if isinstance(game_packet, MarketDetail):
-                    print(f"Received market packet {game_packet.id}.")
+                    logger.debug(f"Received market packet {game_packet.id}.")
                     self._detail_results[game_packet.id] = game_packet
                     self._check_if_item_complete(game_packet.id)
                 elif isinstance(game_packet, MarketBrowse):
-                    print(f"Received market browse packet {game_packet.id}")
+                    logger.debug(f"Received market browse packet {game_packet.id}")
                     self._browse_results[game_packet.id] = game_packet
                     self._check_if_item_complete(game_packet.id)
                 elif isinstance(game_packet, ClientMarketBrowse):
-                    print(f"Sending out client market browse packet {game_packet.id}")
+                    logger.info(f"Sending out client market browse packet {game_packet.id}")
                 else:
                     # Might want to handle other packets in the future.
                     pass

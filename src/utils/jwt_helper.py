@@ -1,5 +1,9 @@
 import jwt
+import logging
 from datetime import datetime, timedelta
+
+
+logger = logging.getLogger(__name__)
 
 
 class JWTHelper:
@@ -44,5 +48,5 @@ class JWTHelper:
         except jwt.ExpiredSignatureError:
             return None, "Token has expired."
         except Exception as e:
-            print(f"Error while decoding token: {e}")
+            logger.warning(f"Error while decoding token: {e}")
             return None, "Invalid token."

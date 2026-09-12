@@ -1,7 +1,7 @@
 import pytest
 from PIL import Image
 
-from utils.extraction.ocr.ocr import take_screenshot, process_image, read_image_text
+from utils.extraction.ocr.image_processing import take_screenshot, process_image, read_image_text, find_playspace
 
 
 class TestScreenshot:
@@ -32,3 +32,29 @@ class TestScreenshot:
 
         # Assert
         assert text.strip() == "2283"
+
+    def test_FindPlayspace1_ReturnsExpected(self):
+        # Arrange
+        image = Image.open("tests/test_images/Playspace1.png")
+
+        # Act
+        x, y, w, h = find_playspace(image)
+
+        # Assert
+        assert abs(x - 472) < 5
+        assert abs(y - 123) < 5
+        assert abs(w - 481) < 5
+        assert abs(h - 353) < 5
+
+    def test_FindPlayspace2_ReturnsExpected(self):
+        # Arrange
+        image = Image.open("tests/test_images/Playspace2.png")
+
+        # Act
+        x, y, w, h = find_playspace(image)
+
+        # Assert
+        assert abs(x - 206) < 5
+        assert abs(y - 60) < 5
+        assert abs(w - 834) < 5
+        assert abs(h - 612) < 5
