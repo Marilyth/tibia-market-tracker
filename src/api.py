@@ -65,7 +65,7 @@ def check_secret(secret: str):
     Raises:
         HTTPException: If the secret is invalid.
     """
-    if secret != config["jwtSecret"]:
+    if secret != os.getenv("JWT_SECRET"):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid secret."
