@@ -2,14 +2,12 @@ from xtea import *
 from typing import List
 from mitmproxy import tcp, http, flow
 from mitmproxy.io import FlowReader, FlowWriter
-from utils.extraction.network.proxy import inject_tcp
-from utils.extraction.network.sequence_manager import SequenceManager
 from utils.extraction.network.packets.packet_utils import read_packet
 from utils.extraction.network.packets.packet_base import PacketBase
 from utils.extraction.network.packets.server.market_detail import MarketDetail
 from utils.extraction.network.packets.server.market_browse import MarketBrowse
 from utils.extraction.network.packets.client.market_browse import MarketBrowse as ClientMarketBrowse
-from utils.extraction.network.xtea_utils import decrypt, encrypt, is_ready
+from utils.extraction.network.xtea_utils import decrypt, is_ready
 import sys
 import logging
 from threading import Lock
@@ -34,11 +32,10 @@ class NetworkSniffer:
         self.queue_lock = Lock()
         self.prev = bytes()
         self.flow_file = None
-        self.main_flow = None
-        self.sequence_numbers: dict[tuple, SequenceManager] = {}
         self.results: dict[int, tuple[MarketDetail, MarketBrowse]] = {}
         self._detail_results: dict[int, MarketDetail] = {}
         self._browse_results: dict[int, MarketBrowse] = {}
+        self.client_market_browse_ids: list[int] = []
 
     def replay(self, record_file: str = "flow.mitm"):
         """Replays the flow file that was written by the sniffer.
@@ -82,35 +79,6 @@ class NetworkSniffer:
         # Ignore responses, we only care about TCP messages.
         logger.debug(f"\n <- {http_flow.request.pretty_url}: {http_flow.response.text[:1024]}")
 
-    def inject_tcp_message(self, packet: PacketBase):
-        """Injects a TCP message into the sniffer.
-
-        Args:
-            message (bytes): The TCP message to inject.
-            to_client (bool): Whether the message is from the client or server.
-        """
-        # Add a padding length byte to the encrypted message.
-        message = packet.packet
-
-        padding_bytes = (8 - (len(message) + 1) % 8) % 8
-        message = padding_bytes.to_bytes(1, 'little') + message
-
-        encrypted_message = encrypt(message)
-
-        # Build and prepend header.
-        length = len(encrypted_message) // 8
-        sequence_number = 0 # Sequence number is adjusted later.
-        compression_flag = 0
-
-        message = (
-            length.to_bytes(2, 'little') +
-            sequence_number.to_bytes(2, 'little') +
-            compression_flag.to_bytes(2, 'little') +
-            encrypted_message
-        )
-
-        inject_tcp(self.main_flow, not packet.from_client, b"injected" + message)
-
     def tcp_message(self, tcp_flow: tcp.TCPFlow):
         """Handles a TCP message packet.
 
@@ -129,10 +97,6 @@ class NetworkSniffer:
                 logger.info(f"New TCP flow from {tcp_flow.client_conn.address} to {tcp_flow.server_conn.address}.")
 
         self.handle_packet(tcp_flow, message)
-
-    def is_ready_for_injection(self) -> bool:
-        """Returns whether the sniffer is ready for injection."""
-        return self.main_flow is not None and is_ready()
 
     def has_result(self, item_id: int) -> bool:
         """Returns whether a complete result is available for the given item."""
@@ -203,11 +167,6 @@ class NetworkSniffer:
         if not raw_data:
             return
 
-        is_injected = raw_data.startswith(b"injected")
-        if is_injected:
-            raw_data = raw_data[8:]
-            packet.content = raw_data
-
         sender = tcp_flow.client_conn.address if packet.from_client else tcp_flow.server_conn.address
 
         # First 2 bytes are the size of the packet load in multiples of 8 bytes (minus the header) in little endian. I.e. 0c00 is 12 bytes.
@@ -239,17 +198,6 @@ class NetworkSniffer:
         if packet_size < actual_size:
             next_data = raw_data[6 + packet_size:]
             raw_data = raw_data[:packet_size + 6]
-
-        # Handle sequence number changes in case packages were injected.
-        if not sender in self.sequence_numbers:
-            self.sequence_numbers[sender] = SequenceManager()
-
-        sequence_manager = self.sequence_numbers[sender]
-
-        # The sequence number needs to be adjusted if any messages were injected.
-        # Otherwise the connection drops.
-        adjusted_packet_content = sequence_manager.adjust_sequence_number(raw_data, is_injected)
-        packet.content = packet.content.replace(raw_data, adjusted_packet_content)
 
         # Decrypt the packet.
         decrypted_data = decrypt(raw_data[6:6 + packet_size])
@@ -308,9 +256,6 @@ class NetworkSniffer:
             if not result:
                 return
 
-            # Set main flow for injections.
-            self.main_flow = flow
-
             game_packets, next_data = result
 
             for game_packet in game_packets:
@@ -324,6 +269,7 @@ class NetworkSniffer:
                     self._check_if_item_complete(game_packet.id)
                 elif isinstance(game_packet, ClientMarketBrowse):
                     logger.info(f"Sending out client market browse packet {game_packet.id}")
+                    self.client_market_browse_ids.append(game_packet.id)
                 else:
                     # Might want to handle other packets in the future.
                     pass

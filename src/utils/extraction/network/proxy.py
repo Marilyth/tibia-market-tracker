@@ -75,18 +75,6 @@ async def start_proxy(addons: List):
         await asyncio.sleep(0.5)
 
 
-def inject_tcp(flow, to_client: bool, message: bytes):
-    """Injects a TCP message into the proxy from the application's thread.
-
-    The command is marshalled onto the proxy event loop so that mitmproxy writes
-    to its transports from the proxy thread.
-    """
-    if _proxy_loop is None or master is None:
-        raise RuntimeError("Proxy is not running.")
-
-    _proxy_loop.call_soon_threadsafe(master.commands.call, "inject.tcp", flow, to_client, message)
-
-
 def get_proxy_env() -> dict:
     """Returns the environment variables that route traffic through the proxy.
     """
