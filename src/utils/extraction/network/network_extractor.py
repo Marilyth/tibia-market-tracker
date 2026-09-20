@@ -117,12 +117,13 @@ class NetworkExtractor(Extractor):
             if not missing_ids:
                 return results
 
-            await wait_like_human_async(self.RETRY_DELAY)
             repeat_like_human(lambda: pyautogui.press("up"), len(item_ids), wait_time=0.1)
+            await wait_like_human_async(self.RETRY_DELAY)
+            
             retry_ids, retry_results, _ = await self._read_batch(len(item_ids), detect_category_end=False)
 
             if retry_ids != item_ids:
-                logger.warning("Market selection changed while retrying: expected=%s got=%s", item_ids, retry_ids)
+                logger.warning(f"Market selection changed while retrying: expected={item_ids} got={retry_ids}")
 
             for item_id in missing_ids:
                 if item_id in retry_results:
@@ -132,7 +133,7 @@ class NetworkExtractor(Extractor):
         for item_id in missing_ids:
             if item_id not in self.failed_item_ids:
                 self.failed_item_ids.append(item_id)
-            logger.warning("Failed to extract item %s after %s retries.", item_id, self.MAX_RETRIES)
+            logger.warning(f"Failed to extract item {item_id} after {self.MAX_RETRIES} retries.")
 
         return results
 
@@ -174,14 +175,19 @@ class NetworkExtractor(Extractor):
         if detect_category_end:
             category_item_ids.extend(item_ids)
             self._category_item_ids = category_item_ids
+            logger.debug(f"Received {category_item_ids=}")
 
         if detect_category_end and item_ids and len(item_ids) < count and len(category_item_ids) >= 2:
+            logger.info(f"Did not receive {count} items, checking if we reached the category boundary.")
+
             # Check if the item above the current is the second to last item we received.
             # If so, the lack of a full batch is due to the category boundary.
             await wait_like_human_async(self.RETRY_DELAY)
             pyautogui.press("up")
 
             observed_previous_id = await self._wait_for_client_browse()
+            await wait_like_human_async(self.ITEM_DELAY)
+
             expected_previous_id = category_item_ids[-2]
             category_finished = observed_previous_id == expected_previous_id
 
