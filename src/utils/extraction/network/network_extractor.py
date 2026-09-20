@@ -100,50 +100,23 @@ class NetworkExtractor(Extractor):
                 last_wiggle = time.monotonic()
 
             item_ids, batch_results, category_finished = await self._read_batch(self.BATCH_SIZE)
-            if not item_ids:
+
+            for key in batch_results:
+                results[key] = batch_results[key]
+
+            if category_finished or not item_ids:
                 return last_wiggle
 
-            batch_results = await self._retry_batch(item_ids, batch_results)
-            self._store_batch_results(batch_results, marketable_ids, results, progress_bar)
-            item_offset += len(item_ids)
+            # We did not get the expected number of items, so retry this batch.
+            if not category_finished and len(batch_results) < self.BATCH_SIZE:
+                for _ in range(self.BATCH_SIZE):
+                    pyautogui.press("up")
+                    await wait_like_human_async(0.1)
 
-            if category_finished:
-                return last_wiggle
-
-    async def _retry_batch(self, item_ids: list[int], results: dict[int, MarketResult]) -> dict[int, MarketResult]:
-        """Retries missing responses while rewinding the market selection."""
-        for _ in range(self.MAX_RETRIES):
-            missing_ids = [item_id for item_id in item_ids if item_id not in results]
-            if not missing_ids:
-                return results
-
-            repeat_like_human(lambda: pyautogui.press("up"), len(item_ids), wait_time=0.1)
-            await wait_like_human_async(self.RETRY_DELAY)
-            
-            retry_ids, retry_results, _ = await self._read_batch(len(item_ids), detect_category_end=False)
-
-            if retry_ids != item_ids:
-                logger.warning(f"Market selection changed while retrying: expected={item_ids} got={retry_ids}")
-
-            for item_id in missing_ids:
-                if item_id in retry_results:
-                    results[item_id] = retry_results[item_id]
-
-        missing_ids = [item_id for item_id in item_ids if item_id not in results]
-        for item_id in missing_ids:
-            if item_id not in self.failed_item_ids:
-                self.failed_item_ids.append(item_id)
-            logger.warning(f"Failed to extract item {item_id} after {self.MAX_RETRIES} retries.")
-
-        return results
-
-    @staticmethod
-    def _store_batch_results(batch_results: dict[int, MarketResult], marketable_ids: set[int], results: dict[int, MarketResult], progress_bar: tqdm) -> None:
-        """Adds a batch to the aggregate and advances progress for new items."""
-        for item_id, result in batch_results.items():
-            if item_id in marketable_ids and item_id not in results:
-                progress_bar.update(1)
-            results[item_id] = result
+                await wait_like_human_async(self.RETRY_DELAY)
+                self.sniffer.client_market_browse_ids.clear()
+            else:
+                item_offset += len(item_ids)
 
     def _select_category(self, category_index: int, item_offset: int = 0) -> None:
         """Focuses the market item list at the requested category and offset."""
@@ -161,6 +134,8 @@ class NetworkExtractor(Extractor):
         category_finished = False
 
         for _ in range(count):
+            await wait_like_human_async(self.ITEM_DELAY)
+
             pyautogui.press("down")
             item_id = await self._wait_for_client_browse()
 
@@ -170,7 +145,6 @@ class NetworkExtractor(Extractor):
                 break
 
             item_ids.append(item_id)
-            await wait_like_human_async(self.ITEM_DELAY)
 
         if detect_category_end:
             category_item_ids.extend(item_ids)
@@ -178,7 +152,7 @@ class NetworkExtractor(Extractor):
             logger.debug(f"Received {category_item_ids=}")
 
         if detect_category_end and item_ids and len(item_ids) < count and len(category_item_ids) >= 2:
-            logger.info(f"Did not receive {count} items, checking if we reached the category boundary.")
+            logger.info(f"Did not send out {count} items, checking if we reached the category boundary.")
 
             # Check if the item above the current is the second to last item we received.
             # If so, the lack of a full batch is due to the category boundary.
