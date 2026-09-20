@@ -298,7 +298,7 @@ class Client:
 
         # Wait until the icon stop moving.
         while True:
-            pyautogui.sleep(2)
+            pyautogui.sleep(5)
             new_coordinate = pyautogui.locateCenterOnScreen("images/DepotIcon.png")
 
             # If the icon stopped moving, or disappeared, consider it reached.
