@@ -210,6 +210,9 @@ def read_schedule():
 
 
 def write_schedule():
+    if schedule is None:
+        return
+    
     # Write updated schedule back to file.
     with open(os.path.join(os.path.dirname(__file__), "config", "schedule.json"), "w") as s:
         s.write(object_to_json(schedule.hours, indent=4))
