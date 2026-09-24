@@ -5,7 +5,6 @@ from collections.abc import Callable
 
 import pyautogui
 from opentelemetry import trace
-from tqdm import tqdm
 
 from utils.client import Client
 from utils.data.market_values import MarketBoard, MarketBoardTraderData, MarketValues
@@ -41,8 +40,7 @@ class NetworkExtractor(Extractor):
     def __init__(self, client: Client) -> None:
         super().__init__(client)
         self.sniffer = NetworkSniffer()
-        self.failed_item_ids: list[int] = []
-        self._category_item_ids: list[int] = []
+        self.results: dict[int, MarketResult] = {}
 
     async def setup(self, manual_session: bool = False) -> None:
         """Sets up passive packet capture, logs in, extracts XTEA, and walks to the depot."""
@@ -58,65 +56,64 @@ class NetworkExtractor(Extractor):
         """Extracts market values by navigating the market UI and reading server packets."""
         await self._wait_until_ready()
 
-        marketable_ids = set(Wiki.get_marketable_proto_items())
-        results: dict[int, MarketResult] = {}
-        progress_bar = tqdm(total=len(marketable_ids), desc="Extracting market values")
+        if not self.client.open_market():
+            raise RuntimeError("Failed to open market.")
 
-        try:
-            if not self.client.open_market():
-                raise RuntimeError("Failed to open market.")
+        # The final "Weapons: All" category duplicates the specific weapon categories.
+        for category in market_categories[:-1]:
+            await self._extract_category(category.index)
 
-            # Use monotonic to ensure we don't get affected by system time changes.
-            last_wiggle = time.monotonic()
-
-            # The final "Weapons: All" category duplicates the specific weapon categories.
-            for category in market_categories[:-1]:
-                last_wiggle = await self._extract_category(category.index, marketable_ids, results, progress_bar, last_wiggle)
-        finally:
-            progress_bar.close()
-
-        return self._convert_results(results, marketable_ids)
+        return self._convert_results()
 
     async def _wait_until_ready(self) -> None:
         """Waits until packet decryption has been initialized."""
         while not is_ready():
             await asyncio.sleep(0.1)
 
-    async def _extract_category(self, category_index: int, marketable_ids: set[int], results: dict[int, MarketResult], progress_bar: tqdm, last_wiggle: float) -> float:
+    async def _extract_category(self, category_index: int):
         """Extracts every visible item in one market category."""
-        self._category_item_ids = []
         self._select_category(category_index)
         item_offset = 0
+        retries = 0
 
         while True:
             # Ensure we don't get kicked out for inactivity by wiggling.
-            if time.monotonic() - last_wiggle > self.WIGGLE_INTERVAL:
+            if self.client.kick_time < time.time():
                 self.client.close_market()
                 self.client.wiggle()
                 if not self.client.open_market():
                     raise RuntimeError("Failed to open market after wiggle.")
 
                 self._select_category(category_index, item_offset)
-                last_wiggle = time.monotonic()
 
-            item_ids, batch_results, category_finished = await self._read_batch(self.BATCH_SIZE)
+            sent_ids, received = await self._read_batch(self.BATCH_SIZE)
 
-            for key in batch_results:
-                results[key] = batch_results[key]
+            for key in received:
+                self.results[key] = received[key]
 
-            if category_finished or not item_ids:
-                return last_wiggle
+            if len(received) < len(sent_ids):
+                retries += 1
 
-            # We did not get the expected number of items, so retry this batch.
-            if not category_finished and len(batch_results) < self.BATCH_SIZE:
-                for _ in range(self.BATCH_SIZE):
-                    pyautogui.press("up")
-                    await wait_like_human_async(0.1)
+                if retries > self.MAX_RETRIES:
+                    raise Exception(f"Failed to extract items from category {category_index} after {retries} retries.")
 
+                logger.warning(f"Requested {len(sent_ids)} items, but only received {len(received)}. Retrying batch ({retries}/{self.MAX_RETRIES}).")
+
+                await repeat_like_human(lambda: pyautogui.press("up"), len(sent_ids), 0.1, 0.03)
                 await wait_like_human_async(self.RETRY_DELAY)
-                self.sniffer.client_market_browse_ids.clear()
-            else:
-                item_offset += len(item_ids)
+                continue
+            
+            retries = 0
+            item_offset += len(received)
+
+            # Sent out less items than expected. Assume we are done.
+            if len(sent_ids) < self.BATCH_SIZE:
+                break
+
+        logger.info(f"Extracted {item_offset} items from category {category_index}.")
+
+        if item_offset == 0:
+            raise Exception(f"Failed to extract items from category {category_index}.")
 
     def _select_category(self, category_index: int, item_offset: int = 0) -> None:
         """Focuses the market item list at the requested category and offset."""
@@ -127,11 +124,10 @@ class NetworkExtractor(Extractor):
         if item_offset:
             repeat_like_human(lambda: pyautogui.press("down"), item_offset, wait_time=0.06, target_deviation=0.01)
 
-    async def _read_batch(self, count: int, *, detect_category_end: bool = True) -> tuple[list[int], dict[int, MarketResult], bool]:
+    async def _read_batch(self, count: int) -> tuple[list[int], dict[int, MarketResult], bool]:
         """Selects items, identifies them from observed client packets, and reads their results."""
-        category_item_ids = self._category_item_ids
-        item_ids = []
-        category_finished = False
+        self.sniffer.client_market_browse_ids.clear()
+        sent_ids = []
 
         for _ in range(count):
             await wait_like_human_async(self.ITEM_DELAY)
@@ -139,45 +135,25 @@ class NetworkExtractor(Extractor):
             pyautogui.press("down")
             item_id = await self._wait_for_client_browse()
 
-            # If no packet was sent out, assume we are done for now.
-            # Might need retry later.
+            # No packet was sent out. Retry to ensure this was no error.
+            if item_id is None:
+                await wait_like_human_async(0.1, 0.05)
+                pyautogui.press("up")
+                await wait_like_human_async(self.RETRY_DELAY)
+
+                pyautogui.press("down")
+                item_id = await self._wait_for_client_browse()
+            
+            # No packet was sent out again. Assume we are finished.
             if item_id is None:
                 break
 
-            item_ids.append(item_id)
+            sent_ids.append(item_id)
 
-        if detect_category_end:
-            category_item_ids.extend(item_ids)
-            self._category_item_ids = category_item_ids
-            logger.debug(f"Received {category_item_ids=}")
+        logger.debug(f"Sent {sent_ids=}")
 
-        if detect_category_end and item_ids and len(item_ids) < count and len(category_item_ids) >= 2:
-            logger.info(f"Did not send out {count} items, checking if we reached the category boundary.")
-
-            # Check if the item above the current is the second to last item we received.
-            # If so, the lack of a full batch is due to the category boundary.
-            await wait_like_human_async(self.RETRY_DELAY)
-            pyautogui.press("up")
-
-            observed_previous_id = await self._wait_for_client_browse()
-            await wait_like_human_async(self.ITEM_DELAY)
-
-            expected_previous_id = category_item_ids[-2]
-            category_finished = observed_previous_id == expected_previous_id
-
-            # Restore focus to the last item so a retry rewinds the
-            # complete batch from a known position.
-            pyautogui.press("down")
-            await self._wait_for_client_browse()
-
-            if not category_finished:
-                raise RuntimeError(
-                    f"Short market batch did not reach the category boundary: "
-                    f"{item_ids=}, {expected_previous_id=}, {observed_previous_id=}"
-                )
-
-        results = await asyncio.gather(*(self._wait_for_result(item_id) for item_id in item_ids))
-        return item_ids, {item_id: result for item_id, result in zip(item_ids, results) if result is not None}, category_finished
+        results = await asyncio.gather(*(self._wait_for_result(item_id) for item_id in sent_ids))
+        return sent_ids, {item_id: result for item_id, result in zip(sent_ids, results) if result is not None}
 
     async def _wait_for_client_browse(self) -> int | None:
         """Waits for the client to send a market browse packet and returns the item ID."""
@@ -205,14 +181,11 @@ class NetworkExtractor(Extractor):
 
         return True
 
-    def _convert_results(self, results: dict[int, MarketResult], marketable_ids: set[int]) -> tuple[list[MarketValues], list[MarketBoard]]:
+    def _convert_results(self) -> tuple[list[MarketValues], list[MarketBoard]]:
         market_values: list[MarketValues] = []
         market_boards: list[MarketBoard] = []
 
-        for item_id, (details, browse, extraction_time) in results.items():
-            if item_id not in marketable_ids:
-                continue
-
+        for item_id, (details, browse, extraction_time) in self.results.items():
             values, historical_values = packet_to_marketvalues(details, browse)
             market_boards.append(MarketBoard(id=details.id, sellers=self._market_board_traders(browse.sell_offers), buyers=self._market_board_traders(browse.buy_offers, reverse=True), update_time=extraction_time))
             market_values.extend(reversed(historical_values))
