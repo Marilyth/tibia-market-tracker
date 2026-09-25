@@ -209,6 +209,8 @@ class NetworkExtractor(Extractor):
         with tracer.start_as_current_span("network_extractor.login"):
             self.client.login_to_game()
 
+        # Wait a bit for BattlEye to relax.
+        time.sleep(5)
         with tracer.start_as_current_span("network_extractor.extract_key"):
             self._extract_key()
 
