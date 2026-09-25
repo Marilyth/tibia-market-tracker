@@ -32,6 +32,7 @@ class XteaDebugger:
 
         # Convert to hex for gdb.
         self.breakpoint_address = hex(address)
+        logger.info(f"Found breakpoint address: {self.breakpoint_address}")
 
     def find_key(self) -> List[int]:
         """Attach gdb to the process self.process_id and set a breakpoint at the address self.breakpoint_address.
@@ -54,11 +55,22 @@ class XteaDebugger:
         logger.debug(f"{gdb_output=}")
         keys = [key for key in gdb_output.split(":\t")[1].split("\n")[0].split("\t") if key]
 
+
         # Keys are in 0x00 format, convert to bytes.
         keys = [int(key, 16) for key in keys]
 
         # Write key to file for debugging purposes.
         with open("key.txt", "w") as f:
             f.write(",".join([str(k) for k in keys]))
+
+        logger.info(f"Found key: {keys}")
+
+        # Log the context around the key in memory.
+        key_bytes = bytearray(keys)
+        memory_reader = MemoryReader(self.process_id)
+        addresses = memory_reader.filter_value(key_bytes)
+        for address in addresses:
+            context = memory_reader.get_context(address, 150)
+            logger.debug(f"Context around key: {context}")
 
         return keys
