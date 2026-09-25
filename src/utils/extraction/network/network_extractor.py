@@ -159,7 +159,7 @@ class NetworkExtractor(Extractor):
                 raise Exception("Failed to find depot.")
 
     def _extract_key(self):
-        setup(key_segment=XteaDebugger().find_key())
+        setup(key_segment=XteaDebugger().find_key_by_anchor())
 
 
 class ItemExtractionTask:
