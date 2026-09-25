@@ -32,7 +32,7 @@ class NetworkExtractor(Extractor):
 
     BATCH_SIZE = 12
     MAX_RETRIES = 5
-    ITEM_DELAY = 0.42
+    ITEM_DELAY = 0.5 # Higher bursts are possible, but generally 2 items per second should be safer.
     RETRY_DELAY = 5
     PACKET_TIMEOUT = 2
     WIGGLE_INTERVAL = 14 * 60
