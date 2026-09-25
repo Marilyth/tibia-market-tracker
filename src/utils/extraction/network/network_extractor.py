@@ -99,7 +99,7 @@ class NetworkExtractor(Extractor):
 
                 logger.warning(f"Requested {len(sent_ids)} items, but only received {len(received)}. Retrying batch ({retries}/{self.MAX_RETRIES}).")
 
-                await repeat_like_human(lambda: pyautogui.press("up"), len(sent_ids), 0.1, 0.03)
+                repeat_like_human(lambda: pyautogui.press("up"), len(sent_ids), 0.1, 0.03)
                 await wait_like_human_async(self.RETRY_DELAY)
                 continue
             
