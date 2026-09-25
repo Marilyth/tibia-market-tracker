@@ -118,6 +118,13 @@ class NetworkExtractor(Extractor):
     def _select_category(self, category_index: int, item_offset: int = 0) -> None:
         """Focuses the market item list at the requested category and offset."""
         self.sniffer.client_market_browse_ids.clear()
+
+        # Start on a fresh screen each time so hitting the right locations is easier.
+        self.client.close_market()
+        self.client.wiggle()
+        if not self.client.open_market():
+            raise RuntimeError("Failed to open market after wiggle.")
+        
         self.client._wait_until_find("images/Category.png", click=True, cache=False, coordinate_deviation=1, throw_on_timeout=True)
         repeat_like_human(lambda: pyautogui.press("down"), category_index, wait_time=0.1)
         repeat_like_human(lambda: pyautogui.press("tab"), 10, wait_time=0.1)
