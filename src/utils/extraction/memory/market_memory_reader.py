@@ -1,9 +1,8 @@
 import time
 import logging
-from typing import *
 from datetime import datetime, timedelta
 from utils.extraction.memory.memory_reader import MemoryReader
-import ctypes
+from utils.extraction.memory.process_memory import ProcessMemory
 from utils.data.market_values import MarketValues
 
 
@@ -12,11 +11,12 @@ logger = logging.getLogger(__name__)
 
 class MarketMemoryReader:
     def __init__(self, p_id: int):
-        self.buy_details_reader: MemoryReader = MemoryReader(p_id=p_id)
-        self.sell_details_reader: MemoryReader = MemoryReader(process=self.buy_details_reader.process)
-        self.buy_offer_reader: MemoryReader = MemoryReader(process=self.buy_details_reader.process)
-        self.sell_offer_reader: MemoryReader = MemoryReader(process=self.buy_details_reader.process)
-        self.item_id_reader: MemoryReader = MemoryReader(process=self.buy_details_reader.process)
+        self.process = ProcessMemory(p_id, include={"heap"})
+        self.buy_details_reader = MemoryReader(process=self.process)
+        self.sell_details_reader = MemoryReader(process=self.process)
+        self.buy_offer_reader = MemoryReader(process=self.process)
+        self.sell_offer_reader = MemoryReader(process=self.process)
+        self.item_id_reader = MemoryReader(process=self.process)
         self.past_offers = 32
         
         # Values to determine if current memory belongs to the current item.
@@ -26,6 +26,19 @@ class MarketMemoryReader:
         self.last_id = 0
         
         self.has_finished_filtering = False
+
+    def close(self) -> None:
+        self.process.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.close()
+
+    @staticmethod
+    def _read_ints(reader: MemoryReader, signed=True):
+        return [int.from_bytes(value, "little", signed=signed) for value in reader.read_values()]
 
     def reset(self):
         """Resets the memory reader to the initial state.
@@ -52,15 +65,15 @@ class MarketMemoryReader:
         logger.debug(f"Filtering memory... {buy_offer=}, {sell_offer=}, {max_buy_offer=}, {max_sell_offer=}, {item_id=}")
 
         if len(self.buy_offer_reader.addresses) != 1 and buy_offer >= 100:
-            self.buy_offer_reader.filter_value(0, ctypes.c_long(buy_offer))
+            self.buy_offer_reader.filter_value(buy_offer.to_bytes(8, "little", signed=True))
         if len(self.sell_offer_reader.addresses) != 1 and sell_offer >= 100:
-            self.sell_offer_reader.filter_value(0, ctypes.c_long(sell_offer))
+            self.sell_offer_reader.filter_value(sell_offer.to_bytes(8, "little", signed=True))
         if len(self.buy_details_reader.addresses) != 1 and max_buy_offer >= 100:
-            self.buy_details_reader.filter_value(0, ctypes.c_long(max_buy_offer))
+            self.buy_details_reader.filter_value(max_buy_offer.to_bytes(8, "little", signed=True))
         if len(self.sell_details_reader.addresses) != 1 and max_sell_offer >= 100:
-            self.sell_details_reader.filter_value(0, ctypes.c_long(max_sell_offer))
+            self.sell_details_reader.filter_value(max_sell_offer.to_bytes(8, "little", signed=True))
         if len(self.item_id_reader.addresses) != 1 and item_id >= 100:
-            self.item_id_reader.filter_value(0, ctypes.c_uint16(item_id))
+            self.item_id_reader.filter_value(item_id.to_bytes(2, "little"))
 
         if len(self.buy_offer_reader.addresses) == 1 and len(self.sell_offer_reader.addresses) == 1 and\
             len(self.buy_details_reader.addresses) == 1 and len(self.sell_details_reader.addresses) == 1:
@@ -127,14 +140,14 @@ class MarketMemoryReader:
         Returns:
             MarketValues: The MarketValues for the current item.
         """
-        max_bought, min_bought, total_bought_gold, amount_bought = self.buy_details_reader.read_values()
+        max_bought, min_bought, total_bought_gold, amount_bought = self._read_ints(self.buy_details_reader)
         amount_bought = amount_bought & 0xFFFFFFFF
         average_bought = (total_bought_gold // amount_bought) if amount_bought > 0 else 0
 
-        max_sold, min_sold, total_sold_gold, amount_sold = self.sell_details_reader.read_values()
+        max_sold, min_sold, total_sold_gold, amount_sold = self._read_ints(self.sell_details_reader)
         amount_sold = amount_sold & 0xFFFFFFFF
         average_sold = (total_sold_gold // amount_sold) if amount_sold > 0 else 0
-        item_ids = self.item_id_reader.read_values()[-3:]
+        item_ids = self._read_ints(self.item_id_reader, signed=False)[-3:]
         logger.debug(item_ids)
 
         # Get the most commonly occuring id in item_ids.
@@ -144,8 +157,8 @@ class MarketMemoryReader:
         
         current_expression = f"{max_bought},{min_bought},{total_bought_gold},{amount_bought},{average_bought}" +\
                              f"{max_sold},{min_sold},{total_sold_gold},{amount_sold},{average_sold}" +\
-                             ",".join([str(x) for x in self.buy_offer_reader.read_values()]) +\
-                             ",".join([str(x) for x in self.sell_offer_reader.read_values()])
+                             ",".join([str(x) for x in self._read_ints(self.buy_offer_reader)]) +\
+                             ",".join([str(x) for x in self._read_ints(self.sell_offer_reader)])
         
         # Check if this memory is a duplicate of the last item. If so, probably nonexistent item.
         if current_expression == self.last_expression:
@@ -157,8 +170,8 @@ class MarketMemoryReader:
         
         self.last_expression = current_expression
         
-        buy_offer_values = self.buy_offer_reader.read_values()
-        sell_offer_values = self.sell_offer_reader.read_values()
+        buy_offer_values = self._read_ints(self.buy_offer_reader)
+        sell_offer_values = self._read_ints(self.sell_offer_reader)
         
         now_timestamp = (datetime.now() + timedelta(30)).timestamp()
         current_timestamp = datetime.now().timestamp()
