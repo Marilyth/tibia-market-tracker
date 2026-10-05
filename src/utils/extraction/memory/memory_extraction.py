@@ -73,20 +73,20 @@ class MemoryExtractor(Extractor):
         self.market_reader.get_current_market_values("tibia coins", scan_run=True)
 
     def extract_market_values_async(self) -> List[MarketValues]:
-        self.market_reader = MarketMemoryReader(self.client.tibia_process_id)
         items = []
 
-        for category in tqdm(market_categories[:-1], desc=f"Category"):
-            try:
-                with tracer.start_as_current_span("memory_extractor.crawl_category") as span:
-                    span.set_attribute("category.index", category.index)
-                    span.set_attribute("category.name", category.name)
-                    items.extend(self.crawl_market(category.index))
-            except Exception as e:
-                logger.exception(f"Error while crawling market: {e}")
-                break
+        with MarketMemoryReader(self.client.tibia_process_id) as self.market_reader:
+            for category in tqdm(market_categories[:-1], desc=f"Category"):
+                try:
+                    with tracer.start_as_current_span("memory_extractor.crawl_category") as span:
+                        span.set_attribute("category.index", category.index)
+                        span.set_attribute("category.name", category.name)
+                        items.extend(self.crawl_market(category.index))
+                except Exception as e:
+                    logger.exception(f"Error while crawling market: {e}")
+                    break
 
-        return items
+            return items
 
     def crawl_market(self, category_index: int, starting_index: int = 0) -> List[MarketValues]:
         """
