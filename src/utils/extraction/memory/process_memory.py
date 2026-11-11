@@ -11,6 +11,7 @@ CHUNK_SIZE = 1024 * 1024
 
 class ProcessMemory:
     def __init__(self, pid, include=None, exclude=None):
+        # Might need to run sudo sysctl kernel.yama.ptrace_scope=0 first to allow for non sudo.
         self.pid = pid
         self.include = include
         self.exclude = exclude

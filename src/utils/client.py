@@ -2,7 +2,7 @@ import pyautogui
 import subprocess
 import time
 import logging
-from random import uniform
+from random import uniform, randint
 from typing import *
 import os
 from utils.extraction.memory.memory_reader import MemoryReader
@@ -14,6 +14,7 @@ from utils.extraction.ocr.image_processing import find_playspace
 
 logger = logging.getLogger(__name__)
 
+pyautogui.useImageNotFoundException(False)
 depot_tile_orientations = ["West", "North", "South"]
 
 class Client:
@@ -352,34 +353,44 @@ class Client:
         return found_depots
 
     def _wait_until_find(self, image: str, timeout: int = 60, click: bool = False, cache: bool = True, exact: bool = False, throw_on_timeout: bool = False, coordinate_deviation: int = 5) -> Tuple[int, int]:
-        start_time = time.time()
+        position = None
 
-        while time.time() - start_time < timeout:
-            if cache and image in self.position_cache:
-                self._add_to_log(f"Found {image} in cache.")
-                position = self.position_cache[image]
-            else:
+        if cache and image in self.position_cache:
+            self._add_to_log(f"Found {image} in cache.")
+            position = self.position_cache[image]
+        else:
+            xpos = randint(20, 100)
+            ypos = randint(20, 500)
+            move_mouse_like_human(xpos, ypos)
+
+            start_time = time.time()
+
+            while time.time() - start_time < timeout:
                 self._add_to_log(f"Looking for {image}...")
-                move_mouse_like_human(20, 20)
+
                 if not exact:
                     position = pyautogui.locateCenterOnScreen(image, grayscale=True, confidence=0.9)
                 else:
                     position = pyautogui.locateCenterOnScreen(image)
+
                 if position:
                     self.position_cache[image] = position
+                    break
 
-            if position:
-                self._add_to_log(f"Found {image} at {position}.")
-                if click:
-                    self._add_to_log(f"Clicking {image}...")
-                    move_mouse_like_human(position[0], position[1], coordinate_deviation)
-                    pyautogui.leftClick()
+                wait_like_human(0.3)
 
-                return position
+        if position:
+            self._add_to_log(f"Found {image} at {position}.")
 
-            wait_like_human(0.3)
+            if click:
+                self._add_to_log(f"Clicking {image}...")
+                move_mouse_like_human(position[0], position[1], coordinate_deviation)
+                pyautogui.leftClick()
+
+            return position
 
         self._add_to_log(f"Finding {image} failed.")
+
         if throw_on_timeout:
             raise TimeoutError(f"Finding {image} failed.")
 
