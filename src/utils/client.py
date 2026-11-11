@@ -165,6 +165,9 @@ class Client:
         pyautogui.press("escape")
 
         self._wait_until_find("images/LeaveButton.png", click=True, cache=False, timeout=5)
+        
+        self.tibia.terminate()
+        self.tibia.wait()
 
     def open_market(self):
         """
