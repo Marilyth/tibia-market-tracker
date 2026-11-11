@@ -4,7 +4,6 @@ pytesseract
 opencv-python-headless
 numpy
 requests
-pyvirtualdisplay
 pytest
 pytest-asyncio
 fastapi

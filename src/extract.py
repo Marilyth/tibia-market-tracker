@@ -151,50 +151,38 @@ def upload_data(market_values, market_boards, server: str):
                             headers={"Content-Type": "application/json", "Content-Encoding": "gzip"})
 
 
-async def do_market_search(character: Character, virtual_display: bool, virtual_display_visible: bool):
-    async def market_search():
-        client = Client(get_tibia_path(), character)
-
-        extractor: Extractor = NetworkExtractor(client)
-        await extractor.setup()
-
-        # Update the schedule with the server and name of the character slot.
-        write_schedule()
-
-        market_values, market_boards = None, None
-
-        try:
-            with tracer.start_as_current_span("extract_market_values") as span:
-                span.set_attribute("server", character.server)
-                span.set_attribute("character", character.name or character.username)
-                market_values, market_boards = await extractor.extract_market_values_async()
-                span.set_attribute("market_values.count", len(market_values))
-                span.set_attribute("market_boards.count", len(market_boards))
-                span.set_attribute("extraction.failed_items", getattr(extractor, "failed_item_ids", []))
-        except Exception as e:
-            logger.exception(f"Market extraction failed: {e}")
-            extractor.sniffer.save_flows("failed_flows.mitm")
-        finally:
-            client.exit_tibia()
-            stop_proxy()
-
-        with tracer.start_as_current_span("upload_results"):
-            await asyncio.to_thread(upload_data, market_values, market_boards, character.server)
-
+async def do_market_search(character: Character):
     while is_tibia_running():
         logger.info("Tibia is running. Waiting for it to close.")
         time.sleep(60)
 
-    if virtual_display:
-        from pyvirtualdisplay import Display
-        with Display(visible=virtual_display_visible, size=(1600, 900)):
-            import pyautogui
-            import Xlib.display
-            pyautogui._pyautogui_x11._display = Xlib.display.Display(os.environ['DISPLAY'])
+    client = Client(get_tibia_path(), character)
 
-            await market_search()
-    else:
-        await market_search()
+    extractor: Extractor = NetworkExtractor(client)
+    await extractor.setup()
+
+    # Update the schedule with the server and name of the character slot.
+    write_schedule()
+
+    market_values, market_boards = None, None
+
+    try:
+        with tracer.start_as_current_span("extract_market_values") as span:
+            span.set_attribute("server", character.server)
+            span.set_attribute("character", character.name or character.username)
+            market_values, market_boards = await extractor.extract_market_values_async()
+            span.set_attribute("market_values.count", len(market_values))
+            span.set_attribute("market_boards.count", len(market_boards))
+            span.set_attribute("extraction.failed_items", getattr(extractor, "failed_item_ids", []))
+    except Exception as e:
+        logger.exception(f"Market extraction failed: {e}")
+        extractor.sniffer.save_flows("failed_flows.mitm")
+    finally:
+        client.exit_tibia()
+        stop_proxy()
+
+    with tracer.start_as_current_span("upload_results"):
+        await asyncio.to_thread(upload_data, market_values, market_boards, character.server)
 
 
 def read_schedule():
@@ -316,7 +304,7 @@ async def main():
         os.makedirs("./results", exist_ok=True)
 
         logger.info(f"Using account {character.username} on slot {character.slot}.")
-        await do_market_search(character, config["useVirtualDisplay"], config["showVirtualDisplay"])
+        await do_market_search(character)
 
 
 if __name__ == "__main__":
