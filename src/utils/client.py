@@ -9,7 +9,7 @@ from utils.extraction.memory.memory_reader import MemoryReader
 import shutil
 from utils.human_movement import move_mouse_like_human, wait_like_human, repeat_like_human
 from utils.schedule import Character
-from utils.extraction.ocr.image_processing import find_playspace
+from utils.playspace import find_playspace
 
 
 logger = logging.getLogger(__name__)

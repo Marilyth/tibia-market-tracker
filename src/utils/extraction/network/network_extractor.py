@@ -8,7 +8,6 @@ from utils.extraction.network.packets.server.market_browse import MarketBrowse a
 from utils.extraction.network.packets.enums import MarketBrowseType
 from utils.extraction.network.packets.packet_utils import packet_to_marketvalues
 from utils.extraction.network.debugger import XteaDebugger
-from utils.extraction.extractor import Extractor
 from utils.human_movement import wait_like_human_async
 from utils.extraction.network.proxy import start_proxy, get_proxy_env
 from utils.wiki import Wiki
@@ -24,9 +23,13 @@ logger = logging.getLogger(__name__)
 tracer = trace.get_tracer(__name__)
 
 
-class NetworkExtractor(Extractor):
+class MarketExtractionRetriesExceeded(RuntimeError):
+    """Raised when every item in a batch fails all in-session retries."""
+
+
+class NetworkExtractor:
     def __init__(self, client: Client):
-        super().__init__(client)
+        self.client = client
         self.sniffer = NetworkSniffer()
         self.xtea_key = None
         self.failed_item_ids: list[int] = []
@@ -44,7 +47,7 @@ class NetworkExtractor(Extractor):
         while manual_session:
             await asyncio.sleep(1)
 
-    async def extract_market_values_async(self) -> tuple[list[MarketValues], list[MarketBoard]]:
+    async def extract_market_values_async(self, checkpoint=None) -> tuple[list[MarketValues], list[MarketBoard]]:
         """Extracts market values for all marketable items by injecting MarketBrowse packets.
 
         Returns:
@@ -53,13 +56,14 @@ class NetworkExtractor(Extractor):
         while not self.sniffer.is_ready_for_injection():
             await asyncio.sleep(1)
 
-        successful_tasks: list[ItemExtractionTask] = []
+        if checkpoint is None:
+            checkpoint = {}
 
         # Order items to be closer to how they are displayed in the client.
         proto_items = Wiki.get_marketable_proto_items().values()
         proto_items = sorted(proto_items, key=lambda item: (item.flags.market.category, item.name))
 
-        extraction_tasks = [ItemExtractionTask(item.id) for item in proto_items]
+        extraction_tasks = [ItemExtractionTask(item.id) for item in proto_items if item.id not in checkpoint]
 
         last_wiggle = 0
 
@@ -102,14 +106,15 @@ class NetworkExtractor(Extractor):
                         logger.warning(f"Failed to extract item {task.item_id} after {task.attempts} attempts.")
                     continue
 
-                successful_tasks.append(task)
+                checkpoint[task.item_id] = task
                 extraction_tasks.remove(task)
 
             progress_bar.update(len([item for item in batch if item.status == ExtractionTaskStatus.Completed]))
 
             if all(item.status != ExtractionTaskStatus.Completed for item in batch):
                 if current_retry_count >= max_retry_count:
-                    raise Exception("Failed to extract any market values after multiple retries.")
+                    progress_bar.close()
+                    raise MarketExtractionRetriesExceeded("Failed to extract any market values after multiple retries.")
 
                 logger.warning(f"Entire batch failed. {current_retry_count=}")
                 current_retry_count += 1
@@ -128,7 +133,7 @@ class NetworkExtractor(Extractor):
         market_value_items: list[MarketValues] = []
 
         # Convert items to MarketValues objects.
-        for task in successful_tasks:
+        for task in checkpoint.values():
             market_details, market_browse = task.result
             market_values, historical_values = packet_to_marketvalues(market_details, market_browse)
 
