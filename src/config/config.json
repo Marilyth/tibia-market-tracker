@@ -1,6 +1,4 @@
 {
     "apiDomain": "api.tibiamarket.top",
-    "apiPort": 8001,
-    "useVirtualDisplay": false,
-    "showVirtualDisplay": false
+    "apiPort": 8001
 }

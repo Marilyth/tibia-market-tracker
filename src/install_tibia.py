@@ -2,8 +2,6 @@ import requests
 import tarfile
 import os
 import logging
-from pyvirtualdisplay import Display
-import Xlib.display
 
 
 logger = logging.getLogger(__name__)
@@ -59,13 +57,11 @@ def install_tibia():
     """Triggers the installation of Tibia, if it is not already installed.
     """
     # Start_game already handles the installation process.
-    with Display(visible=False, size=(1600, 900)):
-        import pyautogui
-        from utils.client import Client
-        pyautogui._pyautogui_x11._display = Xlib.display.Display(os.environ['DISPLAY'])
-        client = Client(get_tibia_path(), None, None)
-        client.start_game()
-        client.exit_tibia()
+    import pyautogui
+    from utils.client import Client
+    client = Client(get_tibia_path(), None, None)
+    client.start_game()
+    client.exit_tibia()
 
 if __name__ == "__main__":
     download_package()

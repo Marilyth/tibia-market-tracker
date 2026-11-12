@@ -159,6 +159,9 @@ class NetworkSniffer:
         with self.queue_lock:
             flows = list(self.flows)
 
+        if not flows:
+            return
+
         with open(file_path, "wb") as f:
             writer = FlowWriter(f)
 
