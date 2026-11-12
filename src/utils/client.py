@@ -5,6 +5,7 @@ import logging
 from random import uniform, randint
 from typing import *
 import os
+import signal
 from utils.extraction.memory.memory_reader import MemoryReader
 import shutil
 from utils.human_movement import move_mouse_like_human, wait_like_human, repeat_like_human
@@ -166,8 +167,7 @@ class Client:
 
         self._wait_until_find("images/LeaveButton.png", click=True, cache=False, timeout=5)
         
-        self.tibia.terminate()
-        self.tibia.wait()
+        os.kill(self.tibia_process_id, signal.SIGTERM)
 
     def open_market(self):
         """
