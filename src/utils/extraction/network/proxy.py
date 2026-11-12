@@ -36,6 +36,8 @@ def _proxy_thread_main(addons: List):
     try:
         _proxy_loop.run_until_complete(_run_master(addons))
     finally:
+        if master:
+            master._legacy_log_events.uninstall()
         _proxy_loop.close()
         _proxy_loop = None
 
@@ -97,14 +99,17 @@ def get_proxy_env() -> dict:
 
 
 def stop_proxy():
-    global _proxy_thread
+    global _proxy_thread, master
 
-    if master:
+    if master and _proxy_loop and not _proxy_loop.is_closed():
+        _proxy_loop.call_soon_threadsafe(lambda: master.options.update(server=False))
         master.shutdown()
 
     if _proxy_thread:
-        _proxy_thread.join(timeout=10)
+        _proxy_thread.join()
         _proxy_thread = None
+
+    master = None
 
 
 if __name__ == "__main__":
