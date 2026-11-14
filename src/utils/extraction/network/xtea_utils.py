@@ -11,6 +11,12 @@ _key: list[int] = None
 _key_string: bytes = None
 _xtea: XTEACipher = None
 
+def reset():
+    global _key, _key_string, _xtea
+    _key = None
+    _key_string = None
+    _xtea = None
+
 def setup(rounds: int = 64, byte_order: str = sys.byteorder, key_segment: list[int] = None):
     global _rounds, _byte_order, _key, _key_string, _xtea
 

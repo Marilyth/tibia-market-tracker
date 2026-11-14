@@ -2,7 +2,7 @@ from utils.client import Client
 from utils.data.market_values import ItemMetaData, MarketValues, MarketBoard, MarketBoardTraderData
 from utils.extraction.network.network_sniffer import NetworkSniffer
 from utils.extraction.network.packets.server.market_detail import MarketDetail
-from utils.extraction.network.xtea_utils import setup
+from utils.extraction.network.xtea_utils import reset, setup
 from utils.extraction.network.packets.client.market_browse import MarketBrowse
 from utils.extraction.network.packets.server.market_browse import MarketBrowse as ServerMarketBrowse
 from utils.extraction.network.packets.enums import MarketBrowseType
@@ -39,6 +39,7 @@ class NetworkExtractor:
         Sets up the network extraction by sniffing packets, logging in, extracting the XTEA key, and opening the market.
         """
         with tracer.start_as_current_span("network_extractor.setup"):
+            reset()
             await start_proxy([self.sniffer])
             self.client.env.update(get_proxy_env())
             await asyncio.to_thread(self._setup_session)
